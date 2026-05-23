@@ -25,5 +25,5 @@ sendgrid==6.11.0
 # Push Notifications
 firebase-admin==6.5.0
 
-# File Uploads (S3 / MinIO)
+# File Uploads
 boto3==1.34.131

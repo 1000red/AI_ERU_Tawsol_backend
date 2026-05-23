@@ -21,9 +21,6 @@ class Settings(BaseSettings):
     SENDGRID_API_KEY: str = ""
     FROM_EMAIL: str = "noreply@eru-tawasol.com"
 
-    # Firebase
-    FIREBASE_CREDENTIALS_PATH: str = "serviceAccountKey.json"
-
     # S3 / MinIO
     S3_ENDPOINT_URL: str = ""          # empty = real AWS S3
     S3_ACCESS_KEY: str = "minioadmin"

@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
+from app.core.security import bearer_scheme, decode_token, blacklist_token
 from app.schemas.user import (
     UserLogin, TokenOut,
     ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordRequest,
@@ -14,6 +16,16 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 @router.post("/login", response_model=TokenOut)
 def login(data: UserLogin, db: Session = Depends(get_db)):
     return svc.login_user(db, data.email, data.password)
+
+
+@router.post("/logout")
+def logout(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+):
+    payload = decode_token(credentials.credentials)
+    blacklist_token(db, payload)
+    return {"message": "Logged out successfully"}
 
 
 # ── OTP / Password reset ──────────────────────────────────────────────────────

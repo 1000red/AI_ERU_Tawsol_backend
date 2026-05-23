@@ -18,7 +18,7 @@ base.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="University community platform — connect students, TAs, and professors",
+    description="University community platform — connect students, TAs, and admins",
     docs_url="/docs",
     redoc_url="/redoc",
 )

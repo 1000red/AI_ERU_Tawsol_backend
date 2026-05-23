@@ -22,17 +22,17 @@ def create_material(data: MaterialCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{material_id}", response_model=MaterialOut)
-def get_material(material_id: int, db: Session = Depends(get_db)):
+def get_material(material_id: str, db: Session = Depends(get_db)):
     return svc.get_material(db, material_id)
 
 
 @router.put("/{material_id}", response_model=MaterialOut)
-def update_material(material_id: int, data: MaterialUpdate, db: Session = Depends(get_db)):
+def update_material(material_id: str, data: MaterialUpdate, db: Session = Depends(get_db)):
     return svc.update_material(db, material_id, data)
 
 
 @router.delete("/{material_id}", status_code=204)
-def delete_material(material_id: int, db: Session = Depends(get_db)):
+def delete_material(material_id: str, db: Session = Depends(get_db)):
     svc.delete_material(db, material_id)
 
 
@@ -44,7 +44,7 @@ def enroll_student(data: EnrollStudentIn, db: Session = Depends(get_db)):
 
 
 @router.delete("/enroll/student/{material_id}/{user_id}", status_code=204)
-def unenroll_student(material_id: int, user_id: int, db: Session = Depends(get_db)):
+def unenroll_student(material_id: str, user_id: int, db: Session = Depends(get_db)):
     svc.unenroll_student(db, material_id, user_id)
 
 

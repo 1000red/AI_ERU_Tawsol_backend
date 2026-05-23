@@ -64,9 +64,13 @@ def send_welcome_email(to_email: str, user_name: str) -> bool:
         <p style="color:#333;font-size:16px;">Hi <strong>{user_name}</strong>,</p>
         <p style="color:#555;">
           Your account has been created successfully. You can now connect with
-          professors, teaching assistants, and fellow students on ERU Tawasol.
+          teaching assistants, admins, and fellow students on ERU Tawasol.
         </p>
         <p style="color:#555;">Start exploring your courses and joining the community!</p>
+        <hr style="border:none;border-top:1px solid #e0e0e0;margin:24px 0;">
+        <p style="color:#bbb;font-size:12px;text-align:center;">
+          ERU Tawasol &mdash; El Ryada University Community Platform
+        </p>
       </div>
     </div>
     """
@@ -89,31 +93,22 @@ def send_welcome_email(to_email: str, user_name: str) -> bool:
         return False
 
 
-def send_temp_password_email(to_email: str, user_name: str, temp_password: str) -> bool:
+def send_password_changed_email(to_email: str, user_name: str) -> bool:
     if not settings.SENDGRID_API_KEY:
-        print(f"[DEV EMAIL] Temp password for {to_email} ({user_name}): {temp_password}")
+        print(f"[DEV EMAIL] Password changed for {to_email} ({user_name})")
         return True
 
     html_body = f"""
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;">
       <div style="background:#1565C0;padding:24px;border-radius:12px 12px 0 0;text-align:center;">
         <h1 style="color:#fff;margin:0;font-size:24px;">ERU Tawasol</h1>
-        <p style="color:#90CAF9;margin:4px 0 0;">Your Account is Ready</p>
+        <p style="color:#90CAF9;margin:4px 0 0;">Password Changed</p>
       </div>
       <div style="background:#f5f7fa;padding:32px;border-radius:0 0 12px 12px;">
         <p style="color:#333;font-size:16px;">Hi <strong>{user_name}</strong>,</p>
         <p style="color:#555;">
-          Your account has been created. Use the temporary password below to log in,
-          then change it immediately from your profile.
-        </p>
-        <div style="background:#fff;border:2px dashed #1565C0;border-radius:12px;
-                    text-align:center;padding:24px;margin:24px 0;">
-          <p style="color:#999;font-size:13px;margin:0 0 8px;">Temporary Password</p>
-          <span style="font-size:28px;font-weight:bold;color:#1565C0;
-                       font-family:monospace;letter-spacing:4px;">{temp_password}</span>
-        </div>
-        <p style="color:#e53935;font-size:13px;">
-          ⚠️ Please change your password immediately after logging in.
+          Your password has been changed successfully.
+          If you did not make this change, please contact support immediately.
         </p>
         <hr style="border:none;border-top:1px solid #e0e0e0;margin:24px 0;">
         <p style="color:#bbb;font-size:12px;text-align:center;">
@@ -130,12 +125,12 @@ def send_temp_password_email(to_email: str, user_name: str, temp_password: str) 
         message = Mail(
             from_email=settings.FROM_EMAIL,
             to_emails=to_email,
-            subject="ERU Tawasol – Your Temporary Password",
+            subject="ERU Tawasol – Password Changed",
             html_content=html_body,
         )
         sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
         response = sg.send(message)
         return response.status_code in (200, 202)
     except Exception as e:
-        print(f"[SendGrid] Temp password email failed: {e}")
+        print(f"[SendGrid] Password changed email failed: {e}")
         return False

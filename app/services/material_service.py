@@ -7,7 +7,7 @@ from app.schemas.material import MaterialCreate, MaterialUpdate
 
 # ── Material CRUD ─────────────────────────────────────────────────────────────
 
-def get_material(db: Session, material_id: int) -> Material:
+def get_material(db: Session, material_id: str) -> Material:
     m = db.query(Material).filter(Material.material_id == material_id).first()
     if not m:
         raise HTTPException(status_code=404, detail="Material not found")
@@ -26,7 +26,7 @@ def create_material(db: Session, data: MaterialCreate) -> Material:
     return material
 
 
-def update_material(db: Session, material_id: int, data: MaterialUpdate) -> Material:
+def update_material(db: Session, material_id: str, data: MaterialUpdate) -> Material:
     material = get_material(db, material_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(material, field, value)
@@ -35,7 +35,7 @@ def update_material(db: Session, material_id: int, data: MaterialUpdate) -> Mate
     return material
 
 
-def delete_material(db: Session, material_id: int) -> None:
+def delete_material(db: Session, material_id: str) -> None:
     material = get_material(db, material_id)
     db.delete(material)
     db.commit()
@@ -43,7 +43,7 @@ def delete_material(db: Session, material_id: int) -> None:
 
 # ── Student Enrollment ────────────────────────────────────────────────────────
 
-def enroll_student(db: Session, material_id: int, user_id: int) -> MaterialStudent:
+def enroll_student(db: Session, material_id: str, user_id: int) -> MaterialStudent:
     existing = db.query(MaterialStudent).filter_by(
         material_id=material_id, user_id=user_id
     ).first()
@@ -56,7 +56,7 @@ def enroll_student(db: Session, material_id: int, user_id: int) -> MaterialStude
     return enrollment
 
 
-def unenroll_student(db: Session, material_id: int, user_id: int) -> None:
+def unenroll_student(db: Session, material_id: str, user_id: int) -> None:
     enrollment = db.query(MaterialStudent).filter_by(
         material_id=material_id, user_id=user_id
     ).first()
@@ -77,7 +77,7 @@ def get_student_materials(db: Session, user_id: int) -> list[Material]:
 
 # ── Teacher Assignment ────────────────────────────────────────────────────────
 
-def assign_teacher(db: Session, material_id: int, user_id: int) -> MaterialTeacher:
+def assign_teacher(db: Session, material_id: str, user_id: int) -> MaterialTeacher:
     existing = db.query(MaterialTeacher).filter_by(
         material_id=material_id, user_id=user_id
     ).first()

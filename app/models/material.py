@@ -5,7 +5,7 @@ from app.db.base import Base
 class Material(Base):
     __tablename__ = "material"
 
-    material_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    material_id = Column(String(10), primary_key=True, index=True)
     name        = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
     duration    = Column(Integer, nullable=False, default=0) # in hours
@@ -24,7 +24,7 @@ class MaterialStudent(Base):
     __tablename__ = "material_student"
 
     id          = Column(Integer, primary_key=True, autoincrement=True)
-    material_id = Column(Integer, ForeignKey("material.material_id"), nullable=False)
+    material_id = Column(String(10), ForeignKey("material.material_id"), nullable=False)
     user_id     = Column(Integer, ForeignKey("users.user_id"),        nullable=False)
 
     material = relationship("Material", back_populates="student_enrollments")
@@ -35,7 +35,7 @@ class MaterialTeacher(Base):
     __tablename__ = "material_teacher"
 
     id          = Column(Integer, primary_key=True, autoincrement=True)
-    material_id = Column(Integer, ForeignKey("material.material_id"), nullable=False)
+    material_id = Column(String(10), ForeignKey("material.material_id"), nullable=False)
     user_id     = Column(Integer, ForeignKey("users.user_id"),        nullable=False)
 
     material = relationship("Material", back_populates="teacher_assignments")

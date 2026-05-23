@@ -20,11 +20,6 @@ OTP_EXPIRE_MINUTES=10
 SENDGRID_API_KEY=
 FROM_EMAIL=noreply@eru-tawasol.com
 
-# ── Firebase (Push Notifications) ────────────────────
-# Download serviceAccountKey.json from:
-# Firebase Console → Project Settings → Service Accounts → Generate new private key
-FIREBASE_CREDENTIALS_PATH=serviceAccountKey.json
-
 # ── S3 / MinIO (File Uploads) ────────────────────────
 # Local MinIO (run: docker run -p 9000:9000 -p 9001:9001 minio/minio server /data --console-address ":9001")
 S3_ENDPOINT_URL=http://localhost:9000

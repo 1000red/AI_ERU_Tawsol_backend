@@ -1,13 +1,12 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
-# from app.db.database import engine
 from app.db.base import Base
 
 
 class UserType(Base):
     __tablename__ = "user_type"
 
-    code        = Column(String(5), primary_key=True) # "STU", "PROF", "TA", "ADM"
+    code        = Column(String(5), primary_key=True) # "STU", "DR", "TA", "ADM"
     description = Column(String(50), nullable=False)
 
     users = relationship("User", back_populates="user_type")
@@ -21,11 +20,10 @@ class User(Base):
     name     = Column(String(100), nullable=False)
     email    = Column(String(100), nullable=False, unique=True, index=True)
     password = Column(String(255), nullable=False)
-    total_hours = Column(Integer, default=0) # save the hours pass
-    level    = Column(Integer, nullable=False, default=0) # from 1 to 4 for students, 100 for professors and admins
-    department = Column(String(100), nullable=True)
+    level    = Column(Integer, nullable=False, default=0) # from 1 to 4 for students, 100 for admins
+    department = Column(String(100), nullable=True) # AI /CS /DS /SW /none(level 1 and 2)
     profile_picture = Column(String(255), nullable=True)  # path to image file
-    type_code = Column(String(5), ForeignKey("user_type.code"), nullable=False) # same as user_type_code but more concise
+    type_code = Column(String(5), ForeignKey("user_type.code"), nullable=False)
 
     # Relationships
     user_type         = relationship("UserType", back_populates="users")
@@ -36,3 +34,11 @@ class User(Base):
     material_files    = relationship("MaterialFile",          foreign_keys="MaterialFile.author_id",          back_populates="author")
     assignments       = relationship("Assignment",            foreign_keys="Assignment.author_id",            back_populates="author")
     submissions       = relationship("AssignmentSubmission",  foreign_keys="AssignmentSubmission.student_id", back_populates="student")
+
+
+class BlacklistedToken(Base):
+    __tablename__ = "blacklisted_tokens"
+
+    id         = Column(Integer, primary_key=True, autoincrement=True)
+    jti        = Column(String(36), nullable=False, unique=True, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)

@@ -4,26 +4,13 @@ import shutil, os, uuid
 
 from app.db.database import get_db
 from app.core.security import get_current_user_id
-from app.core.dependencies import require_admin
-from app.schemas.user import UserOut, UserUpdate, UserCreate, ChangePasswordRequest, UpdateHoursRequest
+from app.schemas.user import UserOut, UserUpdate, ChangePasswordRequest
 from app.services import user_service as svc
 
 UPLOAD_DIR = "uploads/profiles"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 router = APIRouter(prefix="/users", tags=["Users"])
-
-
-# ── Admin only ────────────────────────────────────────────────────────────────
-
-@router.post("/", response_model=UserOut, status_code=201, dependencies=[Depends(require_admin)])
-def create_user(data: UserCreate, db: Session = Depends(get_db)):
-    return svc.create_user(db, data)
-
-
-@router.put("/{user_id}/hours", response_model=UserOut, dependencies=[Depends(require_admin)])
-def update_hours(user_id: int, data: UpdateHoursRequest, db: Session = Depends(get_db)):
-    return svc.update_total_hours(db, user_id, data.total_hours)
 
 
 # ── Current user ──────────────────────────────────────────────────────────────
