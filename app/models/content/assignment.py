@@ -11,7 +11,7 @@ class Assignment(Base):
 
     assignment_id   = Column(Integer, primary_key=True, index=True, autoincrement=True)
     announcement_id = Column(Integer, ForeignKey("announcements.announcement_id"), nullable=True)
-    material_id     = Column(Integer, ForeignKey("material.material_id"), nullable=False)
+    material_id     = Column(String(10), ForeignKey("material.material_id"), nullable=False)
     author_id       = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     title           = Column(String(200), nullable=False)
     description     = Column(Text, nullable=True)
