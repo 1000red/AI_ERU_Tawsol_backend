@@ -11,7 +11,12 @@ from app.db import base  # noqa: F401 — triggers all model imports for create_
 from app.models import user, material, chat, complaint, notification, content  # noqa: F401
 
 # Create all tables
-base.Base.metadata.create_all(bind=engine)
+try:
+    base.Base.metadata.create_all(bind=engine)
+except Exception as e:
+    import sys
+    print(f"❌ Failed to create tables: {e}")
+    sys.exit(1)
 
 # ── App ───────────────────────────────────────────────────────────────────────
 
