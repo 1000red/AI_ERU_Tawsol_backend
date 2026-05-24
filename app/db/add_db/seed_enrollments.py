@@ -2,9 +2,9 @@ from app.db.database import SessionLocal
 from app.models.material import MaterialStudent
 
 ENROLLMENTS = [
-    {"user_id": 940, "material_id": "CS307"},  # Alfred Ayman → Computer Graphics
-    {"user_id": 936, "material_id": "DS305"},  # Ziad Tamer  → Fundamentals of Simulation
-    {"user_id": 936, "material_id": "CB302"},  # Ziad Tamer  → Computer Architecture
+    {"user_id": 1386, "material_id": "CS307"},  # Alfred Ayman → Computer Graphics
+    {"user_id": 1382, "material_id": "DS305"},  # Ziad Tamer  → Fundamentals of Simulation
+    {"user_id": 1382, "material_id": "CB302"},  # Ziad Tamer  → Computer Architecture
 ]
 
 

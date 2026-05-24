@@ -19,6 +19,7 @@ class UserOut(BaseModel):
     level:                int = 0
     profile_picture:      Optional[str] = None
     department:           Optional[str] = None
+    current_password: bool = False
     model_config = {"from_attributes": True}
 
 

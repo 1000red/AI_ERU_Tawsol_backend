@@ -23,6 +23,7 @@ def seed_students():
                 level                = int(row["level"]),
                 department           = row["department"],
                 type_code            = row["type_code"],
+                current_password = True,
             )
             for row in rows
             if row["uni_code"] not in existing

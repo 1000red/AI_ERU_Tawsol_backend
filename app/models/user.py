@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 
@@ -22,8 +22,9 @@ class User(Base):
     password = Column(String(255), nullable=False)
     level    = Column(Integer, nullable=False, default=0) # from 1 to 4 for students, 100 for admins
     department = Column(String(100), nullable=True) # AI /CS /DS /SW /none(level 1 and 2)
-    profile_picture = Column(String(255), nullable=True)  # path to image file
-    type_code = Column(String(5), ForeignKey("user_type.code"), nullable=False)
+    profile_picture      = Column(String(255), nullable=True)
+    type_code            = Column(String(5), ForeignKey("user_type.code"), nullable=False)
+    current_password = Column(Boolean, nullable=False, default=True)
 
     # Relationships
     user_type         = relationship("UserType", back_populates="users")

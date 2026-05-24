@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -16,7 +16,7 @@ def list_materials(skip: int = 0, limit: int = 100, db: Session = Depends(get_db
     return svc.get_all_materials(db, skip, limit)
 
 
-@router.post("/", response_model=MaterialOut, status_code=201)
+@router.post("/", response_model=MaterialOut, status_code=status.HTTP_201_CREATED)
 def create_material(data: MaterialCreate, db: Session = Depends(get_db)):
     return svc.create_material(db, data)
 
@@ -31,14 +31,14 @@ def update_material(material_id: str, data: MaterialUpdate, db: Session = Depend
     return svc.update_material(db, material_id, data)
 
 
-@router.delete("/{material_id}", status_code=204)
+@router.delete("/{material_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_material(material_id: str, db: Session = Depends(get_db)):
     svc.delete_material(db, material_id)
 
 
 # ── Student Enrollment ────────────────────────────────────────────────────────
 
-@router.post("/enroll/student", response_model=EnrollmentOut, status_code=201)
+@router.post("/enroll/student", response_model=EnrollmentOut, status_code=status.HTTP_201_CREATED)
 def enroll_student(data: EnrollStudentIn, db: Session = Depends(get_db)):
     return svc.enroll_student(db, data.material_id, data.user_id)
 
@@ -55,7 +55,7 @@ def student_materials(user_id: int, db: Session = Depends(get_db)):
 
 # ── Teacher Assignment ────────────────────────────────────────────────────────
 
-@router.post("/assign/teacher", response_model=EnrollmentOut, status_code=201)
+@router.post("/assign/teacher", response_model=EnrollmentOut, status_code=status.HTTP_201_CREATED)
 def assign_teacher(data: AssignTeacherIn, db: Session = Depends(get_db)):
     return svc.assign_teacher(db, data.material_id, data.user_id)
 

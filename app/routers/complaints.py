@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -9,7 +9,7 @@ from app.services import complaint_service as svc
 router = APIRouter(prefix="/complaints", tags=["Complaints"])
 
 
-@router.post("/", response_model=ComplaintOut, status_code=201)
+@router.post("/", response_model=ComplaintOut, status_code=status.HTTP_201_CREATED)
 def create_complaint(data: ComplaintCreate, db: Session = Depends(get_db)):
     return svc.create_complaint(db, data)
 
@@ -29,7 +29,7 @@ def material_complaints(material_id: int, db: Session = Depends(get_db)):
     return svc.get_by_material(db, material_id)
 
 
-@router.delete("/{complaint_id}", status_code=204)
+@router.delete("/{complaint_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_complaint(
     complaint_id: int,
     user_id: int = Depends(get_current_user_id),

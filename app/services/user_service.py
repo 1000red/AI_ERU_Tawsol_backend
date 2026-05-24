@@ -59,7 +59,8 @@ def login_user(db: Session, email: str, password: str) -> dict:
             detail="Invalid email or password",
         )
     token = create_access_token({"sub": str(user.user_id), "type": user.type_code})
-    if user.email != "elsadek-hussien@eru.edu.eg":
+    # Send welcome email only on first-ever login (before they've changed their temp password)
+    if user.current_password and user.email != "elsadek-hussien@eru.edu.eg":
         send_welcome_email(user.email, user.name)
     return {"access_token": token, "token_type": "bearer", "user": user}
 
@@ -72,6 +73,7 @@ def change_password(db: Session, user_id: int, old_password: str, new_password: 
             detail="Old password is incorrect"
         )
     user.password = hash_password(new_password)
+    user.current_password = False
     db.commit()
     send_password_changed_email(user.email, user.name)
 
@@ -134,7 +136,7 @@ def reset_password(db: Session, reset_token: str, new_password: str) -> None:
     payload = decode_token(reset_token)
     if payload.get("purpose") != "reset":
         raise HTTPException(
-            status_code=status.HTTP_400_NOT_FOUND, 
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid token purpose"
         )
     user = get_user_by_id(db, int(payload["sub"]))

@@ -35,12 +35,13 @@ def seed():
         professor = db.query(User).filter(User.email == PROFESSOR["email"]).first()
         if not professor:
             professor = User(
-                uni_code  = PROFESSOR["uni_code"],
-                name      = PROFESSOR["name"],
-                email     = PROFESSOR["email"],
-                password  = hash_password(PROFESSOR["password"]),
-                level     = PROFESSOR["level"],
-                type_code = PROFESSOR["type_code"],
+                uni_code             = PROFESSOR["uni_code"],
+                name                 = PROFESSOR["name"],
+                email                = PROFESSOR["email"],
+                password             = hash_password(PROFESSOR["password"]),
+                level                = PROFESSOR["level"],
+                type_code            = PROFESSOR["type_code"],
+                current_password = False,
             )
             db.add(professor)
             db.flush()

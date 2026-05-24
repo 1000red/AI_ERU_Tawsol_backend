@@ -1,5 +1,5 @@
 import json
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, Query, HTTPException
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, Query, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import datetime
 
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 
 # ── REST endpoints ────────────────────────────────────────────────────────────
 
-@router.post("/send", response_model=MessageOut, status_code=201)
+@router.post("/send", response_model=MessageOut, status_code=status.HTTP_201_CREATED)
 def send_message(
     data: MessageSend,
     user_id: int = Depends(get_current_user_id),
