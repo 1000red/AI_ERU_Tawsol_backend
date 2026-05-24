@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from app.routers.content import announcements, material_files, assignments, submissions
 
-router = APIRouter(prefix="/content", tags=["Content"])
+router = APIRouter()
 
 router.include_router(announcements.router)
 router.include_router(material_files.router)
