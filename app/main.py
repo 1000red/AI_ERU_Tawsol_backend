@@ -47,7 +47,7 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 
-from app.routers import auth, users, materials, chat as chat_router, complaints, content, contact  # noqa
+from app.routers import auth, support, users, materials, chat as chat_router, complaints, content  # noqa
 
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -55,7 +55,7 @@ app.include_router(materials.router)
 app.include_router(chat_router.router)
 app.include_router(complaints.router)
 app.include_router(content.router)
-app.include_router(contact.router)
+app.include_router(support.router)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

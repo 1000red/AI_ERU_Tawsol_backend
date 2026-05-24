@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, func, select
+from sqlalchemy.orm import relationship, column_property
 from app.db.base import Base
+from app.models.content.announcement import Announcement
+
 
 class Material(Base):
     __tablename__ = "material"
@@ -8,9 +10,7 @@ class Material(Base):
     material_id = Column(String(10), primary_key=True, index=True)
     name        = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
-    duration    = Column(Integer, nullable=False, default=0) # in hours
-    profile_picture = Column(String(255), nullable=True) # path to image file
-
+    duration    = Column(Integer, nullable=False, default=0)  # in hours
 
     student_enrollments = relationship("MaterialStudent", back_populates="material")
     teacher_assignments = relationship("MaterialTeacher", back_populates="material")
@@ -40,3 +40,18 @@ class MaterialTeacher(Base):
 
     material = relationship("Material", back_populates="teacher_assignments")
     teacher  = relationship("User")
+
+
+Material.student_count = column_property(
+    select(func.count(MaterialStudent.id))
+    .where(MaterialStudent.material_id == Material.material_id)
+    .correlate_except(MaterialStudent)
+    .scalar_subquery()
+)
+
+Material.content_count = column_property(
+    select(func.count(Announcement.announcement_id))
+    .where(Announcement.target_course_id == Material.material_id)
+    .correlate_except(Announcement)
+    .scalar_subquery()
+)

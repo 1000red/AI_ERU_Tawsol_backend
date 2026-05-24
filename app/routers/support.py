@@ -4,10 +4,10 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.core.security import get_current_user_id
 from app.models.user import User
-from app.schemas.contact import ContactRequest
+from app.schemas.support import ContactRequest
 from app.utils.email import send_contact_us_email
 
-router = APIRouter(prefix="/contact", tags=["Contact Us"])
+router = APIRouter(prefix="/support", tags=["Support"])
 
 
 @router.post("/", status_code=status.HTTP_200_OK)
