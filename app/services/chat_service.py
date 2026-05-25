@@ -109,6 +109,9 @@ def save_message(
     file_size_bytes: Optional[int] = None,
     voice_duration_seconds: Optional[int] = None,
 ) -> ChatHistory:
+    if sender_id == receiver_id:
+        raise HTTPException(status_code=400, detail="Cannot send a message to yourself")
+
     if not can_chat(db, sender_id, receiver_id):
         raise HTTPException(status_code=403, detail="You are not allowed to chat with this user")
 
