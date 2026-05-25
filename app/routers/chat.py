@@ -45,15 +45,18 @@ def send_message(
     )
 
 
-@router.get("/history/{other_user_id}", response_model=list[MessageOut])
+@router.get("/history/{user1_id}/{user2_id}", response_model=list[MessageOut])
 def get_history(
-    other_user_id: int,
+    user1_id: int,
+    user2_id: int,
     skip: int = 0,
     limit: int = 50,
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
-    return get_conversation(db, user_id, other_user_id, skip, limit)
+    if user_id not in (user1_id, user2_id):
+        raise HTTPException(status_code=403, detail="Access denied")
+    return get_conversation(db, user1_id, user2_id, skip, limit)
 
 
 @router.get("/conversations", response_model=list[ConversationOut])
