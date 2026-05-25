@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-from app.schemas.file_types.__types__ import FILE_TYPES
+from app.schemas.file_types.__types__ import CONTENT_TYPE
 
 
 # ── Assignment ────────────────────────────────────────────────────────────────
@@ -11,7 +11,7 @@ class AssignmentCreate(BaseModel):
     title:           str
     description:     Optional[str]                   = None
     deadline:        datetime
-    file_type:       Optional[FILE_TYPES] = None
+    file_type:       Optional[CONTENT_TYPE] = None
     link_url:        Optional[str]                   = None
     text_content:    Optional[str]                   = None
     material_id:     str
@@ -30,7 +30,7 @@ class AssignmentOut(BaseModel):
     title:           str
     description:     Optional[str]                   = None
     deadline:        datetime
-    file_type:       Optional[FILE_TYPES] = None
+    file_type:       Optional[CONTENT_TYPE] = None
     link_url:        Optional[str]                   = None
     text_content:    Optional[str]                   = None
     assignment_id:   int
@@ -49,7 +49,7 @@ class AssignmentOut(BaseModel):
 class SubmissionCreate(BaseModel):
     title:         Optional[str]                    = None
     description:   Optional[str]                    = None
-    file_type:     Optional[FILE_TYPES]  = None
+    file_type:     Optional[CONTENT_TYPE]  = None
     link_url:      Optional[str]                    = None
     text_content:  Optional[str]                    = None
     assignment_id: int
@@ -65,7 +65,7 @@ class SubmissionUpdate(BaseModel):
 class SubmissionOut(BaseModel):
     title:         Optional[str]                    = None
     description:   Optional[str]                    = None
-    file_type:     Optional[FILE_TYPES]  = None
+    file_type:     Optional[CONTENT_TYPE]  = None
     link_url:      Optional[str]                    = None
     text_content:  Optional[str]                    = None
     submission_id: int

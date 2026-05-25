@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-from app.schemas.file_types.__types__ import FILE_TYPES
+from app.schemas.file_types.__types__ import CONTENT_TYPE
 
 
 # ── MaterialFile ──────────────────────────────────────────────────────────────
@@ -10,7 +10,7 @@ from app.schemas.file_types.__types__ import FILE_TYPES
 class MaterialFileCreate(BaseModel):
     title:           str
     description:     Optional[str]          = None
-    file_type:       FILE_TYPES
+    file_type:       CONTENT_TYPE
     link_url:        Optional[str]          = None
     text_content:    Optional[str]          = None
     material_id:     str
@@ -27,7 +27,7 @@ class MaterialFileUpdate(BaseModel):
 class MaterialFileOut(BaseModel):
     title:           str
     description:     Optional[str]          = None
-    file_type:       FILE_TYPES
+    file_type:       CONTENT_TYPE
     link_url:        Optional[str]          = None
     text_content:    Optional[str]          = None
     file_id:         int

@@ -1,14 +1,15 @@
 import json
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, Query, HTTPException, status
 from sqlalchemy.orm import Session
-from datetime import datetime
 
 from app.db.database import get_db, SessionLocal
 from app.core.security import get_current_user_id, get_current_user_id_ws
-from app.schemas.chat import MessageSend, MessageOut, ConversationOut
+from app.schemas.chat import MessageSend, MessageEdit, MessageOut, ConversationOut
 from app.services.chat_service import (
     ws_manager,
     save_message,
+    edit_message,
+    delete_message,
     get_conversation,
     get_user_conversations,
     search_users,
@@ -35,8 +36,8 @@ def send_message(
         db,
         sender_id=user_id,
         receiver_id=data.receiver_id,
+        content_type=data.content_type,
         message=data.message,
-        message_type=data.message_type,
         file_url=data.file_url,
         file_name=data.file_name,
         file_size_bytes=data.file_size_bytes,
@@ -72,6 +73,39 @@ def search(
     return search_users(db, q, user_id)
 
 
+@router.put("/message/{chat_id}", response_model=MessageOut)
+async def update_message(
+    chat_id: int,
+    data: MessageEdit,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    msg = edit_message(db, chat_id, data.message, user_id)
+    other_id = msg.receiver_id if msg.sender_id == user_id else msg.sender_id
+    await ws_manager.send_to_user(other_id, {
+        "type":      "message_edited",
+        "chat_id":   msg.chat_id,
+        "message":   msg.message,
+        "edited_at": msg.edited_at.isoformat(),
+    })
+    return msg
+
+
+@router.delete("/message/{chat_id}", response_model=MessageOut)
+async def remove_message(
+    chat_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    msg = delete_message(db, chat_id, user_id)
+    other_id = msg.receiver_id if msg.sender_id == user_id else msg.sender_id
+    await ws_manager.send_to_user(other_id, {
+        "type":    "message_deleted",
+        "chat_id": msg.chat_id,
+    })
+    return msg
+
+
 @router.get("/online")
 def online_users():
     return {"online_users": ws_manager.online_users()}
@@ -88,7 +122,6 @@ def mark_seen(
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
-    """Mark all messages from other_user_id as seen by the current user."""
     mark_messages_seen(db, receiver_id=user_id, sender_id=other_user_id)
 
 
@@ -118,7 +151,6 @@ async def websocket_chat(
     user_id: int,
     token: str = Query(...),
 ):
-    # Authenticate
     try:
         token_user_id = get_current_user_id_ws(token)
         if token_user_id != user_id:
@@ -132,7 +164,6 @@ async def websocket_chat(
 
     db: Session = SessionLocal()
     try:
-        # On connect: mark all pending messages as delivered and notify senders
         affected_senders = mark_messages_delivered(db, receiver_id=user_id)
         for sender_id in affected_senders:
             await ws_manager.send_to_user(sender_id, {
@@ -147,16 +178,16 @@ async def websocket_chat(
         })
 
         while True:
-            raw = await websocket.receive_text()
+            raw  = await websocket.receive_text()
             data = json.loads(raw)
             msg_type = data.get("type", "message")
 
             if msg_type == "message":
-                receiver_id = int(data["receiver_id"])
-                text        = data.get("message") or None
-                media_type  = data.get("message_type", "text")
+                receiver_id  = int(data["receiver_id"])
+                content_type = data.get("content_type", "text")
+                text         = data.get("message") or None
 
-                if not text and media_type == "text":
+                if not text and content_type == "text":
                     continue
 
                 try:
@@ -164,8 +195,8 @@ async def websocket_chat(
                         db,
                         sender_id=user_id,
                         receiver_id=receiver_id,
+                        content_type=content_type,
                         message=text,
-                        message_type=media_type,
                         file_url=data.get("file_url"),
                         file_name=data.get("file_name"),
                         file_size_bytes=data.get("file_size_bytes"),
@@ -180,8 +211,8 @@ async def websocket_chat(
                     "chat_id":                chat.chat_id,
                     "sender_id":              user_id,
                     "receiver_id":            receiver_id,
+                    "content_type":           chat.content_type,
                     "message":                chat.message,
-                    "message_type":           chat.message_type,
                     "file_url":               chat.file_url,
                     "file_name":              chat.file_name,
                     "file_size_bytes":        chat.file_size_bytes,
@@ -193,7 +224,6 @@ async def websocket_chat(
                 await ws_manager.send_to_user(user_id, {**payload, "type": "sent"})
 
             elif msg_type == "seen":
-                # {"type": "seen", "sender_id": <id>}
                 sender_id = data.get("sender_id")
                 if sender_id:
                     sender_id = int(sender_id)
