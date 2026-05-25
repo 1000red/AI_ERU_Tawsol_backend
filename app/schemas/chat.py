@@ -9,6 +9,17 @@ class MessageEdit(BaseModel):
     message: str
 
 
+class RepliedMessageOut(BaseModel):
+    chat_id:      int
+    sender_id:    int
+    content_type: str
+    message:      Optional[str] = None
+    file_name:    Optional[str] = None
+    is_deleted:   bool          = False
+
+    model_config = {"from_attributes": True}
+
+
 class MessageSend(BaseModel):
     receiver_id:            int
     content_type:           CONTENT_TYPE         = "text"
@@ -17,6 +28,7 @@ class MessageSend(BaseModel):
     file_name:              Optional[str]        = None
     file_size_bytes:        Optional[int]        = None
     voice_duration_seconds: Optional[int]        = None
+    reply_to_id:            Optional[int]        = None
 
 
 class MessageOut(BaseModel):
@@ -34,6 +46,8 @@ class MessageOut(BaseModel):
     is_deleted:             bool                 = False
     edited_at:              Optional[datetime]   = None
     sent_at:                datetime
+    reply_to_id:            Optional[int]               = None
+    reply_to:               Optional[RepliedMessageOut] = None
 
     model_config = {"from_attributes": True}
 

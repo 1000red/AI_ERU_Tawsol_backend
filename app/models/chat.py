@@ -19,9 +19,11 @@ class ChatHistory(Base):
     is_deleted             = Column(Boolean, nullable=False, default=False)
     edited_at              = Column(DateTime, nullable=True)
     sent_at                = Column(DateTime, server_default=func.now(), nullable=False)
+    reply_to_id            = Column(Integer, ForeignKey("chat_history.chat_id"), nullable=True)
 
     sender   = relationship("User", foreign_keys=[sender_id],   back_populates="sent_messages")
     receiver = relationship("User", foreign_keys=[receiver_id], back_populates="received_messages")
+    reply_to = relationship("ChatHistory", foreign_keys="ChatHistory.reply_to_id", remote_side="ChatHistory.chat_id")
 
 
 class PinnedConversation(Base):

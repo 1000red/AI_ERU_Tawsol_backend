@@ -108,12 +108,18 @@ def save_message(
     file_name: Optional[str] = None,
     file_size_bytes: Optional[int] = None,
     voice_duration_seconds: Optional[int] = None,
+    reply_to_id: Optional[int] = None,
 ) -> ChatHistory:
     if sender_id == receiver_id:
         raise HTTPException(status_code=400, detail="Cannot send a message to yourself")
 
     if not can_chat(db, sender_id, receiver_id):
         raise HTTPException(status_code=403, detail="You are not allowed to chat with this user")
+
+    if reply_to_id is not None:
+        replied = db.query(ChatHistory).filter(ChatHistory.chat_id == reply_to_id).first()
+        if not replied:
+            raise HTTPException(status_code=404, detail="Replied message not found")
 
     initial_status = "delivered" if ws_manager.is_online(receiver_id) else "sent"
 
@@ -127,6 +133,7 @@ def save_message(
         file_size_bytes=file_size_bytes,
         voice_duration_seconds=voice_duration_seconds,
         status=initial_status,
+        reply_to_id=reply_to_id,
     )
     db.add(chat)
     db.commit()

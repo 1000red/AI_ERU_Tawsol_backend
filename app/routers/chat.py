@@ -77,6 +77,7 @@ def send_message(
         file_name=data.file_name,
         file_size_bytes=data.file_size_bytes,
         voice_duration_seconds=data.voice_duration_seconds,
+        reply_to_id=data.reply_to_id,
     )
 
 
@@ -255,10 +256,24 @@ async def websocket_chat(
                         file_name=data.get("file_name"),
                         file_size_bytes=data.get("file_size_bytes"),
                         voice_duration_seconds=data.get("voice_duration_seconds"),
+                        reply_to_id=data.get("reply_to_id"),
                     )
                 except HTTPException as e:
                     await ws_manager.send_to_user(user_id, {"type": "error", "detail": e.detail})
                     continue
+
+                replied_payload = None
+                if chat.reply_to_id:
+                    r = chat.reply_to
+                    if r:
+                        replied_payload = {
+                            "chat_id":      r.chat_id,
+                            "sender_id":    r.sender_id,
+                            "content_type": r.content_type,
+                            "message":      r.message if not r.is_deleted else None,
+                            "file_name":    r.file_name,
+                            "is_deleted":   r.is_deleted,
+                        }
 
                 payload = {
                     "type":                   "message",
@@ -273,6 +288,8 @@ async def websocket_chat(
                     "voice_duration_seconds": chat.voice_duration_seconds,
                     "status":                 chat.status,
                     "sent_at":                chat.sent_at.isoformat(),
+                    "reply_to_id":            chat.reply_to_id,
+                    "reply_to":               replied_payload,
                 }
                 await ws_manager.send_to_user(receiver_id, payload)
                 await ws_manager.send_to_user(user_id, {**payload, "type": "sent"})
