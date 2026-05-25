@@ -197,6 +197,7 @@ def get_user_conversations(db: Session, user_id: int) -> list[dict]:
                 ChatHistory.sender_id == other_id,
                 ChatHistory.receiver_id == user_id,
                 ChatHistory.status != "seen",
+                ChatHistory.is_deleted == False,
             )
             .count()
         )

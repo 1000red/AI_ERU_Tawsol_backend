@@ -43,6 +43,7 @@ app.add_middleware(
 os.makedirs("uploads/profiles", exist_ok=True)
 os.makedirs("uploads/materials", exist_ok=True)
 os.makedirs("uploads/content", exist_ok=True)
+os.makedirs("uploads/voice", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # ── Routers ───────────────────────────────────────────────────────────────────

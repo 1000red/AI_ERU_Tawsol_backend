@@ -1,5 +1,8 @@
 import json
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, Query, HTTPException, status
+import os
+import shutil
+import uuid
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, Query, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db, SessionLocal
@@ -23,8 +26,40 @@ from app.services.chat_service import (
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
+VOICE_DIR = "uploads/voice"
+ALLOWED_AUDIO_EXTENSIONS = {".m4a", ".mp3", ".ogg", ".wav", ".aac", ".webm", ".opus", ".flac"}
+MAX_VOICE_SIZE_BYTES = 25 * 1024 * 1024  # 25 MB
+
 
 # ── REST endpoints ────────────────────────────────────────────────────────────
+
+@router.post("/upload/voice", status_code=status.HTTP_201_CREATED)
+async def upload_voice(
+    file: UploadFile = File(...),
+    user_id: int = Depends(get_current_user_id),
+):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in ALLOWED_AUDIO_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported audio format. Allowed: {', '.join(ALLOWED_AUDIO_EXTENSIONS)}",
+        )
+
+    contents = await file.read()
+    if len(contents) > MAX_VOICE_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="Voice file exceeds 25 MB limit")
+
+    filename = f"{uuid.uuid4().hex}{ext}"
+    save_path = os.path.join(VOICE_DIR, filename)
+    with open(save_path, "wb") as f:
+        f.write(contents)
+
+    return {
+        "file_url":        f"/uploads/voice/{filename}",
+        "file_name":       file.filename,
+        "file_size_bytes": len(contents),
+    }
+
 
 @router.post("/send", response_model=MessageOut, status_code=status.HTTP_201_CREATED)
 def send_message(
