@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
+from sqlalchemy.exc import IntegrityError
 from fastapi import WebSocket, HTTPException
 from datetime import datetime, timezone
 from typing import Optional
@@ -135,10 +136,14 @@ def save_message(
         status=initial_status,
         reply_to_id=reply_to_id,
     )
-    db.add(chat)
-    db.commit()
-    db.refresh(chat)
-    return chat
+    try:
+        db.add(chat)
+        db.commit()
+        db.refresh(chat)
+        return chat
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to save message, please try again")
 
 
 def get_conversation(

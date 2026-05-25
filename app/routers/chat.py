@@ -259,7 +259,12 @@ async def websocket_chat(
                         reply_to_id=data.get("reply_to_id"),
                     )
                 except HTTPException as e:
+                    db.rollback()
                     await ws_manager.send_to_user(user_id, {"type": "error", "detail": e.detail})
+                    continue
+                except Exception:
+                    db.rollback()
+                    await ws_manager.send_to_user(user_id, {"type": "error", "detail": "Failed to send message"})
                     continue
 
                 replied_payload = None

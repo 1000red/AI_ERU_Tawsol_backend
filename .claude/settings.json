@@ -4,7 +4,8 @@
       "Bash(pip3 list *)",
       "Bash(pip3 install *)",
       "Bash(python3 -m pip list)",
-      "Bash(python3 -c \"import ast, sys; ast.parse\\(open\\('app/routers/chat.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")"
+      "Bash(python3 -c \"import ast, sys; ast.parse\\(open\\('app/routers/chat.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")",
+      "Bash(PGPASSWORD=postgres psql -U postgres -h localhost -d eru_tawasol -c \"SELECT setval\\('chat_history_chat_id_seq', COALESCE\\(\\(SELECT MAX\\(chat_id\\) FROM chat_history\\), 1\\)\\);\")"
     ]
   }
 }
