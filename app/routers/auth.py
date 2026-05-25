@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Depends
-from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.core.security import bearer_scheme, decode_token, blacklist_token
 from app.schemas.user import (
     UserLogin, TokenOut,
     ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordRequest,
@@ -19,12 +17,7 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
 
 
 @router.post("/logout")
-def logout(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    db: Session = Depends(get_db),
-):
-    payload = decode_token(credentials.credentials)
-    blacklist_token(db, payload)
+def logout():
     return {"message": "Logged out successfully"}
 
 

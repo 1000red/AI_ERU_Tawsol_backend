@@ -1,5 +1,5 @@
 from app.db.base import Base
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -20,3 +20,14 @@ class ChatHistory(Base):
 
     sender   = relationship("User", foreign_keys=[sender_id],   back_populates="sent_messages")
     receiver = relationship("User", foreign_keys=[receiver_id], back_populates="received_messages")
+
+
+class PinnedConversation(Base):
+    __tablename__ = "pinned_conversations"
+
+    id         = Column(Integer, primary_key=True, autoincrement=True)
+    user_id    = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    partner_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    pinned_at  = Column(DateTime, server_default=func.now(), nullable=False)
+
+    __table_args__ = (UniqueConstraint("user_id", "partner_id", name="uq_pinned_user_partner"),)

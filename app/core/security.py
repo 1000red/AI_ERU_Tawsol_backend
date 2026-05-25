@@ -3,11 +3,7 @@ from jose import JWTError, jwt
 import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
-import uuid
-
 from app.core.config import settings
-from app.db.database import get_db
 
 bearer_scheme = HTTPBearer()
 
@@ -30,7 +26,6 @@ def create_access_token(data: dict, expires_minutes: int | None = None) -> str:
         minutes=expires_minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
     to_encode["exp"] = expire
-    to_encode["jti"] = str(uuid.uuid4())
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
@@ -52,34 +47,12 @@ def decode_token(token: str) -> dict:
         ) from e
 
 
-# ── Blacklist helpers ─────────────────────────────────────────────────────────
-
-def _is_blacklisted(db: Session, jti: str) -> bool:
-    from app.models.user import BlacklistedToken
-    return db.query(BlacklistedToken).filter(BlacklistedToken.jti == jti).first() is not None
-
-
-def blacklist_token(db: Session, payload: dict) -> None:
-    from app.models.user import BlacklistedToken
-    jti = payload.get("jti")
-    exp = payload.get("exp")
-    if not jti or not exp:
-        return
-    expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
-    db.add(BlacklistedToken(jti=jti, expires_at=expires_at))
-    db.commit()
-
-
 # ── Dependency: get current user_id from Bearer token ────────────────────────
 
 def get_current_user_id(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    db: Session = Depends(get_db),
 ) -> int:
     payload = decode_token(credentials.credentials)
-    jti = payload.get("jti")
-    if jti and _is_blacklisted(db, jti):
-        raise HTTPException(status_code=401, detail="Token has been revoked")
     user_id = payload.get("sub")
     if user_id is None:
         raise HTTPException(status_code=401, detail="Token missing subject")

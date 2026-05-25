@@ -14,7 +14,6 @@ class Material(Base):
 
     student_enrollments = relationship("MaterialStudent", back_populates="material")
     teacher_assignments = relationship("MaterialTeacher", back_populates="material")
-    complaints          = relationship("Complaint",       back_populates="material")
     announcements       = relationship("Announcement",   back_populates="target_course", foreign_keys="Announcement.target_course_id")
     files               = relationship("MaterialFile",   back_populates="material")
     assignments         = relationship("Assignment",     back_populates="material")

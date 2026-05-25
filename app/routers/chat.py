@@ -6,7 +6,19 @@ from datetime import datetime
 from app.db.database import get_db, SessionLocal
 from app.core.security import get_current_user_id, get_current_user_id_ws
 from app.schemas.chat import MessageSend, MessageOut, ConversationOut
-from app.services.chat_service import ws_manager, save_message, get_conversation, get_user_conversations, search_users, can_chat
+from app.services.chat_service import (
+    ws_manager,
+    save_message,
+    get_conversation,
+    get_user_conversations,
+    search_users,
+    can_chat,
+    mark_messages_delivered,
+    mark_messages_seen,
+    pin_conversation,
+    unpin_conversation,
+    update_last_seen,
+)
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -70,6 +82,34 @@ def is_online(user_id: int):
     return {"user_id": user_id, "online": ws_manager.is_online(user_id)}
 
 
+@router.put("/seen/{other_user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def mark_seen(
+    other_user_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Mark all messages from other_user_id as seen by the current user."""
+    mark_messages_seen(db, receiver_id=user_id, sender_id=other_user_id)
+
+
+@router.post("/pin/{partner_id}", status_code=status.HTTP_204_NO_CONTENT)
+def pin(
+    partner_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    pin_conversation(db, user_id=user_id, partner_id=partner_id)
+
+
+@router.delete("/pin/{partner_id}", status_code=status.HTTP_204_NO_CONTENT)
+def unpin(
+    partner_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session = Depends(get_db),
+):
+    unpin_conversation(db, user_id=user_id, partner_id=partner_id)
+
+
 # ── WebSocket ─────────────────────────────────────────────────────────────────
 
 @router.websocket("/ws/{user_id}")
@@ -89,14 +129,23 @@ async def websocket_chat(
         return
 
     await ws_manager.connect(user_id, websocket)
-    await ws_manager.send_to_user(user_id, {
-        "type": "connected",
-        "user_id": user_id,
-        "online_users": ws_manager.online_users(),
-    })
 
     db: Session = SessionLocal()
     try:
+        # On connect: mark all pending messages as delivered and notify senders
+        affected_senders = mark_messages_delivered(db, receiver_id=user_id)
+        for sender_id in affected_senders:
+            await ws_manager.send_to_user(sender_id, {
+                "type":        "delivered",
+                "receiver_id": user_id,
+            })
+
+        await ws_manager.send_to_user(user_id, {
+            "type":         "connected",
+            "user_id":      user_id,
+            "online_users": ws_manager.online_users(),
+        })
+
         while True:
             raw = await websocket.receive_text()
             data = json.loads(raw)
@@ -104,10 +153,9 @@ async def websocket_chat(
 
             if msg_type == "message":
                 receiver_id = int(data["receiver_id"])
-                text = data.get("message") or None
-                media_type = data.get("message_type", "text")
+                text        = data.get("message") or None
+                media_type  = data.get("message_type", "text")
 
-                # Require either text or a media file
                 if not text and media_type == "text":
                     continue
 
@@ -126,27 +174,39 @@ async def websocket_chat(
                 except HTTPException as e:
                     await ws_manager.send_to_user(user_id, {"type": "error", "detail": e.detail})
                     continue
+
                 payload = {
-                    "type":                  "message",
-                    "chat_id":               chat.chat_id,
-                    "sender_id":             user_id,
-                    "receiver_id":           receiver_id,
-                    "message":               chat.message,
-                    "message_type":          chat.message_type,
-                    "file_url":              chat.file_url,
-                    "file_name":             chat.file_name,
-                    "file_size_bytes":       chat.file_size_bytes,
+                    "type":                   "message",
+                    "chat_id":                chat.chat_id,
+                    "sender_id":              user_id,
+                    "receiver_id":            receiver_id,
+                    "message":                chat.message,
+                    "message_type":           chat.message_type,
+                    "file_url":               chat.file_url,
+                    "file_name":              chat.file_name,
+                    "file_size_bytes":        chat.file_size_bytes,
                     "voice_duration_seconds": chat.voice_duration_seconds,
-                    "status":                chat.status,
-                    "sent_at":               chat.sent_at.isoformat(),
+                    "status":                 chat.status,
+                    "sent_at":                chat.sent_at.isoformat(),
                 }
                 await ws_manager.send_to_user(receiver_id, payload)
                 await ws_manager.send_to_user(user_id, {**payload, "type": "sent"})
 
+            elif msg_type == "seen":
+                # {"type": "seen", "sender_id": <id>}
+                sender_id = data.get("sender_id")
+                if sender_id:
+                    sender_id = int(sender_id)
+                    mark_messages_seen(db, receiver_id=user_id, sender_id=sender_id)
+                    await ws_manager.send_to_user(sender_id, {
+                        "type":        "seen",
+                        "receiver_id": user_id,
+                    })
+
             elif msg_type == "typing":
                 receiver_id = int(data["receiver_id"])
                 await ws_manager.send_to_user(receiver_id, {
-                    "type": "typing",
+                    "type":      "typing",
                     "sender_id": user_id,
                     "is_typing": data.get("is_typing", True),
                 })
@@ -160,4 +220,5 @@ async def websocket_chat(
         print(f"[WS] Error user {user_id}: {e}")
     finally:
         ws_manager.disconnect(user_id, websocket)
+        update_last_seen(db, user_id)
         db.close()

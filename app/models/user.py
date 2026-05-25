@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from app.db.base import Base
 
 
@@ -25,6 +26,7 @@ class User(Base):
     profile_picture      = Column(String(255), nullable=True)
     type_code            = Column(String(5), ForeignKey("user_type.code"), nullable=False)
     current_password = Column(Boolean, nullable=False, default=True)
+    last_seen         = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     user_type         = relationship("UserType", back_populates="users")
@@ -36,10 +38,3 @@ class User(Base):
     assignments       = relationship("Assignment",            foreign_keys="Assignment.author_id",            back_populates="author")
     submissions       = relationship("AssignmentSubmission",  foreign_keys="AssignmentSubmission.student_id", back_populates="student")
 
-
-class BlacklistedToken(Base):
-    __tablename__ = "blacklisted_tokens"
-
-    id         = Column(Integer, primary_key=True, autoincrement=True)
-    jti        = Column(String(36), nullable=False, unique=True, index=True)
-    expires_at = Column(DateTime(timezone=True), nullable=False)

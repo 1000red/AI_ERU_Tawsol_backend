@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from fastapi import WebSocket, HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
-from app.models.chat import ChatHistory
+from app.models.chat import ChatHistory, PinnedConversation
 from app.models.user import User
 
 
@@ -109,6 +109,9 @@ def save_message(
     if not can_chat(db, sender_id, receiver_id):
         raise HTTPException(status_code=403, detail="You are not allowed to chat with this user")
 
+    # If receiver is already online, mark as delivered immediately
+    initial_status = "delivered" if ws_manager.is_online(receiver_id) else "sent"
+
     chat = ChatHistory(
         sender_id=sender_id,
         receiver_id=receiver_id,
@@ -118,8 +121,8 @@ def save_message(
         file_name=file_name,
         file_size_bytes=file_size_bytes,
         voice_duration_seconds=voice_duration_seconds,
-        status="sent",
-        sent_at=datetime.utcnow(),
+        status=initial_status,
+        sent_at=datetime.now(timezone.utc),
     )
     db.add(chat)
     db.commit()
@@ -154,10 +157,8 @@ def get_conversation(
 
 def get_user_conversations(db: Session, user_id: int) -> list[dict]:
     """Return one conversation object per partner, ordered by most recent message."""
-    from sqlalchemy import func, or_
-    from app.models.user import User
+    from sqlalchemy import func
 
-    # Subquery: latest chat_id per (sender, receiver) pair involving user_id
     subq = (
         db.query(
             func.greatest(ChatHistory.sender_id, ChatHistory.receiver_id).label("u1"),
@@ -181,6 +182,13 @@ def get_user_conversations(db: Session, user_id: int) -> list[dict]:
         .all()
     )
 
+    pinned_partners = {
+        row.partner_id
+        for row in db.query(PinnedConversation.partner_id)
+        .filter(PinnedConversation.user_id == user_id)
+        .all()
+    }
+
     conversations = []
     for msg in latest_messages:
         other_id = msg.receiver_id if msg.sender_id == user_id else msg.sender_id
@@ -188,7 +196,6 @@ def get_user_conversations(db: Session, user_id: int) -> list[dict]:
         if not other_user:
             continue
 
-        # Count messages sent TO user_id by this partner that are not yet seen
         unread_count = (
             db.query(ChatHistory)
             .filter(
@@ -199,19 +206,89 @@ def get_user_conversations(db: Session, user_id: int) -> list[dict]:
             .count()
         )
 
+        min_id = min(user_id, other_id)
+        max_id = max(user_id, other_id)
+
         conversations.append({
+            "id": f"{min_id}_{max_id}",
             "other_user": {
                 "id":              other_user.user_id,
                 "name":            other_user.name,
                 "profile_picture": other_user.profile_picture,
                 "type_code":       other_user.type_code,
                 "is_online":       ws_manager.is_online(other_id),
+                "last_seen":       other_user.last_seen,
+                "student_id":      other_user.uni_code,
             },
             "last_message": msg,
             "unread_count": unread_count,
+            "is_pinned":    other_id in pinned_partners,
         })
 
+    # Pinned conversations float to the top
+    conversations.sort(key=lambda c: (not c["is_pinned"], 0))
+
     return conversations
+
+
+def mark_messages_delivered(db: Session, receiver_id: int, sender_id: Optional[int] = None) -> list[int]:
+    """Mark sent messages as delivered. Returns list of affected sender IDs."""
+    q = db.query(ChatHistory).filter(
+        ChatHistory.receiver_id == receiver_id,
+        ChatHistory.status == "sent",
+    )
+    if sender_id is not None:
+        q = q.filter(ChatHistory.sender_id == sender_id)
+
+    messages = q.all()
+    affected_senders = set()
+    for msg in messages:
+        msg.status = "delivered"
+        affected_senders.add(msg.sender_id)
+    db.commit()
+    return list(affected_senders)
+
+
+def mark_messages_seen(db: Session, receiver_id: int, sender_id: int) -> bool:
+    """Mark all messages from sender_id to receiver_id as seen."""
+    updated = (
+        db.query(ChatHistory)
+        .filter(
+            ChatHistory.receiver_id == receiver_id,
+            ChatHistory.sender_id == sender_id,
+            ChatHistory.status != "seen",
+        )
+        .all()
+    )
+    for msg in updated:
+        msg.status = "seen"
+    db.commit()
+    return len(updated) > 0
+
+
+def pin_conversation(db: Session, user_id: int, partner_id: int) -> None:
+    existing = db.query(PinnedConversation).filter(
+        PinnedConversation.user_id == user_id,
+        PinnedConversation.partner_id == partner_id,
+    ).first()
+    if not existing:
+        db.add(PinnedConversation(user_id=user_id, partner_id=partner_id))
+        db.commit()
+
+
+def unpin_conversation(db: Session, user_id: int, partner_id: int) -> None:
+    db.query(PinnedConversation).filter(
+        PinnedConversation.user_id == user_id,
+        PinnedConversation.partner_id == partner_id,
+    ).delete()
+    db.commit()
+
+
+def update_last_seen(db: Session, user_id: int) -> None:
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if user:
+        user.last_seen = datetime.now(timezone.utc)
+        db.commit()
 
 
 def search_users(db: Session, query: str, current_user_id: int) -> list[User]:

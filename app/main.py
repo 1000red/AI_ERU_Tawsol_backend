@@ -8,7 +8,7 @@ from app.db.database import engine
 from app.db import base  # noqa: F401 — triggers all model imports for create_all
 
 # Import models to ensure tables are created
-from app.models import user, material, chat, complaint, notification, content  # noqa: F401
+from app.models import user, material, chat, notification, content  # noqa: F401
 
 # Create all tables
 try:
@@ -47,13 +47,12 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 
-from app.routers import auth, support, users, materials, chat as chat_router, complaints, content  # noqa
+from app.routers import auth, support, users, materials, chat as chat_router, content  # noqa
 
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(materials.router)
 app.include_router(chat_router.router)
-app.include_router(complaints.router)
 app.include_router(content.router)
 app.include_router(support.router)
 
