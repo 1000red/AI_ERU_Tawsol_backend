@@ -124,7 +124,6 @@ def save_message(
         file_size_bytes=file_size_bytes,
         voice_duration_seconds=voice_duration_seconds,
         status=initial_status,
-        sent_at=datetime.now(timezone.utc),
     )
     db.add(chat)
     db.commit()
@@ -274,7 +273,7 @@ def edit_message(db: Session, chat_id: int, new_text: str, user_id: int) -> Chat
         raise HTTPException(status_code=403, detail=f"Cannot edit after {EDIT_DELETE_WINDOW_MINUTES} minutes")
 
     msg.message   = new_text
-    msg.edited_at = datetime.now(timezone.utc)
+    msg.edited_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
     db.refresh(msg)
     return msg

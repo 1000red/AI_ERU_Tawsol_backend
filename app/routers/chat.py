@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db, SessionLocal
 from app.core.security import get_current_user_id, get_current_user_id_ws
-from app.schemas.chat import MessageSend, MessageEdit, MessageOut, ConversationOut
+from app.schemas.chat import MessageSend, MessageEdit, MessageOut, ConversationOut, ConversationUserOut
 from app.services.chat_service import (
     ws_manager,
     save_message,
@@ -64,13 +64,25 @@ def my_conversations(
     return get_user_conversations(db, user_id)
 
 
-@router.get("/search")
+@router.get("/search", response_model=list[ConversationUserOut])
 def search(
     q: str = Query(..., min_length=1),
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
-    return search_users(db, q, user_id)
+    users = search_users(db, q, user_id)
+    return [
+        ConversationUserOut(
+            id=u.user_id,
+            name=u.name,
+            profile_picture=u.profile_picture,
+            type_code=u.type_code,
+            is_online=ws_manager.is_online(u.user_id),
+            last_seen=u.last_seen,
+            student_id=u.uni_code,
+        )
+        for u in users
+    ]
 
 
 @router.put("/message/{chat_id}", response_model=MessageOut)
@@ -178,8 +190,12 @@ async def websocket_chat(
         })
 
         while True:
-            raw  = await websocket.receive_text()
-            data = json.loads(raw)
+            raw = await websocket.receive_text()
+            try:
+                data = json.loads(raw)
+            except json.JSONDecodeError:
+                await websocket.send_json({"type": "error", "detail": "Invalid JSON"})
+                continue
             msg_type = data.get("type", "message")
 
             if msg_type == "message":
