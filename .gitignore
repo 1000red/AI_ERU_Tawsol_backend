@@ -8,3 +8,5 @@ __pycache__/
 
 alembic/
 alembic.ini
+
+uploads/

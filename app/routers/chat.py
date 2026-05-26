@@ -30,6 +30,15 @@ VOICE_DIR = "uploads/voice"
 ALLOWED_AUDIO_EXTENSIONS = {".m4a", ".mp3", ".ogg", ".wav", ".aac", ".webm", ".opus", ".flac"}
 MAX_VOICE_SIZE_BYTES = 25 * 1024 * 1024  # 25 MB
 
+FILE_DIR = "uploads/files"
+ALLOWED_FILE_EXTENSIONS = {
+    ".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic",
+    ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv",
+    ".mp3", ".m4a", ".ogg", ".wav", ".aac",
+    ".zip", ".rar",
+}
+MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB
+
 
 # ── REST endpoints ────────────────────────────────────────────────────────────
 
@@ -56,6 +65,35 @@ async def upload_voice(
 
     return {
         "file_url":        f"/uploads/voice/{filename}",
+        "file_name":       file.filename,
+        "file_size_bytes": len(contents),
+    }
+
+
+@router.post("/upload/file", status_code=status.HTTP_201_CREATED)
+async def upload_file(
+    file: UploadFile = File(...),
+    user_id: int = Depends(get_current_user_id),
+):
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in ALLOWED_FILE_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type. Allowed: {', '.join(sorted(ALLOWED_FILE_EXTENSIONS))}",
+        )
+
+    contents = await file.read()
+    if len(contents) > MAX_FILE_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="File exceeds 50 MB limit.")
+
+    os.makedirs(FILE_DIR, exist_ok=True)
+    filename = f"{uuid.uuid4().hex}{ext}"
+    save_path = os.path.join(FILE_DIR, filename)
+    with open(save_path, "wb") as f:
+        f.write(contents)
+
+    return {
+        "file_url":        f"/uploads/files/{filename}",
         "file_name":       file.filename,
         "file_size_bytes": len(contents),
     }
