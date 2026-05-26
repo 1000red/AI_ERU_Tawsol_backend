@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form
+from fastapi import APIRouter, Depends, UploadFile, File, Form, Query
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -11,6 +11,22 @@ from app.routers.content._helpers import save_file
 router = APIRouter(prefix="/files", tags=["Material Files"])
 
 
+@router.get("", response_model=list[MaterialFileOut])
+def get_all_files(
+    file_type: Optional[str] = Query(None, description="pdf | word | ppt | image | video | link …"),
+    skip:      int           = Query(0, ge=0),
+    limit:     int           = Query(50, ge=1, le=200),
+    user_id: int = Depends(get_current_user_id),
+    db: Session  = Depends(get_db),
+):
+    """Return all material files across the current user's enrolled / taught courses."""
+    user = svc.get_user_info(db, user_id)
+    return svc.get_all_files_for_user(
+        db, user_id, user.type_code,
+        file_type=file_type, skip=skip, limit=limit,
+    )
+
+
 @router.get("/{material_id}", response_model=list[MaterialFileOut])
 def get_files(
     material_id: str,
@@ -21,14 +37,15 @@ def get_files(
 
 @router.post("", response_model=MaterialFileOut, status_code=201)
 def create_file(
-    material_id: str = Form(...),
-    title: str = Form(...),
-    description: Optional[str] = Form(None),
-    file_type: str = Form(...),
-    link_url: Optional[str] = Form(None),
-    file: Optional[UploadFile] = File(None),
-    user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db),
+    material_id:  str            = Form(...),
+    title:        str            = Form(...),
+    description:  Optional[str]  = Form(None),
+    file_type:    str            = Form(...),
+    link_url:     Optional[str]  = Form(None),
+    text_content: Optional[str]  = Form(None),
+    file:         Optional[UploadFile] = File(None),
+    user_id: int  = Depends(get_current_user_id),
+    db: Session   = Depends(get_db),
 ):
     file_path = save_file(file)
     data = MaterialFileCreate(
@@ -37,26 +54,28 @@ def create_file(
         description=description,
         file_type=file_type,
         link_url=link_url,
+        text_content=text_content,
     )
     return svc.create_material_file(db, data, user_id, file_path)
 
 
 @router.put("/{file_id}", response_model=MaterialFileOut)
 def update_file(
-    file_id: int,
-    title: Optional[str] = Form(None),
-    description: Optional[str] = Form(None),
-    link_url: Optional[str] = Form(None),
-    file: Optional[UploadFile] = File(None),
-    user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db),
+    file_id:      int,
+    title:        Optional[str]  = Form(None),
+    description:  Optional[str]  = Form(None),
+    link_url:     Optional[str]  = Form(None),
+    text_content: Optional[str]  = Form(None),
+    file:         Optional[UploadFile] = File(None),
+    user_id: int  = Depends(get_current_user_id),
+    db: Session   = Depends(get_db),
 ):
     file_path = save_file(file)
-    data = MaterialFileUpdate(
-        title=title,
-        description=description,
-        link_url=link_url,
-    )
+    fields = {k: v for k, v in {
+        "title": title, "description": description,
+        "link_url": link_url, "text_content": text_content,
+    }.items() if v is not None}
+    data = MaterialFileUpdate(**fields)
     return svc.update_material_file(db, file_id, data, user_id, file_path)
 
 
@@ -64,6 +83,6 @@ def update_file(
 def delete_file(
     file_id: int,
     user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db),
+    db: Session  = Depends(get_db),
 ):
     svc.delete_material_file(db, file_id, user_id)

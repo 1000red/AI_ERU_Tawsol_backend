@@ -39,7 +39,7 @@ class AssignmentSubmission(Base):
     student_id    = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     title         = Column(String(200), nullable=True)
     description   = Column(Text, nullable=True)
-    file_type     = Column(String(20), nullable=True)  # pdf, word, image, voice, link, text
+    file_type     = Column(String(20), nullable=True)
     file_path     = Column(String(500), nullable=True)
     link_url      = Column(String(500), nullable=True)
     text_content  = Column(Text, nullable=True)

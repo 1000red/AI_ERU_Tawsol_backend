@@ -11,23 +11,31 @@ def seed_materials():
             reader = csv.DictReader(f)
             rows = list(reader)
 
-        existing = {m.material_id for m in db.query(Material.material_id).all()}
+        existing = {m.material_id: m for m in db.query(Material).all()}
 
-        new_materials = [
-            Material(
-                material_id     = row["material_id"],
-                name            = row["name"],
-                description     = row["description"] or None,
-                duration        = int(row["duration"]),
-                profile_picture = row["profile_picture"] or None,
-            )
-            for row in rows
-            if row["material_id"] not in existing
-        ]
+        added = 0
+        updated = 0
+        for row in rows:
+            dept = row["department_course"]
+            if row["material_id"] not in existing:
+                db.add(Material(
+                    material_id       = row["material_id"],
+                    name              = row["name"],
+                    description       = row["description"] or None,
+                    duration          = int(row["duration"]),
+                    department_course = dept,
+                ))
+                added += 1
+            else:
+                mat = existing[row["material_id"]]
+                mat.name              = row["name"]
+                mat.description       = row["description"] or None
+                mat.duration          = int(row["duration"])
+                mat.department_course = dept
+                updated += 1
 
-        db.add_all(new_materials)
         db.commit()
-        print(f"Done: {len(new_materials)} added, {len(rows) - len(new_materials)} skipped.")
+        print(f"Done: {added} added, {updated} updated.")
 
     except Exception as e:
         db.rollback()

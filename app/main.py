@@ -44,11 +44,13 @@ os.makedirs("uploads/profiles", exist_ok=True)
 os.makedirs("uploads/materials", exist_ok=True)
 os.makedirs("uploads/content", exist_ok=True)
 os.makedirs("uploads/voice", exist_ok=True)
+os.makedirs("uploads/files", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 
 from app.routers import auth, support, users, materials, chat as chat_router, content  # noqa
+from app.routers.notifications import router as notifications_router  # noqa
 
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -56,6 +58,7 @@ app.include_router(materials.router)
 app.include_router(chat_router.router)
 app.include_router(content.router)
 app.include_router(support.router)
+app.include_router(notifications_router)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

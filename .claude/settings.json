@@ -5,7 +5,26 @@
       "Bash(pip3 install *)",
       "Bash(python3 -m pip list)",
       "Bash(python3 -c \"import ast, sys; ast.parse\\(open\\('app/routers/chat.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")",
-      "Bash(PGPASSWORD=postgres psql -U postgres -h localhost -d eru_tawasol -c \"SELECT setval\\('chat_history_chat_id_seq', COALESCE\\(\\(SELECT MAX\\(chat_id\\) FROM chat_history\\), 1\\)\\);\")"
+      "Bash(PGPASSWORD=postgres psql -U postgres -h localhost -d eru_tawasol -c \"SELECT setval\\('chat_history_chat_id_seq', COALESCE\\(\\(SELECT MAX\\(chat_id\\) FROM chat_history\\), 1\\)\\);\")",
+      "Bash(grep -c \"\\\\.dart$\")",
+      "Bash(python3 -c ' *)",
+      "Bash(grep -E \"\\\\.dart$\")",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMzg2IiwiZXhwIjoxNzc5OTAyMzg0fQ.ERziXe6xosBM5Ww46hzJcEnXHquUVHN2lM1tU9jTScY' http://localhost:8001/announcements)",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMzg2IiwiZXhwIjoxNzc5OTAyMzg0fQ.ERziXe6xosBM5Ww46hzJcEnXHquUVHN2lM1tU9jTScY' http://localhost:8001/notifications/unread-count)",
+      "Bash(grep \"\\\\.dart$\")",
+      "Bash(mkdir -p /home/alfred/University/graduathion_project/project_01/frontend/lib/features/announcement/presentation/manager/assignment_cubit)"
+    ],
+    "additionalDirectories": [
+      "/home/alfred/University/graduathion_project/project_01/frontend/lib/core/network",
+      "/home/alfred/University/graduathion_project/project_01/frontend/lib/features/announcement/data/models",
+      "/home/alfred/University/graduathion_project/project_01/frontend/lib/features/announcement/data/datasources",
+      "/home/alfred/University/graduathion_project/project_01/frontend/lib/features/announcement/data/repos",
+      "/home/alfred/University/graduathion_project/project_01/frontend/lib/features/announcement/presentation/manager/announ_cubit",
+      "/home/alfred/University/graduathion_project/project_01/frontend/lib/features/announcement/presentation/manager/add_announ_cubit",
+      "/home/alfred/University/graduathion_project/project_01/frontend/lib/features/announcement/presentation/manager",
+      "/home/alfred/University/graduathion_project/project_01/frontend/lib/features/announcement/presentation/view",
+      "/home/alfred/University/graduathion_project/project_01/frontend/lib/core/services"
     ]
   }
 }
