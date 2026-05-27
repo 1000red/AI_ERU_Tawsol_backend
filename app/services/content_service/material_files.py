@@ -19,7 +19,10 @@ def get_material_file(db: Session, file_id: int) -> MaterialFile:
 def get_material_files(db: Session, material_id: str) -> list[MaterialFile]:
     return (
         db.query(MaterialFile)
-          .filter(MaterialFile.material_id == material_id)
+          .filter(
+              MaterialFile.material_id == material_id,
+              MaterialFile.announcement_id == None,  # exclude announcement/assignment attachments
+          )
           .order_by(MaterialFile.created_at.desc())
           .all()
     )
@@ -64,9 +67,15 @@ def create_material_file(
     data: MaterialFileCreate,
     author_id: int,
     file_path: str | None = None,
+    file_size: int | None = None,
 ) -> MaterialFile:
     _require_staff(db, author_id)  # students cannot upload course files
-    material_file = MaterialFile(**data.model_dump(), author_id=author_id, file_path=file_path)
+    material_file = MaterialFile(
+        **data.model_dump(),
+        author_id=author_id,
+        file_path=file_path,
+        file_size=file_size,
+    )
     db.add(material_file)
     db.commit()
     db.refresh(material_file)
@@ -79,6 +88,7 @@ def update_material_file(
     data: MaterialFileUpdate,
     user_id: int,
     file_path: str | None = None,
+    file_size: int | None = None,
 ) -> MaterialFile:
     material_file = get_material_file(db, file_id)
     _check_can_manage(db, material_file, user_id)  # author or admin
@@ -86,6 +96,7 @@ def update_material_file(
         setattr(material_file, field, value)
     if file_path:
         material_file.file_path = file_path
+        material_file.file_size = file_size
     db.commit()
     db.refresh(material_file)
     return material_file

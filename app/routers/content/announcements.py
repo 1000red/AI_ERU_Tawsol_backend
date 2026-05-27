@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.db.database import get_db
-from app.core.security import get_current_user_id
+from app.core.security import get_current_user_id, get_current_user_id_ws
 from app.schemas.content import AnnouncementCreate, AnnouncementUpdate, AnnouncementOut
 from app.schemas.content.announcement import RecipientOut, UnreadCountOut
 from app.services import content_service as svc
+from app.websockets import announcement_manager
 
 router = APIRouter(prefix="/announcements", tags=["Announcements"])
 
@@ -17,6 +18,7 @@ router = APIRouter(prefix="/announcements", tags=["Announcements"])
 def get_announcements(
     announcement_type: Optional[str] = Query(None, description="normal | material_file | assignment"),
     priority:          Optional[str] = Query(None, description="normal | important | urgent"),
+    target_course_id:  Optional[str] = Query(None, description="Filter by course/material ID"),
     unread_only:       bool          = Query(False),
     search:            Optional[str] = Query(None),
     skip:              int           = Query(0, ge=0),
@@ -33,6 +35,7 @@ def get_announcements(
         user_department=user.department,
         announcement_type=announcement_type,
         priority=priority,
+        target_course_id=target_course_id,
         unread_only=unread_only,
         search=search,
         skip=skip,
@@ -74,7 +77,6 @@ def get_recipients(
     user_id: int  = Depends(get_current_user_id),
     db: Session   = Depends(get_db),
 ):
-    """List users the current requester can target when creating an announcement."""
     return svc.get_available_recipients(
         db,
         requester_id=user_id,
@@ -95,7 +97,6 @@ def get_announcement(
     user_id: int = Depends(get_current_user_id),
     db: Session  = Depends(get_db),
 ):
-    """Fetch a single announcement and mark it as read."""
     return svc.get_announcement_detail(db, announcement_id, user_id)
 
 
@@ -108,6 +109,19 @@ def create_announcement(
     db: Session  = Depends(get_db),
 ):
     return svc.create_announcement(db, data, user_id)
+
+
+@router.post("/{announcement_id}/notify", status_code=204)
+async def notify_announcement(
+    announcement_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: Session  = Depends(get_db),
+):
+    """Trigger a WS broadcast after all attachments have been uploaded."""
+    await announcement_manager.broadcast({
+        "type":            "new_announcement",
+        "announcement_id": announcement_id,
+    })
 
 
 @router.put("/{announcement_id}", response_model=AnnouncementOut)
@@ -138,3 +152,35 @@ def mark_as_read(
     db: Session  = Depends(get_db),
 ):
     svc.mark_announcement_read(db, announcement_id, user_id)
+
+
+# ── WebSocket ─────────────────────────────────────────────────────────────────
+
+@router.websocket("/ws/{user_id}")
+async def announcements_ws(
+    websocket: WebSocket,
+    user_id: int,
+    token: str = Query(...),
+):
+    try:
+        token_user_id = get_current_user_id_ws(token)
+        if token_user_id != user_id:
+            await websocket.close(code=4001, reason="Unauthorized")
+            return
+    except Exception:
+        await websocket.close(code=4001, reason="Invalid token")
+        return
+
+    await announcement_manager.connect(user_id, websocket)
+    try:
+        while True:
+            # keep connection alive; client may send pings
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_text("pong")
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        print(f"[AnnounWS] Error user {user_id}: {e}")
+    finally:
+        announcement_manager.disconnect(user_id)

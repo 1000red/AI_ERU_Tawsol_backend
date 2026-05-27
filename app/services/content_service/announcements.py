@@ -109,6 +109,7 @@ def get_announcements_for_user(
     *,
     announcement_type: Optional[str] = None,
     priority: Optional[str] = None,
+    target_course_id: Optional[str] = None,
     unread_only: bool = False,
     search: Optional[str] = None,
     skip: int = 0,
@@ -131,7 +132,7 @@ def get_announcements_for_user(
     ]
 
     if user_type == "STU":
-        enrolled = db.query(MaterialStudent.material_id).filter(MaterialStudent.user_id == user_id).subquery()
+        enrolled = db.query(MaterialStudent.material_id).filter(MaterialStudent.user_id == user_id).scalar_subquery()
         conditions.append(and_(Announcement.target_type == "course",
                                Announcement.target_course_id.in_(enrolled)))
         conditions.append(and_(Announcement.target_type == "course_department",
@@ -141,7 +142,7 @@ def get_announcements_for_user(
     # For staff, also include sent announcements targeting their courses
     if user_type in ("DR", "TA"):
         from app.models.material import MaterialTeacher
-        taught = db.query(MaterialTeacher.material_id).filter(MaterialTeacher.user_id == user_id).subquery()
+        taught = db.query(MaterialTeacher.material_id).filter(MaterialTeacher.user_id == user_id).scalar_subquery()
         conditions.append(and_(Announcement.target_type == "course",
                                Announcement.target_course_id.in_(taught)))
         conditions.append(and_(Announcement.target_type == "course_department",
@@ -156,7 +157,7 @@ def get_announcements_for_user(
     # For target_type="users" rows, apply tighter filter
     targeted_ann_ids = db.query(AnnouncementTargetUser.announcement_id).filter(
         AnnouncementTargetUser.user_id == user_id
-    ).subquery()
+    ).scalar_subquery()
     # Replace the loose "target_type == users" condition with the exact set
     query = (
         db.query(Announcement)
@@ -168,6 +169,8 @@ def get_announcements_for_user(
           )
     )
 
+    if target_course_id:
+        query = query.filter(Announcement.target_course_id == target_course_id)
     if announcement_type:
         query = query.filter(Announcement.announcement_type == announcement_type)
     if priority:
@@ -283,6 +286,12 @@ def update_announcement(db: Session, announcement_id: int, data: AnnouncementUpd
 def delete_announcement(db: Session, announcement_id: int, user_id: int) -> None:
     announcement = get_announcement(db, announcement_id)
     _check_can_manage(db, announcement, user_id)  # author or admin
+    # Remove linked file records for material-file announcements so they don't
+    # become invisible orphans after the announcement wrapper is gone.
+    if announcement.announcement_type == 'material_file':
+        db.query(MaterialFile).filter(
+            MaterialFile.announcement_id == announcement_id
+        ).delete(synchronize_session=False)
     db.delete(announcement)
     db.commit()
 

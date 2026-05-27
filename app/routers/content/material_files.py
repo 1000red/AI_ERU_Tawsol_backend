@@ -30,6 +30,7 @@ def get_all_files(
 @router.get("/{material_id}", response_model=list[MaterialFileOut])
 def get_files(
     material_id: str,
+    user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
     return svc.get_material_files(db, material_id)
@@ -48,7 +49,7 @@ def create_file(
     user_id: int  = Depends(get_current_user_id),
     db: Session   = Depends(get_db),
 ):
-    file_path = save_file(file)
+    file_path, file_size = save_file(file)
     data = MaterialFileCreate(
         material_id=material_id,
         title=title,
@@ -58,7 +59,7 @@ def create_file(
         text_content=text_content,
         announcement_id=announcement_id,
     )
-    return svc.create_material_file(db, data, user_id, file_path)
+    return svc.create_material_file(db, data, user_id, file_path, file_size)
 
 
 @router.put("/{file_id}", response_model=MaterialFileOut)
@@ -72,13 +73,13 @@ def update_file(
     user_id: int  = Depends(get_current_user_id),
     db: Session   = Depends(get_db),
 ):
-    file_path = save_file(file)
+    file_path, file_size = save_file(file)
     fields = {k: v for k, v in {
         "title": title, "description": description,
         "link_url": link_url, "text_content": text_content,
     }.items() if v is not None}
     data = MaterialFileUpdate(**fields)
-    return svc.update_material_file(db, file_id, data, user_id, file_path)
+    return svc.update_material_file(db, file_id, data, user_id, file_path, file_size)
 
 
 @router.delete("/{file_id}", status_code=204)

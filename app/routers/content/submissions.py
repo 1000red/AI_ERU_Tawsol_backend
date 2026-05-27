@@ -39,7 +39,7 @@ def create_submission(
     user_id: int   = Depends(get_current_user_id),
     db: Session    = Depends(get_db),
 ):
-    file_path = save_file(file)
+    file_path, _ = save_file(file)
     data = SubmissionCreate(
         assignment_id=assignment_id,
         title=title,
@@ -60,7 +60,7 @@ def update_submission(
     user_id: int   = Depends(get_current_user_id),
     db: Session    = Depends(get_db),
 ):
-    file_path = save_file(file)
+    file_path, _ = save_file(file)
     fields = {k: v for k, v in {
         "title": title, "description": description, "link_url": link_url,
     }.items() if v is not None}

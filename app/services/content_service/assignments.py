@@ -223,6 +223,10 @@ def create_assignment(
     db.refresh(assignment)
     db.refresh(linked_ann)
 
+    # Mark as read for the author so they don't see the unread dot on their own assignment
+    from app.services.content_service.announcements import _mark_as_read
+    _mark_as_read(db, linked_ann.announcement_id, author_id)
+
     from app.models.material import Material
     from app.services.notification_service import notify_assignment
     mat = db.query(Material).filter(Material.material_id == assignment.material_id).first()

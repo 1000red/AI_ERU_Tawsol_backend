@@ -35,6 +35,7 @@ class MaterialFileOut(BaseModel):
     author_id:       int
     announcement_id: Optional[int]          = None
     file_path:       Optional[str]          = None
+    file_size:       Optional[int]          = None  # bytes
     created_at:      datetime
     updated_at:      Optional[datetime]     = None
 

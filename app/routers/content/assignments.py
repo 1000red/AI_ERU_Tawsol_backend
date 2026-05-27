@@ -74,7 +74,7 @@ def create_assignment(
     user_id: int  = Depends(get_current_user_id),
     db: Session   = Depends(get_db),
 ):
-    file_path = save_file(file)
+    file_path, _ = save_file(file)
     data = AssignmentCreate(
         material_id=material_id,
         title=title,

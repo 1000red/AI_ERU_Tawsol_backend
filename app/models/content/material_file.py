@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, BigInteger, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base import Base
@@ -15,6 +15,7 @@ class MaterialFile(Base):
     description     = Column(Text, nullable=True)
     file_type       = Column(String(20), nullable=False)  # pdf, word, ppt, python, jupyter, image, video, voice, link, text
     file_path       = Column(String(500), nullable=True)
+    file_size       = Column(BigInteger, nullable=True)  # bytes
     link_url        = Column(String(500), nullable=True)
     text_content    = Column(Text, nullable=True)
     created_at      = Column(DateTime, server_default=func.now(), nullable=False)
