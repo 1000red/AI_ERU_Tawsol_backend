@@ -17,12 +17,13 @@ class Announcement(Base):
     announcement_type = Column(String(20), nullable=False, default="normal")  # "normal", "material_file", "assignment"
     priority          = Column(String(10), nullable=False, default="normal")  # "normal", "important", "urgent"
 
-    # Target — "all" | "course" | "course_department" | "department" | "level" | "student" | "users"
+    # Target — "all" | "course" | "course_department" | "department" | "level" | "student" | "users" | "role"
     target_type       = Column(String(20), nullable=False)
     target_course_id  = Column(String(10), ForeignKey("material.material_id"), nullable=True) # if DR larning two course
     target_department = Column(String(100), nullable=True) # Ai /CS /DS /Soft
     target_year       = Column(Integer, nullable=True) # level
     target_student_id = Column(Integer, ForeignKey("users.user_id"), nullable=True)  # single-student shorthand
+    target_role       = Column(String(10), nullable=True)  # STU | DR | TA — used with target_type="role"
 
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, onupdate=func.now(), nullable=True)

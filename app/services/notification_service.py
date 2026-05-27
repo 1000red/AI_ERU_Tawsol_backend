@@ -30,6 +30,9 @@ def _resolve_announcement_recipients(db: Session, announcement) -> list[int]:
     if ttype == "all":
         return [r[0] for r in q.all()]
 
+    if ttype == "role" and announcement.target_role:
+        return [r[0] for r in q.filter(User.type_code == announcement.target_role).all()]
+
     if ttype == "department":
         return [r[0] for r in q.filter(User.department == announcement.target_department).all()]
 

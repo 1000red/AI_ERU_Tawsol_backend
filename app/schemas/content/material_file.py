@@ -13,7 +13,7 @@ class MaterialFileCreate(BaseModel):
     file_type:       CONTENT_TYPE
     link_url:        Optional[str]          = None
     text_content:    Optional[str]          = None
-    material_id:     str
+    material_id:     Optional[str]          = None
     announcement_id: Optional[int]          = None
 
 
@@ -31,7 +31,7 @@ class MaterialFileOut(BaseModel):
     link_url:        Optional[str]          = None
     text_content:    Optional[str]          = None
     file_id:         int
-    material_id:     str
+    material_id:     Optional[str]          = None
     author_id:       int
     announcement_id: Optional[int]          = None
     file_path:       Optional[str]          = None

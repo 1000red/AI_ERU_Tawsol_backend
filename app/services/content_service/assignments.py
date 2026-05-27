@@ -198,18 +198,29 @@ def create_assignment(
 
     from app.models.content import Announcement
 
-    # Create a linked announcement so the assignment appears in all feeds
-    linked_ann = Announcement(
-        title=data.title,
-        content=data.description or '',
-        announcement_type='assignment',
-        priority='normal',
-        target_type='course',
-        target_course_id=data.material_id,
-        author_id=author_id,
-    )
-    db.add(linked_ann)
-    db.flush()  # get announcement_id without full commit
+    if data.announcement_id:
+        # Link to an existing announcement (e.g. edit-mode type change to assignment).
+        linked_ann = db.query(Announcement).filter(
+            Announcement.announcement_id == data.announcement_id
+        ).first()
+        if not linked_ann:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404, detail="Announcement not found")
+        linked_ann.announcement_type = 'assignment'
+        db.flush()
+    else:
+        # Create a linked announcement so the assignment appears in all feeds
+        linked_ann = Announcement(
+            title=data.title,
+            content=data.description or '',
+            announcement_type='assignment',
+            priority='normal',
+            target_type='course',
+            target_course_id=data.material_id,
+            author_id=author_id,
+        )
+        db.add(linked_ann)
+        db.flush()  # get announcement_id without full commit
 
     assign_data = data.model_dump(exclude={'announcement_id'})
     assignment = Assignment(

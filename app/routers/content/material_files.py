@@ -38,7 +38,7 @@ def get_files(
 
 @router.post("", response_model=MaterialFileOut, status_code=201)
 def create_file(
-    material_id:     str            = Form(...),
+    material_id:     Optional[str]  = Form(None),
     title:           str            = Form(...),
     description:     Optional[str]  = Form(None),
     file_type:       str            = Form(...),

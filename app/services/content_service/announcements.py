@@ -62,6 +62,7 @@ def _enrich_announcement(db: Session, ann: Announcement, current_user_id: int) -
         "target_year":       ann.target_year,
         "target_student_id": ann.target_student_id,
         "target_user_ids":   target_user_ids,
+        "target_role":       ann.target_role,
         "created_at":        ann.created_at,
         "updated_at":        ann.updated_at,
         "is_read":           is_read,
@@ -127,6 +128,8 @@ def get_announcements_for_user(
         ),
         and_(Announcement.target_type == "department", Announcement.target_department == user_department),
         and_(Announcement.target_type == "student", Announcement.target_student_id == user_id),
+        # role-based targeting: target_type="role" with matching target_role
+        and_(Announcement.target_type == "role", Announcement.target_role == user_type),
         # explicit multi-user targeting
         Announcement.target_type == "users",  # refined below via subquery
     ]
@@ -201,6 +204,8 @@ def _is_users_condition(condition) -> bool:
         return str(condition) == str(Announcement.target_type == "users")
     except Exception:
         return False
+
+
 
 
 def get_sent_announcements(

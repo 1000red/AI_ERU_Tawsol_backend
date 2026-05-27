@@ -7,6 +7,7 @@ TARGET_TYPE = Literal[
     "all", "course", "course_department", "department", "level",
     "student",  # single student (legacy)
     "users",    # explicit multi-user list via target_user_ids
+    "role",     # all users of a given role (STU | DR | TA)
 ]
 
 
@@ -23,6 +24,7 @@ class AnnouncementCreate(BaseModel):
     target_year:       Optional[int]       = None
     target_student_id: Optional[int]       = None   # single-student shorthand
     target_user_ids:   Optional[List[int]] = None   # explicit list (target_type="users")
+    target_role:       Optional[str]       = None   # STU | DR | TA (target_type="role")
 
 
 class AnnouncementUpdate(BaseModel):
@@ -36,6 +38,7 @@ class AnnouncementUpdate(BaseModel):
     target_year:       Optional[int]       = None
     target_student_id: Optional[int]       = None
     target_user_ids:   Optional[List[int]] = None
+    target_role:       Optional[str]       = None
 
 
 class AnnouncementOut(BaseModel):
@@ -51,6 +54,7 @@ class AnnouncementOut(BaseModel):
     target_year:       Optional[int]  = None
     target_student_id: Optional[int]  = None
     target_user_ids:   List[int]            = []
+    target_role:       Optional[str]        = None
     created_at:        datetime
     updated_at:        Optional[datetime]   = None
     is_read:           bool                 = False
