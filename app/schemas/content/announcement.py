@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, Literal, List
 from datetime import datetime
+from app.schemas.content.material_file import MaterialFileOut
 
 TARGET_TYPE = Literal[
     "all", "course", "course_department", "department", "level",
@@ -25,8 +26,16 @@ class AnnouncementCreate(BaseModel):
 
 
 class AnnouncementUpdate(BaseModel):
-    title:   Optional[str] = None
-    content: Optional[str] = None
+    title:             Optional[str]       = None
+    content:           Optional[str]       = None
+    announcement_type: Optional[Literal["normal", "material_file", "assignment"]] = None
+    priority:          Optional[Literal["normal", "important", "urgent"]]          = None
+    target_type:       Optional[TARGET_TYPE] = None
+    target_course_id:  Optional[str]       = None
+    target_department: Optional[str]       = None
+    target_year:       Optional[int]       = None
+    target_student_id: Optional[int]       = None
+    target_user_ids:   Optional[List[int]] = None
 
 
 class AnnouncementOut(BaseModel):
@@ -41,13 +50,16 @@ class AnnouncementOut(BaseModel):
     target_department: Optional[str]  = None
     target_year:       Optional[int]  = None
     target_student_id: Optional[int]  = None
-    target_user_ids:   List[int]      = []
+    target_user_ids:   List[int]            = []
     created_at:        datetime
-    updated_at:        Optional[datetime] = None
-    is_read:           bool           = False
-    author_name:       Optional[str]  = None
-    subject_name:      Optional[str]  = None
-    subject_code:      Optional[str]  = None
+    updated_at:        Optional[datetime]   = None
+    is_read:           bool                 = False
+    author_name:       Optional[str]        = None
+    subject_name:      Optional[str]        = None
+    subject_code:      Optional[str]        = None
+    attachments:       List[MaterialFileOut] = []
+    deadline:          Optional[datetime]   = None
+    assignment_id:     Optional[int]        = None
 
     model_config = {"from_attributes": True}
 

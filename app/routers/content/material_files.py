@@ -37,13 +37,14 @@ def get_files(
 
 @router.post("", response_model=MaterialFileOut, status_code=201)
 def create_file(
-    material_id:  str            = Form(...),
-    title:        str            = Form(...),
-    description:  Optional[str]  = Form(None),
-    file_type:    str            = Form(...),
-    link_url:     Optional[str]  = Form(None),
-    text_content: Optional[str]  = Form(None),
-    file:         Optional[UploadFile] = File(None),
+    material_id:     str            = Form(...),
+    title:           str            = Form(...),
+    description:     Optional[str]  = Form(None),
+    file_type:       str            = Form(...),
+    link_url:        Optional[str]  = Form(None),
+    text_content:    Optional[str]  = Form(None),
+    announcement_id: Optional[int]  = Form(None),
+    file:            Optional[UploadFile] = File(None),
     user_id: int  = Depends(get_current_user_id),
     db: Session   = Depends(get_db),
 ):
@@ -55,6 +56,7 @@ def create_file(
         file_type=file_type,
         link_url=link_url,
         text_content=text_content,
+        announcement_id=announcement_id,
     )
     return svc.create_material_file(db, data, user_id, file_path)
 

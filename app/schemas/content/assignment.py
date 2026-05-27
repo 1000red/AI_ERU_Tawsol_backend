@@ -1,8 +1,9 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 from app.schemas.file_types.__types__ import CONTENT_TYPE
+from app.schemas.content.material_file import MaterialFileOut
 
 
 # ── Assignment ────────────────────────────────────────────────────────────────
@@ -44,6 +45,10 @@ class AssignmentOut(BaseModel):
     has_submitted:      Optional[bool] = None   # for students
     my_submission_id:   Optional[int]  = None   # for students
     submission_count:   Optional[int]  = None   # for DR/TA/ADM
+    author_name:        Optional[str]  = None
+    subject_name:       Optional[str]  = None
+    subject_code:       Optional[str]  = None
+    attachments:        List[MaterialFileOut] = []
 
     model_config = {"from_attributes": True}
 

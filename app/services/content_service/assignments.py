@@ -21,6 +21,29 @@ def get_assignment(db: Session, assignment_id: int) -> Assignment:
 
 
 def _enrich_assignment(db: Session, assignment: Assignment, viewer_id: int, viewer_type: str) -> dict:
+    from app.models.user import User
+    from app.models.material import Material
+
+    author = db.query(User).filter(User.user_id == assignment.author_id).first()
+
+    subject_name = None
+    subject_code = None
+    if assignment.material_id:
+        mat = db.query(Material).filter(Material.material_id == assignment.material_id).first()
+        if mat:
+            subject_name = mat.name
+            subject_code = mat.material_id
+
+    # Files linked via the announcement
+    from app.models.content import MaterialFile
+    ann_files = []
+    if assignment.announcement_id:
+        ann_files = (
+            db.query(MaterialFile)
+              .filter(MaterialFile.announcement_id == assignment.announcement_id)
+              .all()
+        )
+
     data = {
         "assignment_id":    assignment.assignment_id,
         "material_id":      assignment.material_id,
@@ -38,6 +61,10 @@ def _enrich_assignment(db: Session, assignment: Assignment, viewer_id: int, view
         "has_submitted":    None,
         "my_submission_id": None,
         "submission_count": None,
+        "author_name":      author.name if author else None,
+        "subject_name":     subject_name,
+        "subject_code":     subject_code,
+        "attachments":      ann_files,
     }
 
     if viewer_type == "STU":
@@ -166,19 +193,43 @@ def create_assignment(
     data: AssignmentCreate,
     author_id: int,
     file_path: Optional[str] = None,
-) -> Assignment:
+) -> dict:
     _require_staff(db, author_id)  # students cannot create assignments
-    assignment = Assignment(**data.model_dump(), author_id=author_id, file_path=file_path)
+
+    from app.models.content import Announcement
+
+    # Create a linked announcement so the assignment appears in all feeds
+    linked_ann = Announcement(
+        title=data.title,
+        content=data.description or '',
+        announcement_type='assignment',
+        priority='normal',
+        target_type='course',
+        target_course_id=data.material_id,
+        author_id=author_id,
+    )
+    db.add(linked_ann)
+    db.flush()  # get announcement_id without full commit
+
+    assign_data = data.model_dump(exclude={'announcement_id'})
+    assignment = Assignment(
+        **assign_data,
+        author_id=author_id,
+        file_path=file_path,
+        announcement_id=linked_ann.announcement_id,
+    )
     db.add(assignment)
     db.commit()
     db.refresh(assignment)
+    db.refresh(linked_ann)
 
     from app.models.material import Material
     from app.services.notification_service import notify_assignment
     mat = db.query(Material).filter(Material.material_id == assignment.material_id).first()
     notify_assignment(db, assignment, course_name=mat.name if mat else None)
 
-    return assignment
+    viewer = get_user_info(db, author_id)
+    return _enrich_assignment(db, assignment, author_id, viewer.type_code)
 
 
 def update_assignment(

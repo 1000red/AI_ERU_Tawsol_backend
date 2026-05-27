@@ -3,7 +3,7 @@ from sqlalchemy import or_, and_
 from fastapi import HTTPException
 from typing import Optional
 
-from app.models.content import Announcement, AnnouncementRead
+from app.models.content import Announcement, AnnouncementRead, MaterialFile
 from app.models.content.announcement import AnnouncementTargetUser
 from app.schemas.content import AnnouncementCreate, AnnouncementUpdate
 from app.services.content_service._helpers import get_user_info, _check_can_manage
@@ -37,6 +37,18 @@ def _enrich_announcement(db: Session, ann: Announcement, current_user_id: int) -
           .all()
     ]
 
+    files = (
+        db.query(MaterialFile)
+          .filter(MaterialFile.announcement_id == ann.announcement_id)
+          .all()
+    )
+
+    deadline = None
+    assignment_id = None
+    if ann.announcement_type == 'assignment' and ann.assignment:
+        deadline = ann.assignment.deadline
+        assignment_id = ann.assignment.assignment_id
+
     return {
         "announcement_id":   ann.announcement_id,
         "author_id":         ann.author_id,
@@ -56,6 +68,9 @@ def _enrich_announcement(db: Session, ann: Announcement, current_user_id: int) -
         "author_name":       author.name if author else None,
         "subject_name":      subject_name,
         "subject_code":      subject_code,
+        "attachments":       files,
+        "deadline":          deadline,
+        "assignment_id":     assignment_id,
     }
 
 
@@ -242,9 +257,24 @@ def create_announcement(db: Session, data: AnnouncementCreate, author_id: int) -
 
 def update_announcement(db: Session, announcement_id: int, data: AnnouncementUpdate, user_id: int) -> dict:
     announcement = get_announcement(db, announcement_id)
-    _check_can_manage(db, announcement, user_id)  # author or admin
-    for field, value in data.model_dump(exclude_unset=True).items():
+    _check_can_manage(db, announcement, user_id)
+
+    # Apply scalar fields (excludes target_user_ids which lives in a join table)
+    scalar = data.model_dump(exclude_unset=True, exclude={"target_user_ids"})
+    for field, value in scalar.items():
         setattr(announcement, field, value)
+
+    # Rebuild explicit recipient list when provided
+    if data.target_user_ids is not None:
+        db.query(AnnouncementTargetUser).filter(
+            AnnouncementTargetUser.announcement_id == announcement_id
+        ).delete(synchronize_session=False)
+        if data.target_user_ids:
+            for uid in set(data.target_user_ids):
+                db.add(AnnouncementTargetUser(
+                    announcement_id=announcement_id, user_id=uid
+                ))
+
     db.commit()
     db.refresh(announcement)
     return _enrich_announcement(db, announcement, user_id)
