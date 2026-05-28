@@ -121,6 +121,7 @@ def get_announcements_for_user(
 ) -> list[dict]:
     from app.models.material import MaterialStudent
 
+    # Build conditions — "users" target type is handled separately via subquery
     conditions = [
         Announcement.target_type == "all",
         and_(Announcement.target_type == "level", Announcement.target_year == user_level),
@@ -133,8 +134,6 @@ def get_announcements_for_user(
         and_(Announcement.target_type == "student", Announcement.target_student_id == user_id),
         # role-based targeting: target_type="role" with matching target_role
         and_(Announcement.target_type == "role", Announcement.target_role == user_type),
-        # explicit multi-user targeting
-        Announcement.target_type == "users",  # refined below via subquery
     ]
 
     if user_type == "STU":
@@ -155,21 +154,16 @@ def get_announcements_for_user(
                                Announcement.target_course_id.in_(taught),
                                Announcement.target_department == user_department))
 
-    query = (
-        db.query(Announcement)
-          .filter(or_(*conditions))
-    )
-
-    # For target_type="users" rows, apply tighter filter
+    # explicit multi-user targeting: match by announcement_id stored in join table
     targeted_ann_ids = db.query(AnnouncementTargetUser.announcement_id).filter(
         AnnouncementTargetUser.user_id == user_id
     ).scalar_subquery()
-    # Replace the loose "target_type == users" condition with the exact set
+
     query = (
         db.query(Announcement)
           .filter(
               or_(
-                  *[c for c in conditions if not _is_users_condition(c)],
+                  *conditions,
                   Announcement.announcement_id.in_(targeted_ann_ids),
               )
           )
@@ -199,14 +193,6 @@ def get_announcements_for_user(
              .all()
     )
     return [_enrich_announcement(db, a, user_id) for a in announcements]
-
-
-def _is_users_condition(condition) -> bool:
-    """Detect the plain target_type == 'users' condition so we can replace it."""
-    try:
-        return str(condition) == str(Announcement.target_type == "users")
-    except Exception:
-        return False
 
 
 
