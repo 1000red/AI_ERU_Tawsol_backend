@@ -11,7 +11,6 @@ class Material(Base):
     name        = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
     duration    = Column(Integer, nullable=False, default=0)  # in hours
-    department_course = Column(String(50), nullable=False, default="General")
 
     student_enrollments = relationship("MaterialStudent", back_populates="material")
     teacher_assignments = relationship("MaterialTeacher", back_populates="material")

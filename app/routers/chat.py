@@ -156,7 +156,7 @@ def search(
             type_code=u.type_code,
             is_online=ws_manager.is_online(u.user_id),
             last_seen=u.last_seen,
-            student_id=u.uni_code,
+            student_id=u.uni_code if u.type_code == "STU" else None,
         )
         for u in users
     ]

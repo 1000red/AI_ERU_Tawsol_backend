@@ -48,6 +48,8 @@ def _enrich_announcement(db: Session, ann: Announcement, current_user_id: int) -
     if ann.announcement_type == 'assignment' and ann.assignment:
         deadline = ann.assignment.deadline
         assignment_id = ann.assignment.assignment_id
+    
+    is_from_admin = (author.type_code == "ADM") if author else False
 
     return {
         "announcement_id":   ann.announcement_id,
@@ -70,6 +72,7 @@ def _enrich_announcement(db: Session, ann: Announcement, current_user_id: int) -
         "subject_name":      subject_name,
         "subject_code":      subject_code,
         "attachments":       files,
+        "is_from_admin":     is_from_admin,
         "deadline":          deadline,
         "assignment_id":     assignment_id,
     }
@@ -241,7 +244,7 @@ def mark_announcement_read(db: Session, announcement_id: int, user_id: int) -> N
 def create_announcement(db: Session, data: AnnouncementCreate, author_id: int) -> dict:
     author = get_user_info(db, author_id)
     if author.type_code not in ("ADM", "DR", "TA"):
-        raise HTTPException(status_code=403, detail="Only admins, doctors, and TAs can create announcements")
+        raise HTTPException(status_code=403, detail="Not authorized to create announcements")
 
     payload = data.model_dump(exclude={"target_user_ids"})
     announcement = Announcement(**payload, author_id=author_id)
@@ -339,15 +342,30 @@ def get_available_recipients(
             query = query.filter(User.user_id.in_(specific_enrolled))
         else:
             query = query.filter(User.user_id.in_(enrolled_user_ids))
+    elif requester.type_code == "STU":
+        # Students can only target DR/TA of their enrolled courses
+        enrolled_material_ids = db.query(MaterialStudent.material_id).filter(
+            MaterialStudent.user_id == requester_id
+        ).subquery()
+        staff_ids = db.query(MaterialTeacher.user_id).filter(
+            MaterialTeacher.material_id.in_(enrolled_material_ids)
+        ).subquery()
+        query = query.filter(
+            User.user_id.in_(staff_ids),
+            User.type_code.in_(["DR", "TA"]),
+        )
     else:
-        raise HTTPException(status_code=403, detail="Students cannot send announcements")
+        raise HTTPException(status_code=403, detail="Not authorized to search recipients")
 
     if role_filter:
         query = query.filter(User.type_code == role_filter)
     if department:
         query = query.filter(User.department == department)
     if search:
-        like = f"%{search}%"
-        query = query.filter(or_(User.name.ilike(like), User.uni_code.ilike(like)))
+        # name: substring match; uni_code: prefix match to avoid overly broad ID results
+        query = query.filter(or_(
+            User.name.ilike(f"%{search}%"),
+            User.uni_code.ilike(f"{search}%"),
+        ))
 
     return query.offset(skip).limit(limit).all()

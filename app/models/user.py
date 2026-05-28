@@ -22,7 +22,7 @@ class User(Base):
     email    = Column(String(100), nullable=False, unique=True, index=True)
     password = Column(String(255), nullable=False)
     level    = Column(Integer, nullable=False, default=0) # from 1 to 4 for students, 100 for admins
-    department = Column(String(100), nullable=True) # AI /CS /DS /SW /none(level 1 and 2)
+    department = Column(String(100), nullable=True) # AI /CS /DS /SW /general(level 1 and 2)
     profile_picture      = Column(String(255), nullable=True)
     type_code            = Column(String(5), ForeignKey("user_type.code"), nullable=False)
     current_password = Column(Boolean, nullable=False, default=True)

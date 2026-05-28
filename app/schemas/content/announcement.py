@@ -62,6 +62,7 @@ class AnnouncementOut(BaseModel):
     subject_name:      Optional[str]        = None
     subject_code:      Optional[str]        = None
     attachments:       List[MaterialFileOut] = []
+    is_from_admin:     bool                 = False
     deadline:          Optional[datetime]   = None
     assignment_id:     Optional[int]        = None
 

@@ -412,10 +412,10 @@ def search_users(db: Session, query: str, current_user_id: int) -> list[User]:
     name_filter = User.name.ilike(f"%{q}%")
 
     if q.isdigit():
-        # ID search only matches student records
+        # ID search only matches student records; prefix match so partial IDs work
         id_filter = and_(
             User.type_code == "STU",
-            or_(User.user_id == int(q), User.uni_code == q),
+            or_(User.user_id == int(q), User.uni_code.ilike(f"{q}%")),
         )
         search_filter = or_(name_filter, id_filter)
     else:

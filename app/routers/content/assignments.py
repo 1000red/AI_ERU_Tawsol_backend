@@ -63,14 +63,15 @@ def get_assignments(
 
 @router.post("", response_model=AssignmentOut, status_code=201)
 def create_assignment(
-    material_id:  str            = Form(...),
-    title:        str            = Form(...),
-    description:  Optional[str]  = Form(None),
-    deadline:     str            = Form(...),
-    link_url:     Optional[str]  = Form(None),
-    file_type:    Optional[str]  = Form(None),
-    text_content: Optional[str]  = Form(None),
-    file:         Optional[UploadFile] = File(None),
+    material_id:     str            = Form(...),
+    title:           str            = Form(...),
+    description:     Optional[str]  = Form(None),
+    deadline:        str            = Form(...),
+    link_url:        Optional[str]  = Form(None),
+    file_type:       Optional[str]  = Form(None),
+    text_content:    Optional[str]  = Form(None),
+    announcement_id: Optional[int]  = Form(None),
+    file:            Optional[UploadFile] = File(None),
     user_id: int  = Depends(get_current_user_id),
     db: Session   = Depends(get_db),
 ):
@@ -83,6 +84,7 @@ def create_assignment(
         link_url=link_url,
         file_type=file_type,
         text_content=text_content,
+        announcement_id=announcement_id,
     )
     return svc.create_assignment(db, data, user_id, file_path)
 

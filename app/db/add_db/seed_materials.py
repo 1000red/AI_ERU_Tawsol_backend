@@ -16,22 +16,19 @@ def seed_materials():
         added = 0
         updated = 0
         for row in rows:
-            dept = row["department_course"]
             if row["material_id"] not in existing:
                 db.add(Material(
-                    material_id       = row["material_id"],
-                    name              = row["name"],
-                    description       = row["description"] or None,
-                    duration          = int(row["duration"]),
-                    department_course = dept,
+                    material_id = row["material_id"],
+                    name        = row["name"],
+                    description = row["description"] or None,
+                    duration    = int(row["duration"]),
                 ))
                 added += 1
             else:
                 mat = existing[row["material_id"]]
-                mat.name              = row["name"]
-                mat.description       = row["description"] or None
-                mat.duration          = int(row["duration"])
-                mat.department_course = dept
+                mat.name        = row["name"]
+                mat.description = row["description"] or None
+                mat.duration    = int(row["duration"])
                 updated += 1
 
         db.commit()
