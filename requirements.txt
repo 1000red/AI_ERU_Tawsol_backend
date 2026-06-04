@@ -27,3 +27,9 @@ firebase-admin>=6.5.0
 
 # File Uploads
 boto3>=1.34.131
+
+# Quiz / AI — text extraction + Gemini API
+PyMuPDF>=1.24.0
+python-pptx>=0.6.23
+python-docx>=1.1.2
+google-genai>=0.8.0

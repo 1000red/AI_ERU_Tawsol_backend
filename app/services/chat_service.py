@@ -15,8 +15,8 @@ class ConnectionManager:
     def __init__(self):
         self.active: dict[int, list[WebSocket]] = {}
 
-    async def connect(self, user_id: int, ws: WebSocket) -> None:
-        await ws.accept()
+    def connect(self, user_id: int, ws: WebSocket) -> None:
+        # accept() is called by the route handler before this; don't call again.
         self.active.setdefault(user_id, []).append(ws)
 
     def disconnect(self, user_id: int, ws: WebSocket) -> None:

@@ -162,6 +162,9 @@ async def announcements_ws(
     user_id: int,
     token: str = Query(...),
 ):
+    # Must accept() before any close() — otherwise Starlette returns 403 HTTP
+    await websocket.accept()
+
     try:
         token_user_id = get_current_user_id_ws(token)
         if token_user_id != user_id:
@@ -171,7 +174,7 @@ async def announcements_ws(
         await websocket.close(code=4001, reason="Invalid token")
         return
 
-    await announcement_manager.connect(user_id, websocket)
+    announcement_manager.connect(user_id, websocket)
     try:
         while True:
             # keep connection alive; client may send pings

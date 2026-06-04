@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     # OTP
     OTP_EXPIRE_MINUTES: int = 10
 
+    # Gemini AI (quiz generation)
+    GEMINI_API_KEY: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = True

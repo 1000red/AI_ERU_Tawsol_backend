@@ -6,8 +6,8 @@ class AnnouncementConnectionManager:
     def __init__(self):
         self._connections: Dict[int, WebSocket] = {}
 
-    async def connect(self, user_id: int, websocket: WebSocket) -> None:
-        await websocket.accept()
+    def connect(self, user_id: int, websocket: WebSocket) -> None:
+        # accept() is called by the route handler before this; don't call again.
         self._connections[user_id] = websocket
 
     def disconnect(self, user_id: int) -> None:

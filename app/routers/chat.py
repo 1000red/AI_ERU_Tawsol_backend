@@ -240,6 +240,9 @@ async def websocket_chat(
     user_id: int,
     token: str = Query(...),
 ):
+    # Must accept() before any close() — otherwise Starlette returns 403 HTTP
+    await websocket.accept()
+
     try:
         token_user_id = get_current_user_id_ws(token)
         if token_user_id != user_id:
@@ -249,7 +252,7 @@ async def websocket_chat(
         await websocket.close(code=4001, reason="Invalid token")
         return
 
-    await ws_manager.connect(user_id, websocket)
+    ws_manager.connect(user_id, websocket)
 
     db: Session = SessionLocal()
     try:

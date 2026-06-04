@@ -24,3 +24,7 @@ class MaterialFile(Base):
     material     = relationship("Material", back_populates="files")
     author       = relationship("User", back_populates="material_files")
     announcement = relationship("Announcement", back_populates="material_file")
+
+    @property
+    def author_type_code(self) -> str | None:
+        return self.author.type_code if self.author else None
