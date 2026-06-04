@@ -56,31 +56,22 @@ class AssignmentOut(BaseModel):
 # ── Submission ────────────────────────────────────────────────────────────────
 
 class SubmissionCreate(BaseModel):
-    title:         Optional[str]           = None
-    description:   Optional[str]           = None
     file_type:     Optional[CONTENT_TYPE]  = None
     link_url:      Optional[str]           = None
-    text_content:  Optional[str]           = None
     assignment_id: int
 
 
 class SubmissionUpdate(BaseModel):
-    title:        Optional[str] = None
-    description:  Optional[str] = None
-    link_url:     Optional[str] = None
-    text_content: Optional[str] = None
+    link_url: Optional[str] = None
 
 
 class SubmissionOut(BaseModel):
     submission_id: int
     assignment_id: int
     student_id:    int
-    title:         Optional[str]           = None
-    description:   Optional[str]           = None
     file_type:     Optional[CONTENT_TYPE]  = None
     file_path:     Optional[str]           = None
     link_url:      Optional[str]           = None
-    text_content:  Optional[str]           = None
     submitted_at:  datetime
     updated_at:    Optional[datetime]      = None
     student_name:  Optional[str]           = None   # enriched

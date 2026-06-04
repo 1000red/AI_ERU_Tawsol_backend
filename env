@@ -33,3 +33,6 @@ S3_PUBLIC_BASE_URL=http://localhost:9000/eru-tawasol
 # S3_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 # S3_BUCKET_NAME=eru-tawasol-prod
 # S3_PUBLIC_BASE_URL=https://eru-tawasol-prod.s3.amazonaws.com
+
+# Gemini AI — get free key from https://aistudio.google.com
+GEMINI_API_KEY=AQ.

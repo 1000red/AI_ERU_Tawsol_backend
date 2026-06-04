@@ -37,12 +37,9 @@ class AssignmentSubmission(Base):
     submission_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     assignment_id = Column(Integer, ForeignKey("assignments.assignment_id"), nullable=False)
     student_id    = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    title         = Column(String(200), nullable=True)
-    description   = Column(Text, nullable=True)
     file_type     = Column(String(20), nullable=True)
     file_path     = Column(String(500), nullable=True)
     link_url      = Column(String(500), nullable=True)
-    text_content  = Column(Text, nullable=True)
     submitted_at  = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at    = Column(DateTime, onupdate=func.now(), nullable=True)
 

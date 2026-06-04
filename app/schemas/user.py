@@ -32,27 +32,6 @@ class ChangePasswordRequest(BaseModel):
     old_password: str
     new_password: str
 
-    @field_validator("new_password")
-    @classmethod
-    def validate_password_strength(cls, v: str) -> str:
-         # 1. Length Check
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        
-        # 2. Number Check
-        if not re.search(r"\d", v):
-            raise ValueError("Password must contain at least one number")
-        
-        # 3. Uppercase & Lowercase Check
-        if not re.search(r"[A-Z]", v) or not re.search(r"[a-z]", v):
-            raise ValueError("Password must contain both uppercase and lowercase letters")
-        
-        # 4. Special Character Check
-        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
-            raise ValueError("Password must contain at least one special character (e.g., @, #, $, %)")
-            
-        return v
-
 
 # ── Auth responses ────────────────────────────────────────────────────────────
 
@@ -76,24 +55,3 @@ class VerifyOTPRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     reset_token:  str
     new_password: str
-
-    @field_validator("new_password")
-    @classmethod
-    def validate_password_strength(cls, v: str) -> str:
-        # 1. Length Check
-        if len(v) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        
-        # 2. Number Check
-        if not re.search(r"\d", v):
-            raise ValueError("Password must contain at least one number")
-        
-        # 3. Uppercase & Lowercase Check
-        if not re.search(r"[A-Z]", v) or not re.search(r"[a-z]", v):
-            raise ValueError("Password must contain both uppercase and lowercase letters")
-        
-        # 4. Special Character Check
-        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
-            raise ValueError("Password must contain at least one special character (e.g., @, #, $, %)")
-            
-        return v

@@ -31,8 +31,6 @@ def get_my_submission(
 @router.post("", response_model=SubmissionOut, status_code=201)
 def create_submission(
     assignment_id: int            = Form(...),
-    title:         Optional[str]  = Form(None),
-    description:   Optional[str]  = Form(None),
     link_url:      Optional[str]  = Form(None),
     file_type:     Optional[str]  = Form(None),
     file:          Optional[UploadFile] = File(None),
@@ -42,8 +40,6 @@ def create_submission(
     file_path, _ = save_file(file)
     data = SubmissionCreate(
         assignment_id=assignment_id,
-        title=title,
-        description=description,
         link_url=link_url,
         file_type=file_type,
     )
@@ -53,18 +49,13 @@ def create_submission(
 @router.put("/{submission_id}", response_model=SubmissionOut)
 def update_submission(
     submission_id: int,
-    title:         Optional[str]  = Form(None),
-    description:   Optional[str]  = Form(None),
     link_url:      Optional[str]  = Form(None),
     file:          Optional[UploadFile] = File(None),
     user_id: int   = Depends(get_current_user_id),
     db: Session    = Depends(get_db),
 ):
     file_path, _ = save_file(file)
-    fields = {k: v for k, v in {
-        "title": title, "description": description, "link_url": link_url,
-    }.items() if v is not None}
-    data = SubmissionUpdate(**fields)
+    data = SubmissionUpdate(link_url=link_url)
     return svc.update_submission(db, submission_id, data, user_id, file_path)
 
 
