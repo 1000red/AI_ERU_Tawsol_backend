@@ -238,11 +238,6 @@ def create_assignment(
     from app.services.content_service.announcements import _mark_as_read
     _mark_as_read(db, linked_ann.announcement_id, author_id)
 
-    from app.models.material import Material
-    from app.services.notification_service import notify_assignment
-    mat = db.query(Material).filter(Material.material_id == assignment.material_id).first()
-    notify_assignment(db, assignment, course_name=mat.name if mat else None)
-
     viewer = get_user_info(db, author_id)
     return _enrich_assignment(db, assignment, author_id, viewer.type_code)
 

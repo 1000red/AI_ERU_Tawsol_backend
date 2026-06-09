@@ -152,7 +152,6 @@ def search(
         ConversationUserOut(
             id=u.user_id,
             name=u.name,
-            profile_picture=u.profile_picture,
             type_code=u.type_code,
             is_online=ws_manager.is_online(u.user_id),
             last_seen=u.last_seen,

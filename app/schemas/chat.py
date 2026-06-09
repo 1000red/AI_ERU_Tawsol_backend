@@ -61,7 +61,6 @@ class MessageOut(BaseModel):
 class ConversationUserOut(BaseModel):
     id:              int
     name:            str
-    profile_picture: Optional[str]      = None
     type_code:       str
     is_online:       bool               = False
     last_seen:       Optional[datetime] = None

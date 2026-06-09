@@ -78,8 +78,6 @@ class RecipientOut(BaseModel):
     type_code:       str
     department:      Optional[str] = None
     level:           Optional[int] = None
-    profile_picture: Optional[str] = None
-
     model_config = {"from_attributes": True}
 
 

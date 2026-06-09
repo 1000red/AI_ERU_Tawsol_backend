@@ -7,14 +7,12 @@ class MaterialCreate(BaseModel):
     name:            str
     description:     Optional[str] = None
     duration:        int = 0
-    profile_picture: Optional[str] = None
 
 
 class MaterialUpdate(BaseModel):
     name:            Optional[str] = None
     description:     Optional[str] = None
     duration:        Optional[int] = None
-    profile_picture: Optional[str] = None
 
 
 class MaterialOut(BaseModel):
@@ -22,7 +20,6 @@ class MaterialOut(BaseModel):
     name:            str
     description:     Optional[str] = None
     duration:        int
-    profile_picture: Optional[str] = None
     student_count:   int = 0
     content_count:   int = 0
     teacher_name:    Optional[str] = None

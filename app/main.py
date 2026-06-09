@@ -8,7 +8,7 @@ from app.db.database import engine
 from app.db import base  # noqa: F401 — triggers all model imports for create_all
 
 # Import models to ensure tables are created
-from app.models import user, material, chat, notification, content  # noqa: F401
+from app.models import user, material, chat, content  # noqa: F401
 
 # Create all tables
 try:
@@ -40,7 +40,6 @@ app.add_middleware(
 
 # ── Static files ──────────────────────────────────────────────────────────────
 
-os.makedirs("uploads/profiles", exist_ok=True)
 os.makedirs("uploads/materials", exist_ok=True)
 os.makedirs("uploads/content", exist_ok=True)
 os.makedirs("uploads/voice", exist_ok=True)
@@ -50,7 +49,6 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 # ── Routers ───────────────────────────────────────────────────────────────────
 
 from app.routers import auth, support, users, materials, chat as chat_router, content  # noqa
-from app.routers.notifications import router as notifications_router  # noqa
 from app.routers.quiz import router as quiz_router  # noqa
 
 app.include_router(auth.router)
@@ -59,7 +57,6 @@ app.include_router(materials.router)
 app.include_router(chat_router.router)
 app.include_router(content.router)
 app.include_router(support.router)
-app.include_router(notifications_router)
 app.include_router(quiz_router)
 
 

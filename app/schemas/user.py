@@ -17,7 +17,6 @@ class UserOut(BaseModel):
     email:                EmailStr
     type_code:            str
     level:                int = 0
-    profile_picture:      Optional[str] = None
     department:           Optional[str] = None
     current_password: bool = False
     model_config = {"from_attributes": True}
@@ -25,7 +24,6 @@ class UserOut(BaseModel):
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
-    profile_picture: Optional[str] = None
 
 
 class ChangePasswordRequest(BaseModel):

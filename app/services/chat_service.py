@@ -222,7 +222,6 @@ def get_user_conversations(db: Session, user_id: int) -> list[dict]:
             "other_user": {
                 "id":              other_user.user_id,
                 "name":            other_user.name,
-                "profile_picture": other_user.profile_picture,
                 "type_code":       other_user.type_code,
                 "is_online":       ws_manager.is_online(other_id),
                 "last_seen":       other_user.last_seen,

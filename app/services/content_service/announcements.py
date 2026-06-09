@@ -246,9 +246,6 @@ def create_announcement(db: Session, data: AnnouncementCreate, author_id: int) -
     db.refresh(announcement)
     _mark_as_read(db, announcement.announcement_id, author_id)
 
-    from app.services.notification_service import notify_announcement
-    notify_announcement(db, announcement, author_id)
-
     return _enrich_announcement(db, announcement, author_id)
 
 

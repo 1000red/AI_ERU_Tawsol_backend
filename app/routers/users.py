@@ -1,14 +1,10 @@
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-import shutil, os, uuid
 
 from app.db.database import get_db
 from app.core.security import get_current_user_id
 from app.schemas.user import UserOut, UserUpdate, ChangePasswordRequest
 from app.services import user_service as svc
-
-UPLOAD_DIR = "uploads/profiles"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -38,21 +34,6 @@ def change_password(
     svc.change_password(db, user_id, data.old_password, data.new_password)
     return {"message": "Password changed successfully"}
 
-
-@router.put("/me/picture", response_model=UserOut)
-def upload_picture(
-    file: UploadFile = File(...),
-    user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db),
-):
-    ext      = os.path.splitext(file.filename)[1]
-    filename = f"{uuid.uuid4().hex}{ext}"
-    path     = os.path.join(UPLOAD_DIR, filename)
-
-    with open(path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    return svc.update_user(db, user_id, UserUpdate(profile_picture=path))
 
 
 # ── General ───────────────────────────────────────────────────────────────────
