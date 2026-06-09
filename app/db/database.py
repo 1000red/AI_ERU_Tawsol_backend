@@ -15,7 +15,7 @@ try:
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
 except OperationalError:
-    print("❌ Database connection failed — check DATABASE_URL and make sure PostgreSQL is running.")
+    print("Database connection failed — check DATABASE_URL and make sure PostgreSQL is running.")
     sys.exit(1)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
