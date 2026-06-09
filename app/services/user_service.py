@@ -100,7 +100,7 @@ def request_otp(db: Session, email: str) -> dict:
     result: dict = {
         "message": f"OTP sent to {email}. Valid for {settings.OTP_EXPIRE_MINUTES} minutes."
     }
-    if not settings.SENDGRID_API_KEY or email == "elsadek-hussien@eru.edu.eg":
+    if not settings.SENDGRID_API_KEY:
         result["debug_otp"] = otp
     return result
 

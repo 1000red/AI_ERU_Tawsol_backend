@@ -7,7 +7,7 @@ from app.models.user import User
 from app.schemas.support import ContactRequest
 from app.utils.email import send_contact_us_email
 
-router = APIRouter(prefix="/support", tags=["Support"])
+router = APIRouter(prefix="/contact", tags=["Support"])
 
 
 @router.post("/", status_code=status.HTTP_200_OK)

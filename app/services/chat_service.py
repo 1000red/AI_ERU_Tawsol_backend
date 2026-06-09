@@ -150,8 +150,6 @@ def get_conversation(
     db: Session,
     user1_id: int,
     user2_id: int,
-    skip: int = 0,
-    limit: int = 50,
 ) -> list[ChatHistory]:
     return (
         db.query(ChatHistory)
@@ -162,8 +160,6 @@ def get_conversation(
             )
         )
         .order_by(ChatHistory.sent_at)
-        .offset(skip)
-        .limit(limit)
         .all()
     )
 
