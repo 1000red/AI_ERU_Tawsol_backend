@@ -9,4 +9,6 @@ __pycache__/
 alembic/
 alembic.ini
 
+/app/db/add_db/
+
 uploads/
