@@ -111,19 +111,6 @@ def create_announcement(
     return svc.create_announcement(db, data, user_id)
 
 
-@router.post("/{announcement_id}/notify", status_code=204)
-async def notify_announcement(
-    announcement_id: int,
-    user_id: int = Depends(get_current_user_id),
-    db: Session  = Depends(get_db),
-):
-    """Trigger a WS broadcast after all attachments have been uploaded."""
-    await announcement_manager.broadcast({
-        "type":            "new_announcement",
-        "announcement_id": announcement_id,
-    })
-
-
 @router.put("/{announcement_id}", response_model=AnnouncementOut)
 def update_announcement(
     announcement_id: int,

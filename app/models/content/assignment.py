@@ -26,22 +26,3 @@ class Assignment(Base):
     material     = relationship("Material",             back_populates="assignments")
     author       = relationship("User",                 back_populates="assignments")
     announcement = relationship("Announcement",         back_populates="assignment")
-    submissions  = relationship("AssignmentSubmission", back_populates="assignment")
-
-
-# ── AssignmentSubmission ──────────────────────────────────────────────────────
-
-class AssignmentSubmission(Base):
-    __tablename__ = "assignment_submissions"
-
-    submission_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    assignment_id = Column(Integer, ForeignKey("assignments.assignment_id"), nullable=False)
-    student_id    = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    file_type     = Column(String(20), nullable=True)
-    file_path     = Column(String(500), nullable=True)
-    link_url      = Column(String(500), nullable=True)
-    submitted_at  = Column(DateTime, server_default=func.now(), nullable=False)
-    updated_at    = Column(DateTime, onupdate=func.now(), nullable=True)
-
-    assignment = relationship("Assignment", back_populates="submissions")
-    student    = relationship("User", back_populates="submissions")

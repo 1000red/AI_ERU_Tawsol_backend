@@ -1,6 +1,6 @@
 from app.models.content.announcement import Announcement, AnnouncementRead, AnnouncementTargetUser
 from app.models.content.material_file import MaterialFile
-from app.models.content.assignment import Assignment, AssignmentSubmission
+from app.models.content.assignment import Assignment
 
 __all__ = [
     "Announcement",
@@ -8,5 +8,4 @@ __all__ = [
     "AnnouncementTargetUser",
     "MaterialFile",
     "Assignment",
-    "AssignmentSubmission",
 ]

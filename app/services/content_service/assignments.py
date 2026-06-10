@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from datetime import datetime, timedelta
 from typing import Optional
 
-from app.models.content import Assignment, AssignmentSubmission
+from app.models.content import Assignment
 from app.schemas.content import AssignmentCreate, AssignmentUpdate
 from app.services.content_service._helpers import (
     get_user_info,
@@ -58,26 +58,11 @@ def _enrich_assignment(db: Session, assignment: Assignment, viewer_id: int, view
         "text_content":     assignment.text_content,
         "created_at":       assignment.created_at,
         "updated_at":       assignment.updated_at,
-        "has_submitted":    None,
-        "my_submission_id": None,
-        "submission_count": None,
         "author_name":      author.name if author else None,
         "subject_name":     subject_name,
         "subject_code":     subject_code,
         "attachments":      ann_files,
     }
-
-    if viewer_type == "STU":
-        sub = db.query(AssignmentSubmission).filter(
-            AssignmentSubmission.assignment_id == assignment.assignment_id,
-            AssignmentSubmission.student_id == viewer_id,
-        ).first()
-        data["has_submitted"]    = sub is not None
-        data["my_submission_id"] = sub.submission_id if sub else None
-    elif viewer_type in ("DR", "TA", "ADM"):
-        data["submission_count"] = db.query(AssignmentSubmission).filter(
-            AssignmentSubmission.assignment_id == assignment.assignment_id
-        ).count()
 
     return data
 

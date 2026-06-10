@@ -33,16 +33,6 @@ from app.services.content_service.assignments import (
     delete_assignment,
 )
 
-from app.services.content_service.submissions import (
-    get_submission,
-    get_assignment_submissions,
-    get_student_submission,
-    get_my_submission,
-    create_submission,
-    update_submission,
-    delete_submission,
-)
-
 __all__ = [
     "get_user_info",
     # Announcements
@@ -58,8 +48,4 @@ __all__ = [
     "get_assignment", "get_assignment_detail",
     "get_material_assignments", "get_all_assignments_for_user", "get_upcoming_deadlines",
     "create_assignment", "update_assignment", "delete_assignment",
-    # Submissions
-    "get_submission", "get_assignment_submissions",
-    "get_student_submission", "get_my_submission",
-    "create_submission", "update_submission", "delete_submission",
 ]

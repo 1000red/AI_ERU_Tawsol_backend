@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
-from app.models.user import User, UserType
+from app.models.user import User
 from app.schemas.user import UserUpdate
 from app.core.security import hash_password, verify_password, create_access_token, create_reset_token, decode_token
 from app.utils.email import send_otp_email, send_welcome_email, send_password_changed_email
@@ -34,10 +34,6 @@ def get_user_by_id(db: Session, user_id: int) -> User:
 
 def get_user_by_email(db: Session, email: str) -> User | None:
     return db.query(User).filter(User.email == email).first()
-
-
-def get_all_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
-    return db.query(User).offset(skip).limit(limit).all()
 
 
 def update_user(db: Session, user_id: int, data: UserUpdate) -> User:
@@ -140,8 +136,3 @@ def reset_password(db: Session, reset_token: str, new_password: str) -> None:
     user.password = hash_password(new_password)
     db.commit()
 
-
-# ── User Types ────────────────────────────────────────────────────────────────
-
-def get_user_types(db: Session) -> list[UserType]:
-    return db.query(UserType).all()

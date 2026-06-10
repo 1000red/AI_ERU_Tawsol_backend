@@ -42,9 +42,6 @@ class AssignmentOut(BaseModel):
     created_at:      datetime
     updated_at:      Optional[datetime]     = None
     # Enriched fields (populated by service, None when not applicable)
-    has_submitted:      Optional[bool] = None   # for students
-    my_submission_id:   Optional[int]  = None   # for students
-    submission_count:   Optional[int]  = None   # for DR/TA/ADM
     author_name:        Optional[str]  = None
     subject_name:       Optional[str]  = None
     subject_code:       Optional[str]  = None
@@ -52,28 +49,3 @@ class AssignmentOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
-# ── Submission ────────────────────────────────────────────────────────────────
-
-class SubmissionCreate(BaseModel):
-    file_type:     Optional[CONTENT_TYPE]  = None
-    link_url:      Optional[str]           = None
-    assignment_id: int
-
-
-class SubmissionUpdate(BaseModel):
-    link_url: Optional[str] = None
-
-
-class SubmissionOut(BaseModel):
-    submission_id: int
-    assignment_id: int
-    student_id:    int
-    file_type:     Optional[CONTENT_TYPE]  = None
-    file_path:     Optional[str]           = None
-    link_url:      Optional[str]           = None
-    submitted_at:  datetime
-    updated_at:    Optional[datetime]      = None
-    student_name:  Optional[str]           = None   # enriched
-
-    model_config = {"from_attributes": True}

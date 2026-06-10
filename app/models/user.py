@@ -34,5 +34,4 @@ class User(Base):
     announcements     = relationship("Announcement",          foreign_keys="Announcement.author_id",          back_populates="author")
     material_files    = relationship("MaterialFile",          foreign_keys="MaterialFile.author_id",          back_populates="author")
     assignments       = relationship("Assignment",            foreign_keys="Assignment.author_id",            back_populates="author")
-    submissions       = relationship("AssignmentSubmission",  foreign_keys="AssignmentSubmission.student_id", back_populates="student")
 

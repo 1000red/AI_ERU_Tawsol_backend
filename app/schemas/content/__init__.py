@@ -14,9 +14,6 @@ from app.schemas.content.assignment import (
     AssignmentCreate,
     AssignmentUpdate,
     AssignmentOut,
-    SubmissionCreate,
-    SubmissionUpdate,
-    SubmissionOut,
 )
 
 __all__ = [
@@ -24,5 +21,4 @@ __all__ = [
     "RecipientOut", "UnreadCountOut",
     "MaterialFileCreate", "MaterialFileUpdate", "MaterialFileOut",
     "AssignmentCreate", "AssignmentUpdate", "AssignmentOut",
-    "SubmissionCreate", "SubmissionUpdate", "SubmissionOut",
 ]
