@@ -1,7 +1,13 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 from sqlalchemy.exc import IntegrityError
+
 from fastapi import WebSocket, HTTPException
+# accept()
+# receive_json()
+# send_json()
+# close()
+
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -16,7 +22,6 @@ class ConnectionManager:
         self.active: dict[int, list[WebSocket]] = {}
 
     def connect(self, user_id: int, ws: WebSocket) -> None:
-        # accept() is called by the route handler before this; don't call again.
         self.active.setdefault(user_id, []).append(ws)
 
     def disconnect(self, user_id: int, ws: WebSocket) -> None:
@@ -58,12 +63,10 @@ def can_chat(db: Session, sender_id: int, receiver_id: int) -> bool:
     if "ADM" in (sender.type_code, receiver.type_code):
         return True
 
-    dr_types  = {"DR", "PROF"}
-    all_staff = {"DR", "PROF", "TA"}
-
-    # DR ↔ DR — always allowed
-    if sender.type_code in dr_types and receiver.type_code in dr_types:
-        return True
+    # dr_types  = {"DR"}
+    # # DR ↔ DR — always allowed
+    # if sender.type_code in dr_types and receiver.type_code in dr_types:
+    #     return True
 
     # STU ↔ STU — never allowed
     if sender.type_code == "STU" and receiver.type_code == "STU":
@@ -78,7 +81,7 @@ def can_chat(db: Session, sender_id: int, receiver_id: int) -> bool:
         student_id = receiver_id
         staff_id   = sender_id
     else:
-        # both staff (DR↔TA or TA↔TA) — require co-teaching same material
+        # both staff (DR↔DR, DR↔TA, or TA↔TA) — require teaching same material
         sender_materials = db.query(MaterialTeacher.material_id).filter(
             MaterialTeacher.user_id == sender_id
         )
@@ -185,12 +188,12 @@ def get_user_conversations(db: Session, user_id: int) -> list[dict]:
         .all()
     )
 
-    pinned_partners = {
-        row.partner_id
-        for row in db.query(PinnedConversation.partner_id)
+    pinned_rows = (
+        db.query(PinnedConversation.partner_id, PinnedConversation.pinned_at)
         .filter(PinnedConversation.user_id == user_id)
         .all()
-    }
+    )
+    pinned_partners = {row.partner_id: row.pinned_at for row in pinned_rows}
 
     conversations = []
     for msg in latest_messages:
@@ -228,7 +231,12 @@ def get_user_conversations(db: Session, user_id: int) -> list[dict]:
             "is_pinned":    other_id in pinned_partners,
         })
 
-    conversations.sort(key=lambda c: (not c["is_pinned"], 0))
+    conversations.sort(
+        key=lambda c: (
+            not c["is_pinned"],
+            -pinned_partners[c["other_user"]["id"]].timestamp() if c["is_pinned"] else 0,
+        )
+    )
     return conversations
 
 
@@ -266,7 +274,6 @@ def mark_messages_seen(db: Session, receiver_id: int, sender_id: int) -> bool:
 
 
 EDIT_DELETE_WINDOW_MINUTES = 15
-
 
 def edit_message(db: Session, chat_id: int, new_text: str, user_id: int) -> ChatHistory:
     msg = db.query(ChatHistory).filter(ChatHistory.chat_id == chat_id).first()
@@ -321,6 +328,28 @@ def pin_conversation(db: Session, user_id: int, partner_id: int) -> None:
         db.add(PinnedConversation(user_id=user_id, partner_id=partner_id))
         db.commit()
 
+# MAX_PINNED_CONVERSATIONS = 3
+# def pin_conversation(db: Session, user_id: int, partner_id: int) -> None:
+#     existing = db.query(PinnedConversation).filter(
+#         PinnedConversation.user_id == user_id,
+#         PinnedConversation.partner_id == partner_id,
+#     ).first()
+#     if existing:
+#         return  # already pinned, nothing to do
+
+#     pinned_count = (
+#         db.query(PinnedConversation)
+#         .filter(PinnedConversation.user_id == user_id)
+#         .count()
+#     )
+#     if pinned_count >= MAX_PINNED_CONVERSATIONS:
+#         raise HTTPException(
+#             status_code=400,
+#             detail=f"You can only pin up to {MAX_PINNED_CONVERSATIONS} conversations. Unpin one first.",
+#         )
+
+#     db.add(PinnedConversation(user_id=user_id, partner_id=partner_id))
+#     db.commit()
 
 def unpin_conversation(db: Session, user_id: int, partner_id: int) -> None:
     db.query(PinnedConversation).filter(
@@ -345,8 +374,7 @@ def search_users(db: Session, query: str, current_user_id: int) -> list[User]:
     if not current:
         return []
 
-    dr_types    = {"DR", "PROF"}
-    all_staff   = {"DR", "PROF", "TA"}
+    staff_types = {"DR", "TA"}
 
     # ── Build permission filter (who this user is allowed to chat with) ──────
     if current.type_code == "ADM":
@@ -365,8 +393,8 @@ def search_users(db: Session, query: str, current_user_id: int) -> list[User]:
             User.type_code == "ADM",
         )
 
-    elif current.type_code in dr_types:
-        # DR → all other DRs + TA/STU sharing a material + ADMs
+    elif current.type_code in staff_types:
+        # DR/TA → DR/TA/STU sharing a material + ADMs
         my_materials = db.query(MaterialTeacher.material_id).filter(
             MaterialTeacher.user_id == current_user_id
         )
@@ -378,29 +406,14 @@ def search_users(db: Session, query: str, current_user_id: int) -> list[User]:
             MaterialStudent.material_id.in_(my_materials)
         )
         permission_filter = or_(
-            User.type_code.in_(list(dr_types)),        # all DRs
-            User.user_id.in_(shared_staff_ids),        # TAs sharing a material
-            User.user_id.in_(shared_student_ids),      # students sharing a material
+            User.user_id.in_(shared_staff_ids),        # DRs/TAs sharing a material
+            User.user_id.in_(shared_student_ids),       # students sharing a material
             User.type_code == "ADM",
         )
 
-    else:  # TA
-        # TA → DR/TA/STU sharing a material + ADMs
-        my_materials = db.query(MaterialTeacher.material_id).filter(
-            MaterialTeacher.user_id == current_user_id
-        )
-        shared_staff_ids = db.query(MaterialTeacher.user_id).filter(
-            MaterialTeacher.material_id.in_(my_materials),
-            MaterialTeacher.user_id != current_user_id,
-        )
-        shared_student_ids = db.query(MaterialStudent.user_id).filter(
-            MaterialStudent.material_id.in_(my_materials)
-        )
-        permission_filter = or_(
-            User.user_id.in_(shared_staff_ids),
-            User.user_id.in_(shared_student_ids),
-            User.type_code == "ADM",
-        )
+    else:
+        # Fallback: no special permissions, only ADMs
+        permission_filter = User.type_code == "ADM"
 
     # ── Build search filter ───────────────────────────────────────────────────
     # Students can be found by name OR ID; DR/TA/ADM by name only

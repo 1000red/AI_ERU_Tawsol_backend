@@ -23,6 +23,7 @@ class ChatHistory(Base):
 
     sender   = relationship("User", foreign_keys=[sender_id],   back_populates="sent_messages")
     receiver = relationship("User", foreign_keys=[receiver_id], back_populates="received_messages")
+    # Self-Referencing Relationship
     reply_to = relationship("ChatHistory", foreign_keys="ChatHistory.reply_to_id", remote_side="ChatHistory.chat_id")
 
 

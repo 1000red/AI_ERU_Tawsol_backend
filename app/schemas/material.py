@@ -2,19 +2,6 @@ from pydantic import BaseModel, model_validator
 from typing import Optional, Any
 
 
-class MaterialCreate(BaseModel):
-    material_id:     str
-    name:            str
-    description:     Optional[str] = None
-    duration:        int = 0
-
-
-class MaterialUpdate(BaseModel):
-    name:            Optional[str] = None
-    description:     Optional[str] = None
-    duration:        Optional[int] = None
-
-
 class MaterialOut(BaseModel):
     material_id:     str
     name:            str

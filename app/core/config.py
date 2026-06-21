@@ -21,12 +21,12 @@ class Settings(BaseSettings):
     SENDGRID_API_KEY: str = ""
     FROM_EMAIL: str = "noreply@eru-tawasol.com"
 
-    # S3 / MinIO
-    S3_ENDPOINT_URL: str = ""          # empty = real AWS S3
-    S3_ACCESS_KEY: str = "minioadmin"
-    S3_SECRET_KEY: str = "minioadmin"
-    S3_BUCKET_NAME: str = "eru-tawasol"
-    S3_PUBLIC_BASE_URL: str = "http://localhost:9000/eru-tawasol"
+    # # S3 / MinIO
+    # S3_ENDPOINT_URL: str = ""          # empty = real AWS S3
+    # S3_ACCESS_KEY: str = "minioadmin"
+    # S3_SECRET_KEY: str = "minioadmin"
+    # S3_BUCKET_NAME: str = "eru-tawasol"
+    # S3_PUBLIC_BASE_URL: str = "http://localhost:9000/eru-tawasol"
 
     # OTP
     OTP_EXPIRE_MINUTES: int = 10

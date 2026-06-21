@@ -1,6 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional
-
 
 class QuizGenerateRequest(BaseModel):
     file_id: int
@@ -16,7 +14,7 @@ class QuizOption(BaseModel):
 class QuizQuestion(BaseModel):
     id: int
     question: str
-    options: QuizOption
+    options: QuizOption # "A" | "B" | "C" | "D"
 
 
 class QuizGenerateResponse(BaseModel):

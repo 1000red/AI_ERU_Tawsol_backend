@@ -1,6 +1,5 @@
 import json
 import os
-import shutil
 import uuid
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, Query, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
@@ -16,7 +15,6 @@ from app.services.chat_service import (
     get_conversation,
     get_user_conversations,
     search_users,
-    can_chat,
     mark_messages_delivered,
     mark_messages_seen,
     pin_conversation,
@@ -45,7 +43,6 @@ MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB
 @router.post("/upload/voice", status_code=status.HTTP_201_CREATED)
 async def upload_voice(
     file: UploadFile = File(...),
-    user_id: int = Depends(get_current_user_id),
 ):
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_AUDIO_EXTENSIONS:
@@ -73,7 +70,6 @@ async def upload_voice(
 @router.post("/upload/file", status_code=status.HTTP_201_CREATED)
 async def upload_file(
     file: UploadFile = File(...),
-    user_id: int = Depends(get_current_user_id),
 ):
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_FILE_EXTENSIONS:
@@ -237,7 +233,7 @@ async def websocket_chat(
     user_id: int,
     token: str = Query(...),
 ):
-    # Must accept() before any close() — otherwise Starlette returns 403 HTTP
+    # accept()
     await websocket.accept()
 
     try:
@@ -260,12 +256,14 @@ async def websocket_chat(
                 "receiver_id": user_id,
             })
 
+        # send_json()
         await ws_manager.send_to_user(user_id, {
             "type":         "connected",
             "user_id":      user_id,
             "online_users": ws_manager.online_users(),
         })
 
+        # receive_json()
         while True:
             raw = await websocket.receive_text()
             try:
@@ -363,6 +361,7 @@ async def websocket_chat(
     except Exception as e:
         print(f"[WS] Error user {user_id}: {e}")
     finally:
+        # close()
         ws_manager.disconnect(user_id, websocket)
         update_last_seen(db, user_id)
         db.close()

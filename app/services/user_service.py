@@ -1,5 +1,8 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
+from datetime import datetime, timedelta, timezone
+import random
+import string
 
 from app.models.user import User
 from app.schemas.user import UserUpdate
@@ -7,14 +10,9 @@ from app.core.security import hash_password, verify_password, create_access_toke
 from app.utils.email import send_otp_email, send_welcome_email, send_password_changed_email
 from app.core.config import settings
 
-from datetime import datetime, timedelta, timezone
-import random
-import string
 
 _otp_store: dict[str, dict] = {}
 
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _generate_otp(length: int = 6) -> str:
     return "".join(random.choices(string.digits, k=length))

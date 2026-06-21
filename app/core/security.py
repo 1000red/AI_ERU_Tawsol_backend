@@ -3,6 +3,7 @@ from jose import JWTError, jwt
 import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
 from app.core.config import settings
 
 bearer_scheme = HTTPBearer()
@@ -47,7 +48,7 @@ def decode_token(token: str) -> dict:
         ) from e
 
 
-# ── Dependency: get current user_id from Bearer token ────────────────────────
+# ── Dependency: get current user_id ───────────────────────────────────────────
 
 def get_current_user_id(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
@@ -60,7 +61,6 @@ def get_current_user_id(
 
 
 def get_current_user_id_ws(token: str) -> int:
-    """For WebSocket endpoints that pass token as query param."""
     payload = decode_token(token)
     user_id = payload.get("sub")
     if user_id is None:

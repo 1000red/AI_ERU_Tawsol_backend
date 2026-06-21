@@ -1,14 +1,3 @@
-"""
-Quiz generation via Google Gemini API (free tier).
-
-Uses the new `google-genai` SDK (replaces deprecated `google-generativeai`).
-Model: gemini-2.0-flash — fast, free, excellent structured JSON output.
-Free tier: 15 requests/min, 1 million tokens/day.
-
-Setup:
-  1. Get a free API key from https://aistudio.google.com
-  2. Add  GEMINI_API_KEY=your_key_here  to backend/.env
-"""
 import json
 import re
 import asyncio
@@ -17,7 +6,7 @@ from fastapi import HTTPException
 from app.core.config import settings
 from app.services.quiz_service.session import _StoredQuestion
 
-_PROMPT_TEMPLATE = """\
+_PROMPT = """\
 You are a strict educational quiz generator. Your task is to create exactly 10 \
 multiple-choice questions from the LECTURE CONTENT below.
 
@@ -63,65 +52,9 @@ def _make_client():
     return genai.Client(api_key=api_key)
 
 
-async def generate_quiz(text: str) -> list[_StoredQuestion]:
-    if len(text) < 200:
-        raise HTTPException(
-            status_code=422,
-            detail="The file contains too little extractable text to generate a quiz.",
-        )
-
-    trimmed = text[:12_000]
-    prompt = _PROMPT_TEMPLATE + trimmed
-
-    from google.genai import types
-
-    client = _make_client()
-
-    loop = asyncio.get_running_loop()
-
-    # Attempt up to 2 times — Gemini occasionally returns empty/blocked responses.
-    last_error: HTTPException | None = None
-    for attempt in range(2):
-        try:
-            response = await loop.run_in_executor(
-                None,
-                lambda: client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        temperature=0.7,
-                    ),
-                ),
-            )
-        except HTTPException:
-            raise
-        except Exception as exc:
-            _handle_error(exc)  # raises HTTPException
-
-        # response.text raises ValueError when the response is safety-blocked.
-        try:
-            raw = response.text
-        except Exception:
-            raw = None
-
-        if raw and raw.strip():
-            try:
-                return _parse_questions(raw)
-            except HTTPException as parse_err:
-                last_error = parse_err
-                continue  # retry on parse failure
-
-        last_error = HTTPException(
-            status_code=502,
-            detail="AI returned an empty or blocked response. Please try again.",
-        )
-
-    raise last_error or HTTPException(status_code=502, detail="Quiz generation failed.")
-
-
 def _handle_error(exc: Exception) -> None:
     msg = str(exc).lower()
+
     if "api_key" in msg or "invalid" in msg or "403" in msg or "401" in msg:
         raise HTTPException(
             status_code=401,
@@ -141,6 +74,7 @@ def _handle_error(exc: Exception) -> None:
 
 
 def _parse_questions(raw: str) -> list[_StoredQuestion]:
+    # pre-processing data from google
     raw = re.sub(r"```(?:json)?", "", raw).strip()
 
     try:
@@ -186,3 +120,58 @@ def _parse_questions(raw: str) -> list[_StoredQuestion]:
         )
 
     return questions
+
+
+async def generate_quiz(text: str) -> list[_StoredQuestion]:
+    if len(text) < 200:
+        raise HTTPException(
+            status_code=422,
+            detail="The file contains too little extractable text to generate a quiz.",
+        )
+
+    trimmed = text[:12_000]
+    prompt = _PROMPT + trimmed
+
+    from google.genai import types
+
+    client = _make_client()
+
+    loop = asyncio.get_running_loop()
+
+    # Attempt up to 2 times — Gemini occasionally returns empty/blocked responses.
+    last_error = HTTPException(
+        status_code=502,
+        detail="AI returned an empty or blocked response. Please try again.",
+    )
+
+    for attempt in range(2):
+        try:
+            response = await loop.run_in_executor(
+                None,
+                lambda: client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        temperature=0.7,
+                    ),
+                ),
+            )
+        except HTTPException:
+            raise
+        except Exception as exc:
+            _handle_error(exc)
+
+        try:
+            raw = response.text # safety-blocked
+        except Exception:
+            raw = None
+
+        if raw and raw.strip(): # JSON not none
+            try:
+                return _parse_questions(raw)
+            except HTTPException as parse_err:
+                last_error = parse_err
+                continue  # retry on parse failure
+
+    raise last_error # or HTTPException(status_code=502, detail="Quiz generation failed.")
