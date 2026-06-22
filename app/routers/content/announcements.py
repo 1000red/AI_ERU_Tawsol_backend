@@ -43,16 +43,6 @@ def get_announcements(
     )
 
 
-@router.get("/unread-count", response_model=UnreadCountOut)
-def get_unread_count(
-    user_id: int  = Depends(get_current_user_id),
-    db: Session   = Depends(get_db),
-):
-    user = svc.get_user_info(db, user_id)
-    count = svc.get_unread_count(db, user_id, user.type_code, user.level, user.department)
-    return {"unread_count": count}
-
-
 @router.get("/sent", response_model=list[AnnouncementOut])
 def get_sent_announcements(
     skip:  int  = Query(0, ge=0),
@@ -141,6 +131,16 @@ def mark_as_read(
     svc.mark_announcement_read(db, announcement_id, user_id)
 
 
+@router.get("/unread-count", response_model=UnreadCountOut)
+def get_unread_count(
+    user_id: int  = Depends(get_current_user_id),
+    db: Session   = Depends(get_db),
+):
+    user = svc.get_user_info(db, user_id)
+    count = svc.get_unread_count(db, user_id, user.type_code, user.level, user.department)
+    return {"unread_count": count}
+
+
 # ── WebSocket ─────────────────────────────────────────────────────────────────
 
 @router.websocket("/ws/{user_id}")
@@ -149,7 +149,6 @@ async def announcements_ws(
     user_id: int,
     token: str = Query(...),
 ):
-    # Must accept() before any close() — otherwise Starlette returns 403 HTTP
     await websocket.accept()
 
     try:
@@ -164,7 +163,6 @@ async def announcements_ws(
     announcement_manager.connect(user_id, websocket)
     try:
         while True:
-            # keep connection alive; client may send pings
             data = await websocket.receive_text()
             if data == "ping":
                 await websocket.send_text("pong")

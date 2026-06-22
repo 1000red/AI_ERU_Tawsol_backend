@@ -13,7 +13,7 @@ class MaterialFile(Base):
     author_id       = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     title           = Column(String(200), nullable=False)
     description     = Column(Text, nullable=True)
-    file_type       = Column(String(20), nullable=False)  # pdf, word, ppt, python, jupyter, image, video, voice, link, text
+    file_type       = Column(String(20), nullable=False)  # pdf, word, ppt, python, jupyter, image, video, voice, text
     file_path       = Column(String(500), nullable=True)
     file_size       = Column(BigInteger, nullable=True)  # bytes
     link_url        = Column(String(500), nullable=True)

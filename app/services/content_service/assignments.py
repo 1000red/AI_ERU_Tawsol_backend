@@ -99,7 +99,6 @@ def get_all_assignments_for_user(
     skip: int = 0,
     limit: int = 50,
 ) -> list[dict]:
-    """Return all assignments across the user's enrolled/taught courses."""
     from app.models.material import MaterialStudent, MaterialTeacher
 
     now = datetime.utcnow()

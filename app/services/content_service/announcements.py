@@ -19,6 +19,7 @@ def _enrich_announcement(db: Session, ann: Announcement, current_user_id: int) -
 
     subject_name = None
     subject_code = None
+    
     if ann.target_course_id:
         mat = db.query(Material).filter(Material.material_id == ann.target_course_id).first()
         if mat:
@@ -98,7 +99,6 @@ def get_announcement(db: Session, announcement_id: int) -> Announcement:
 
 
 def get_announcement_detail(db: Session, announcement_id: int, current_user_id: int) -> dict:
-    """Return single enriched announcement and mark it as read."""
     ann = get_announcement(db, announcement_id)
     _mark_as_read(db, announcement_id, current_user_id)
     return _enrich_announcement(db, ann, current_user_id)
@@ -121,7 +121,6 @@ def get_announcements_for_user(
 ) -> list[dict]:
     from app.models.material import MaterialStudent
 
-    # Build conditions — "users" target type is handled separately via subquery
     conditions = [
         Announcement.target_type == "all",
         and_(Announcement.target_type == "level", Announcement.target_year == user_level),
@@ -132,7 +131,6 @@ def get_announcements_for_user(
         ),
         and_(Announcement.target_type == "department", Announcement.target_department == user_department),
         and_(Announcement.target_type == "student", Announcement.target_student_id == user_id),
-        # role-based targeting: target_type="role" with matching target_role
         and_(Announcement.target_type == "role", Announcement.target_role == user_type),
     ]
 
@@ -144,7 +142,6 @@ def get_announcements_for_user(
                                Announcement.target_course_id.in_(enrolled),
                                Announcement.target_department == user_department))
 
-    # For staff, also include sent announcements targeting their courses
     if user_type in ("DR", "TA"):
         from app.models.material import MaterialTeacher
         taught = db.query(MaterialTeacher.material_id).filter(MaterialTeacher.user_id == user_id).scalar_subquery()
@@ -195,8 +192,6 @@ def get_announcements_for_user(
     return [_enrich_announcement(db, a, user_id) for a in announcements]
 
 
-
-
 def get_sent_announcements(
     db: Session,
     author_id: int,
@@ -223,7 +218,7 @@ def get_unread_count(db: Session, user_id: int, user_type: str, user_level: int,
 
 
 def mark_announcement_read(db: Session, announcement_id: int, user_id: int) -> None:
-    ann = get_announcement(db, announcement_id)  # raises 404 if not found
+    ann = get_announcement(db, announcement_id)  
     _mark_as_read(db, announcement_id, user_id)
 
 
@@ -235,9 +230,8 @@ def create_announcement(db: Session, data: AnnouncementCreate, author_id: int) -
     payload = data.model_dump(exclude={"target_user_ids"})
     announcement = Announcement(**payload, author_id=author_id)
     db.add(announcement)
-    db.flush()  # get announcement_id before commit
+    db.flush()
 
-    # Save explicit recipient list
     if data.target_type == "users" and data.target_user_ids:
         for uid in set(data.target_user_ids):
             db.add(AnnouncementTargetUser(announcement_id=announcement.announcement_id, user_id=uid))
@@ -253,12 +247,10 @@ def update_announcement(db: Session, announcement_id: int, data: AnnouncementUpd
     announcement = get_announcement(db, announcement_id)
     _check_can_manage(db, announcement, user_id)
 
-    # Apply scalar fields (excludes target_user_ids which lives in a join table)
     scalar = data.model_dump(exclude_unset=True, exclude={"target_user_ids"})
     for field, value in scalar.items():
         setattr(announcement, field, value)
 
-    # Rebuild explicit recipient list when provided
     if data.target_user_ids is not None:
         db.query(AnnouncementTargetUser).filter(
             AnnouncementTargetUser.announcement_id == announcement_id
@@ -276,9 +268,8 @@ def update_announcement(db: Session, announcement_id: int, data: AnnouncementUpd
 
 def delete_announcement(db: Session, announcement_id: int, user_id: int) -> None:
     announcement = get_announcement(db, announcement_id)
-    _check_can_manage(db, announcement, user_id)  # author or admin
-    # Remove linked file records for material-file announcements so they don't
-    # become invisible orphans after the announcement wrapper is gone.
+    _check_can_manage(db, announcement, user_id)  
+
     if announcement.announcement_type == 'material_file':
         db.query(MaterialFile).filter(
             MaterialFile.announcement_id == announcement_id
@@ -307,10 +298,8 @@ def get_available_recipients(
     query = db.query(User).filter(User.user_id != requester_id)
 
     if requester.type_code == "ADM":
-        # Admins can target anyone
         pass
     elif requester.type_code in ("DR", "TA"):
-        # DR/TA can only target students in their courses
         taught_ids = db.query(MaterialTeacher.material_id).filter(
             MaterialTeacher.user_id == requester_id
         ).subquery()
@@ -326,7 +315,6 @@ def get_available_recipients(
         else:
             query = query.filter(User.user_id.in_(enrolled_user_ids))
     elif requester.type_code == "STU":
-        # Students can only target DR/TA of their enrolled courses
         enrolled_material_ids = db.query(MaterialStudent.material_id).filter(
             MaterialStudent.user_id == requester_id
         ).subquery()
@@ -345,7 +333,6 @@ def get_available_recipients(
     if department:
         query = query.filter(User.department == department)
     if search:
-        # name: substring match; uni_code: prefix match to avoid overly broad ID results
         query = query.filter(or_(
             User.name.ilike(f"%{search}%"),
             User.uni_code.ilike(f"{search}%"),

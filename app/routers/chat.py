@@ -256,14 +256,13 @@ async def websocket_chat(
                 "receiver_id": user_id,
             })
 
-        # send_json()
         await ws_manager.send_to_user(user_id, {
             "type":         "connected",
             "user_id":      user_id,
             "online_users": ws_manager.online_users(),
         })
 
-        # receive_json()
+        # receive_json | receive_text
         while True:
             raw = await websocket.receive_text()
             try:
