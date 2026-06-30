@@ -53,7 +53,7 @@ def login_user(db: Session, email: str, password: str) -> dict:
             detail="Invalid email or password",
         )
     token = create_access_token({"sub": str(user.user_id), "type": user.type_code})
-    # send_welcome_email(user.email, user.name)
+    send_welcome_email(user.email, user.name)
     return {"access_token": token, "token_type": "bearer", "user": user}
 
 
@@ -67,7 +67,7 @@ def change_password(db: Session, user_id: int, old_password: str, new_password: 
     user.password = hash_password(new_password)
     user.current_password = False
     db.commit()
-    # send_password_changed_email(user.email, user.name)
+    send_password_changed_email(user.email, user.name)
 
 
 # ── OTP / Password ─────────────────────────────────────────────────────
@@ -84,12 +84,12 @@ def request_otp(db: Session, email: str) -> dict:
         "user_id": user.user_id,
     }
 
-    # sent = send_otp_email(email, otp, user.name)
-    # if not sent:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #         detail="Failed to send OTP email",
-    #     )
+    sent = send_otp_email(email, otp, user.name)
+    if not sent:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send OTP email",
+        )
 
     result: dict = {
         "message": f"OTP sent to {email}. Valid for {settings.OTP_EXPIRE_MINUTES} minutes."

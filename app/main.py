@@ -5,9 +5,8 @@ import os
 
 from app.core.config import settings
 from app.db.database import engine
-from app.db import base  # noqa: F401 — triggers all model imports for create_all
+from app.db import base  # noqa: F401 
 
-# Import models to ensure tables are created
 from app.models import user, material, chat, content  # noqa: F401
 
 # Create all tables
@@ -15,7 +14,7 @@ try:
     base.Base.metadata.create_all(bind=engine)
 except Exception as e:
     import sys
-    print(f"❌ Failed to create tables: {e}")
+    print(f"Failed to create tables: {e}")
     sys.exit(1)
 
 # ── App ───────────────────────────────────────────────────────────────────────
@@ -32,7 +31,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # Restrict to your domain in production
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=True,
@@ -77,6 +76,6 @@ def health():
     return {"status": "ok"}
 
 
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run("app.main:app", host="0.0.0.0", port=8000)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000)
