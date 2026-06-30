@@ -6,9 +6,6 @@ pro_01/
 __pycache__/
 *.pyc
 
-alembic/
-alembic.ini
-
 /app/db/add_db/
 
 uploads/
