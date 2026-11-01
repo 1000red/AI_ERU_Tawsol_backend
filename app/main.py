@@ -1,0 +1,82 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+import os
+
+from app.core.config import settings
+from app.db.database import engine
+from app.db import base  # noqa: F401 
+
+from app.models import user, material, chat, content  # noqa: F401
+
+# Create all tables (Alembic manages migrations, create_all is a safety init)
+try:
+    base.Base.metadata.create_all(bind=engine)
+except Exception as e:
+    import logging
+    logging.getLogger("uvicorn.error").warning(f"Could not connect to create tables on startup: {e}")
+
+# ── App ───────────────────────────────────────────────────────────────────────
+
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description="University community platform — connect students, TAs, and admins",
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+# ── Middleware ────────────────────────────────────────────────────────────────
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=True,
+)
+
+# ── Static files ──────────────────────────────────────────────────────────────
+
+os.makedirs("uploads/materials", exist_ok=True)
+os.makedirs("uploads/content", exist_ok=True)
+os.makedirs("uploads/voice", exist_ok=True)
+os.makedirs("uploads/files", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+# ── Routers ───────────────────────────────────────────────────────────────────
+
+from app.routers import auth, support, users, materials, chat as chat_router, content  # noqa
+from app.routers.quiz import router as quiz_router  # noqa
+from app.routers.neon_services import router as neon_router  # noqa
+
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(materials.router)
+app.include_router(chat_router.router)
+app.include_router(content.router)
+app.include_router(support.router)
+app.include_router(quiz_router)
+app.include_router(neon_router)
+
+
+# ── Health check ──────────────────────────────────────────────────────────────
+
+@app.get("/", tags=["Health"])
+def root():
+    return {
+        "app":     settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status":  "running",
+        "docs":    "/docs",
+    }
+
+
+@app.get("/health", tags=["Health"])
+def health():
+    return {"status": "ok"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000)

@@ -1,0 +1,13 @@
+.env
+env/
+venv/
+pro_01/
+
+__pycache__/
+*.pyc
+
+/app/db/add_db/
+
+uploads/
+node_modules/
+.neon
