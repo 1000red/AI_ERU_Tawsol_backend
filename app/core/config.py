@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 from typing import Optional
 
+OTP_EXPIRE_MINUTES = 10
+
 
 class Settings(BaseSettings):
     # App
@@ -42,12 +44,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440   # 24h
     RESET_TOKEN_EXPIRE_MINUTES: int = 5
 
-    # SendGrid
-    SENDGRID_API_KEY: str = ""
-    FROM_EMAIL: str = "noreply@eru-tawasol.com"
-
-    # OTP
-    OTP_EXPIRE_MINUTES: int = 10
+    # SMTP email
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    FROM_EMAIL: str = ""
 
     # Gemini AI (quiz generation fallback)
     GEMINI_API_KEY: str = ""

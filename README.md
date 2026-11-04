@@ -21,7 +21,7 @@ FastAPI backend for a university community platform that connects students, teac
 - Alembic migrations
 - Pydantic settings and schemas
 - PostgreSQL
-- SendGrid for support/password email flows
+- SMTP for support and account email flows
 - Google Gemini API for quiz generation
 
 ## Project Structure
@@ -61,9 +61,11 @@ SECRET_KEY="replace-with-a-long-random-secret"
 ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 RESET_TOKEN_EXPIRE_MINUTES=5
-SENDGRID_API_KEY=""
-FROM_EMAIL="noreply@eru-tawasol.com"
-OTP_EXPIRE_MINUTES=10
+SMTP_HOST="smtp.example.com"
+SMTP_PORT=587
+SMTP_USERNAME="your-smtp-username"
+SMTP_PASSWORD="your-smtp-password"
+FROM_EMAIL="noreply@example.com"
 GEMINI_API_KEY=""
 ```
 
