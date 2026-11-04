@@ -123,7 +123,7 @@ class TestNeonServicesE2E(unittest.TestCase):
 
         # Test unverified claim decoding helper
         from jose import jwt
-        mock_token = jwt.encode({"sub": "user_42", "email": "student@eru.edu"}, "dummy_secret", algorithm="HS256")
+        mock_token = jwt.encode({"sub": "user_42", "email": "student@weschool.test"}, "dummy_secret", algorithm="HS256")
         claims = jwt.get_unverified_claims(mock_token)
         self.assertEqual(claims.get("sub"), "user_42")
         print("PASS: Neon Auth token decode and configuration verified.")

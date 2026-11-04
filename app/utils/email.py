@@ -47,7 +47,7 @@ def send_otp_email(to_email: str, otp: str, user_name: str) -> bool:
     html_body = f"""
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;">
       <div style="background:#1565C0;padding:24px;border-radius:12px 12px 0 0;text-align:center;">
-        <h1 style="color:#fff;margin:0;font-size:24px;">AI Connect</h1>
+        <h1 style="color:#fff;margin:0;font-size:24px;">WE School</h1>
         <p style="color:#90CAF9;margin:4px 0 0;">Password Reset Request</p>
       </div>
       <div style="background:#f5f7fa;padding:32px;border-radius:0 0 12px 12px;">
@@ -59,11 +59,11 @@ def send_otp_email(to_email: str, otp: str, user_name: str) -> bool:
         </div>
         <p style="color:#999;font-size:13px;">If you did not request a password reset, you can safely ignore this email.</p>
         <hr style="border:none;border-top:1px solid #e0e0e0;margin:24px 0;">
-        <p style="color:#bbb;font-size:12px;text-align:center;">AI Connect &mdash; El Ryada University Community Platform</p>
+        <p style="color:#bbb;font-size:12px;text-align:center;">WE School &mdash; WE Applied Technology Schools</p>
       </div>
     </div>
     """
-    return _send_email(to_email, "AI Connect – Your Password Reset Code", html_body)
+    return _send_email(to_email, "WE School – Your Password Reset Code", html_body)
 
 
 def send_contact_us_email(
@@ -77,7 +77,7 @@ def send_contact_us_email(
     html_body = f"""
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;">
       <div style="background:#1565C0;padding:24px;border-radius:12px 12px 0 0;text-align:center;">
-        <h1 style="color:#fff;margin:0;font-size:22px;">AI Connect — Contact Us</h1>
+        <h1 style="color:#fff;margin:0;font-size:22px;">WE School — Contact Us</h1>
         <p style="color:#90CAF9;margin:4px 0 0;">New message from a user</p>
       </div>
       <div style="background:#f5f7fa;padding:32px;border-radius:0 0 12px 12px;">
@@ -89,44 +89,44 @@ def send_contact_us_email(
         </table>
         <div style="background:#fff;border-right:4px solid #1565C0;padding:16px 20px;border-radius:4px;color:#333;line-height:1.7;white-space:pre-wrap;">{message}</div>
         <hr style="border:none;border-top:1px solid #e0e0e0;margin:24px 0;">
-        <p style="color:#bbb;font-size:12px;text-align:center;">AI Connect &mdash; El Ryada University Community Platform</p>
+        <p style="color:#bbb;font-size:12px;text-align:center;">WE School &mdash; WE Applied Technology Schools</p>
       </div>
     </div>
     """
-    return _send_email(settings.FROM_EMAIL, f"[AI Connect] {issue_label} — {subject}", html_body)
+    return _send_email(settings.FROM_EMAIL, f"[WE School] {issue_label} — {subject}", html_body)
 
 
 def send_welcome_email(to_email: str, user_name: str) -> bool:
     html_body = f"""
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;">
       <div style="background:#1565C0;padding:24px;border-radius:12px 12px 0 0;text-align:center;">
-        <h1 style="color:#fff;margin:0;">Welcome to AI Connect!</h1>
+        <h1 style="color:#fff;margin:0;">Welcome to WE School!</h1>
       </div>
       <div style="background:#f5f7fa;padding:32px;border-radius:0 0 12px 12px;">
         <p style="color:#333;font-size:16px;">Hi <strong>{user_name}</strong>,</p>
-        <p style="color:#555;">Your account has been created successfully. You can now connect with teaching assistants, admins, and fellow students on AI Connect.</p>
+        <p style="color:#555;">Your account has been created successfully. You can now connect with teachers, School Admins, and fellow students on WE School.</p>
         <p style="color:#555;">Start exploring your courses and joining the community!</p>
         <hr style="border:none;border-top:1px solid #e0e0e0;margin:24px 0;">
-        <p style="color:#bbb;font-size:12px;text-align:center;">AI Connect &mdash; El Ryada University Community Platform</p>
+        <p style="color:#bbb;font-size:12px;text-align:center;">WE School &mdash; WE Applied Technology Schools</p>
       </div>
     </div>
     """
-    return _send_email(to_email, "Welcome to AI Connect 🎓", html_body)
+    return _send_email(to_email, "Welcome to WE School 🎓", html_body)
 
 
 def send_password_changed_email(to_email: str, user_name: str) -> bool:
     html_body = f"""
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;">
       <div style="background:#1565C0;padding:24px;border-radius:12px 12px 0 0;text-align:center;">
-        <h1 style="color:#fff;margin:0;font-size:24px;">AI Connect</h1>
+        <h1 style="color:#fff;margin:0;font-size:24px;">WE School</h1>
         <p style="color:#90CAF9;margin:4px 0 0;">Password Changed</p>
       </div>
       <div style="background:#f5f7fa;padding:32px;border-radius:0 0 12px 12px;">
         <p style="color:#333;font-size:16px;">Hi <strong>{user_name}</strong>,</p>
         <p style="color:#555;">Your password has been changed successfully. If you did not make this change, please contact support immediately.</p>
         <hr style="border:none;border-top:1px solid #e0e0e0;margin:24px 0;">
-        <p style="color:#bbb;font-size:12px;text-align:center;">AI Connect &mdash; El Ryada University Community Platform</p>
+        <p style="color:#bbb;font-size:12px;text-align:center;">WE School &mdash; WE Applied Technology Schools</p>
       </div>
     </div>
     """
-    return _send_email(to_email, "AI Connect – Password Changed", html_body)
+    return _send_email(to_email, "WE School – Password Changed", html_body)

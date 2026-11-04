@@ -1,6 +1,6 @@
-# ERU Tawasol Backend
+# WE School Backend
 
-FastAPI backend for a university community platform that connects students, teaching assistants, doctors, and admins. It provides authentication, user profile management, course materials, announcements, assignments, real-time chat, support contact, and AI-assisted quiz generation from uploaded course files.
+FastAPI backend for **WE School** (WE Applied Technology Schools), a school management and communication platform that connects students, teachers, and School Admins. It provides authentication, user profile management, school course materials, announcements, assignments, real-time chat, support contact, and AI-assisted quiz generation from uploaded course files.
 
 ## Features
 
@@ -53,7 +53,7 @@ pip install -r requirements.txt
 Create a `.env` file in the project root:
 
 ```env
-APP_NAME="ERU Tawasol"
+APP_NAME="WE School"
 APP_VERSION="2.0.0"
 DEBUG=false
 DATABASE_URL="postgresql://postgres:password@localhost:5432/eru_tawasol"

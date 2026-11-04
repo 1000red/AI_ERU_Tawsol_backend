@@ -64,7 +64,7 @@ async def generate_quiz_endpoint(
         raise HTTPException(
             status_code=403,
             detail="Quiz generation is only available for official course materials "
-                   "uploaded by a Doctor or Teaching Assistant.",
+                   "uploaded by a Teacher.",
         )
 
     # ── File must belong to a course ──────────────────────────────────────

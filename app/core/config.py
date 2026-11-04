@@ -7,7 +7,7 @@ OTP_EXPIRE_MINUTES = 10
 
 class Settings(BaseSettings):
     # App
-    APP_NAME: str = "ERU Tawasol"
+    APP_NAME: str = "WE School"
     APP_VERSION: str = "2.0.0"
     DEBUG: bool = False
 

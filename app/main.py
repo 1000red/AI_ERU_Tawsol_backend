@@ -21,7 +21,7 @@ except Exception as e:
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="University community platform — connect students, TAs, and admins",
+    description="School platform for WE Applied Technology Schools — connect students, teachers, and School Admins",
     docs_url="/docs",
     redoc_url="/redoc",
 )

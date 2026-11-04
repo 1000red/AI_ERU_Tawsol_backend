@@ -12,8 +12,8 @@ multiple-choice questions from the LECTURE CONTENT below.
 
 STRICT RULES — follow every rule exactly:
 1. Use ONLY information found in the lecture content. Do NOT add outside knowledge.
-2. Ignore completely: author names, instructor names, course codes, page numbers, \
-   headers, footers, watermarks, timestamps, file names, university names.
+2. Ignore completely: author names, teacher names, course codes, page numbers, \
+   headers, footers, watermarks, timestamps, file names, school names.
 3. Focus on: key concepts, definitions, processes, principles, and learning objectives.
 4. Difficulty level: MEDIUM.
 5. Generate exactly 10 questions. Each question has exactly 4 options: A, B, C, D.
