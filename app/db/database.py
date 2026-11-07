@@ -51,7 +51,7 @@ def check_connection() -> bool:
 try:
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
-except OperationalError as e:
+except Exception as e:
     logger.warning(f"Database connection failed on startup: {e}. Check DATABASE_URL.")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
