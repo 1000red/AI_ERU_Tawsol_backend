@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     # Database (PostgreSQL / Neon)
     DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/eru_tawasol?sslmode=require"
     DATABASE_URL_UNPOOLED: Optional[str] = None
+    # Create tables with Base.metadata.create_all() at startup. Keep this off:
+    # Alembic (alembic upgrade head) is the source of truth for the schema, and
+    # create_all() on a fresh database would create tables without Alembic
+    # version tracking. Only enable it for throwaway local experiments.
+    AUTO_CREATE_TABLES: bool = False
 
     # Neon Auth (Managed Better Auth / JWKS)
     NEON_AUTH_BASE_URL: str = ""

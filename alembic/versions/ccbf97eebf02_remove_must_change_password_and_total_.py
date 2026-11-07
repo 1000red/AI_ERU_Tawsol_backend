@@ -13,7 +13,12 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'ccbf97eebf02'
-down_revision: Union[str, None] = None
+# Re-parented from None to the baseline (000000000001): this legacy revision
+# only ALTERs pre-existing tables, so it now runs after the baseline that
+# creates them on fresh databases. Existing databases already past this
+# revision are unaffected (alembic only replays migrations above the current
+# revision).
+down_revision: Union[str, None] = '000000000001'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

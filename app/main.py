@@ -9,12 +9,16 @@ from app.db import base  # noqa: F401
 
 from app.models import user, material, chat, content  # noqa: F401
 
-# Create all tables (Alembic manages migrations, create_all is a safety init)
-try:
-    base.Base.metadata.create_all(bind=engine)
-except Exception as e:
-    import logging
-    logging.getLogger("uvicorn.error").warning(f"Could not connect to create tables on startup: {e}")
+# Create all tables on startup only when explicitly requested. Alembic
+# (alembic upgrade head) is the source of truth for the schema; silently
+# creating tables here would leave a fresh database without Alembic version
+# tracking and make migration history unreliable.
+if settings.AUTO_CREATE_TABLES:
+    try:
+        base.Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").warning(f"Could not connect to create tables on startup: {e}")
 
 # ── App ───────────────────────────────────────────────────────────────────────
 

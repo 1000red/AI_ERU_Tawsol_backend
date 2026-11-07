@@ -9,9 +9,13 @@ logger = logging.getLogger(__name__)
 
 def _normalize_db_url(url: str) -> str:
     if url.startswith("postgres://"):
-        return url.replace("postgres://", "postgresql+psycopg2://", 1)
-    if url.startswith("postgresql://") and not url.startswith("postgresql+"):
-        return url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    # Neon endpoints require TLS; make it explicit when the URL omits it so
+    # connections behave the same locally and against serverless Postgres.
+    if "neon.tech" in url and "sslmode=" not in url:
+        url = f"{url}{'&' if '?' in url else '?'}sslmode=require"
     return url
 
 db_url = _normalize_db_url(settings.DATABASE_URL)
@@ -28,6 +32,8 @@ else:
         pool_pre_ping=True,
         pool_size=10,
         max_overflow=20,
+        pool_recycle=900,   # Recycle connections before serverless idle cut-offs
+        pool_use_lifo=True, # Reuse newest connections to keep idle count low
         connect_args={"connect_timeout": 5},
     )
 
