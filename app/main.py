@@ -9,20 +9,23 @@ from app.db import base  # noqa: F401
 
 from app.models import user, material, chat, content  # noqa: F401
 
-# Create all tables
-try:
-    base.Base.metadata.create_all(bind=engine)
-except Exception as e:
-    import sys
-    print(f"Failed to create tables: {e}")
-    sys.exit(1)
+# Create all tables on startup only when explicitly requested. Alembic
+# (alembic upgrade head) is the source of truth for the schema; silently
+# creating tables here would leave a fresh database without Alembic version
+# tracking and make migration history unreliable.
+if settings.AUTO_CREATE_TABLES:
+    try:
+        base.Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").warning(f"Could not connect to create tables on startup: {e}")
 
 # ── App ───────────────────────────────────────────────────────────────────────
 
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="University community platform — connect students, TAs, and admins",
+    description="School platform for WE Applied Technology Schools — connect students, teachers, and School Admins",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -39,16 +42,22 @@ app.add_middleware(
 
 # ── Static files ──────────────────────────────────────────────────────────────
 
-os.makedirs("uploads/materials", exist_ok=True)
-os.makedirs("uploads/content", exist_ok=True)
-os.makedirs("uploads/voice", exist_ok=True)
-os.makedirs("uploads/files", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+try:
+    os.makedirs("uploads/materials", exist_ok=True)
+    os.makedirs("uploads/content", exist_ok=True)
+    os.makedirs("uploads/voice", exist_ok=True)
+    os.makedirs("uploads/files", exist_ok=True)
+    if os.path.exists("uploads"):
+        app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+except Exception as e:
+    import logging
+    logging.getLogger("uvicorn.error").warning(f"Could not mount static uploads directory: {e}")
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 
 from app.routers import auth, support, users, materials, chat as chat_router, content  # noqa
 from app.routers.quiz import router as quiz_router  # noqa
+from app.routers.neon_services import router as neon_router  # noqa
 
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -57,6 +66,7 @@ app.include_router(chat_router.router)
 app.include_router(content.router)
 app.include_router(support.router)
 app.include_router(quiz_router)
+app.include_router(neon_router)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

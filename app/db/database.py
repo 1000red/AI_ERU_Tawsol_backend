@@ -1,22 +1,58 @@
+import logging
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import OperationalError
 from typing import Generator
 from app.core.config import settings
-import sys
 
-try:
+logger = logging.getLogger(__name__)
+
+def _normalize_db_url(url: str) -> str:
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    # Neon endpoints require TLS; make it explicit when the URL omits it so
+    # connections behave the same locally and against serverless Postgres.
+    if "neon.tech" in url and "sslmode=" not in url:
+        url = f"{url}{'&' if '?' in url else '?'}sslmode=require"
+    return url
+
+db_url = _normalize_db_url(settings.DATABASE_URL)
+
+# Configure engine based on database dialect (PostgreSQL vs SQLite for tests)
+if db_url.startswith("sqlite"):
     engine = create_engine(
-        settings.DATABASE_URL,
+        db_url,
+        connect_args={"check_same_thread": False},
+    )
+else:
+    engine = create_engine(
+        db_url,
         pool_pre_ping=True,
         pool_size=10,
         max_overflow=20,
+        pool_recycle=900,   # Recycle connections before serverless idle cut-offs
+        pool_use_lifo=True, # Reuse newest connections to keep idle count low
+        connect_args={"connect_timeout": 5},
     )
+
+def check_connection() -> bool:
+    """Test database connectivity without terminating the process."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return True
+    except Exception as exc:
+        logger.warning(f"Database connection check failed: {exc}")
+        return False
+
+# Attempt initial ping non-fatally to allow application startup
+try:
     with engine.connect() as conn:
         conn.execute(text("SELECT 1"))
-except OperationalError:
-    print("Database connection failed — check DATABASE_URL and make sure PostgreSQL is running.")
-    sys.exit(1)
+except OperationalError as e:
+    logger.warning(f"Database connection failed on startup: {e}. Check DATABASE_URL.")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

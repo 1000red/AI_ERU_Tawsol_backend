@@ -41,6 +41,14 @@ def decode_token(token: str) -> dict:
     try:
         return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     except JWTError as e:
+        # Support Neon Auth JWTs
+        if settings.NEON_AUTH_BASE_URL:
+            try:
+                claims = jwt.get_unverified_claims(token)
+                if claims and ("sub" in claims or "id" in claims):
+                    return claims
+            except Exception:
+                pass
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",

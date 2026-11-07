@@ -9,3 +9,5 @@ __pycache__/
 /app/db/add_db/
 
 uploads/
+node_modules/
+.neon

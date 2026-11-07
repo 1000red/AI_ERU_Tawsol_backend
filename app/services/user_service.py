@@ -8,7 +8,7 @@ from app.models.user import User
 from app.schemas.user import UserUpdate
 from app.core.security import hash_password, verify_password, create_access_token, create_reset_token, decode_token
 from app.utils.email import send_otp_email, send_welcome_email, send_password_changed_email
-from app.core.config import settings
+from app.core.config import OTP_EXPIRE_MINUTES, settings
 
 
 _otp_store: dict[str, dict] = {}
@@ -80,7 +80,7 @@ def request_otp(db: Session, email: str) -> dict:
     otp = _generate_otp()
     _otp_store[email] = {
         "otp": otp,
-        "expires_at": datetime.now(timezone.utc) + timedelta(minutes=settings.OTP_EXPIRE_MINUTES),
+        "expires_at": datetime.now(timezone.utc) + timedelta(minutes=OTP_EXPIRE_MINUTES),
         "user_id": user.user_id,
     }
 
@@ -92,10 +92,8 @@ def request_otp(db: Session, email: str) -> dict:
         )
 
     result: dict = {
-        "message": f"OTP sent to {email}. Valid for {settings.OTP_EXPIRE_MINUTES} minutes."
+        "message": f"OTP sent to {email}. Valid for {OTP_EXPIRE_MINUTES} minutes."
     }
-    if not settings.SENDGRID_API_KEY:
-        result["debug_otp"] = otp
     return result
 
 

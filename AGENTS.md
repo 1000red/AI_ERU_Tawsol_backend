@@ -27,4 +27,4 @@ Recent commit messages are short and informal, for example `the finall edit_02`.
 
 ## Security & Configuration Tips
 
-Configuration is loaded from `.env` through `app/core/config.py`. Set `DATABASE_URL`, `SECRET_KEY`, `SENDGRID_API_KEY`, `FROM_EMAIL`, and `GEMINI_API_KEY` locally as needed. Never commit real secrets, database dumps, virtual environments, or `uploads/` contents.
+Configuration is loaded from `.env` through `app/core/config.py`. Set `DATABASE_URL`, `SECRET_KEY`, SMTP settings (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `FROM_EMAIL`), and `GEMINI_API_KEY` locally as needed. Never commit real secrets, database dumps, virtual environments, or `uploads/` contents.

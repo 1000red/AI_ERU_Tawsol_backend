@@ -12,8 +12,8 @@ multiple-choice questions from the LECTURE CONTENT below.
 
 STRICT RULES — follow every rule exactly:
 1. Use ONLY information found in the lecture content. Do NOT add outside knowledge.
-2. Ignore completely: author names, instructor names, course codes, page numbers, \
-   headers, footers, watermarks, timestamps, file names, university names.
+2. Ignore completely: author names, teacher names, course codes, page numbers, \
+   headers, footers, watermarks, timestamps, file names, school names.
 3. Focus on: key concepts, definitions, processes, principles, and learning objectives.
 4. Difficulty level: MEDIUM.
 5. Generate exactly 10 questions. Each question has exactly 4 options: A, B, C, D.
@@ -131,6 +131,20 @@ async def generate_quiz(text: str) -> list[_StoredQuestion]:
 
     trimmed = text[:12_000]
     prompt = _PROMPT + trimmed
+
+    from app.services.neon_ai_gateway import neon_ai
+
+    # Try Neon AI Gateway first if configured
+    if neon_ai.is_configured:
+        try:
+            raw = await neon_ai.create_chat_completion(
+                messages=[{"role": "user", "content": prompt}],
+                model="gemini-2.5-flash",
+            )
+            if raw and raw.strip():
+                return _parse_questions(raw)
+        except Exception:
+            pass
 
     from google.genai import types
 
