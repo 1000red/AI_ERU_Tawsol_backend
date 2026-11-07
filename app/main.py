@@ -42,13 +42,14 @@ app.add_middleware(
 
 # ── Static files ──────────────────────────────────────────────────────────────
 
+is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+upload_root = "/tmp/uploads" if is_serverless else "uploads"
+
 try:
-    os.makedirs("uploads/materials", exist_ok=True)
-    os.makedirs("uploads/content", exist_ok=True)
-    os.makedirs("uploads/voice", exist_ok=True)
-    os.makedirs("uploads/files", exist_ok=True)
-    if os.path.exists("uploads"):
-        app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+    for sub in ("materials", "content", "voice", "files"):
+        os.makedirs(os.path.join(upload_root, sub), exist_ok=True)
+    if os.path.exists(upload_root):
+        app.mount("/uploads", StaticFiles(directory=upload_root), name="uploads")
 except Exception as e:
     import logging
     logging.getLogger("uvicorn.error").warning(f"Could not mount static uploads directory: {e}")

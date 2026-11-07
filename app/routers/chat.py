@@ -24,11 +24,14 @@ from app.services.chat_service import (
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
-VOICE_DIR = "uploads/voice"
+is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+BASE_UPLOAD = "/tmp/uploads" if is_serverless else "uploads"
+
+VOICE_DIR = os.path.join(BASE_UPLOAD, "voice")
 ALLOWED_AUDIO_EXTENSIONS = {".m4a", ".mp3", ".ogg", ".wav", ".aac", ".webm", ".opus", ".flac"}
 MAX_VOICE_SIZE_BYTES = 25 * 1024 * 1024  # 25 MB
 
-FILE_DIR = "uploads/files"
+FILE_DIR = os.path.join(BASE_UPLOAD, "files")
 ALLOWED_FILE_EXTENSIONS = {
     ".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic",
     ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv",
@@ -56,6 +59,10 @@ async def upload_voice(
         raise HTTPException(status_code=413, detail="Voice file exceeds 25 MB limit")
 
     filename = f"{uuid.uuid4().hex}{ext}"
+    try:
+        os.makedirs(VOICE_DIR, exist_ok=True)
+    except Exception:
+        pass
     save_path = os.path.join(VOICE_DIR, filename)
     with open(save_path, "wb") as f:
         f.write(contents)
@@ -82,7 +89,10 @@ async def upload_file(
     if len(contents) > MAX_FILE_SIZE_BYTES:
         raise HTTPException(status_code=413, detail="File exceeds 50 MB limit.")
 
-    os.makedirs(FILE_DIR, exist_ok=True)
+    try:
+        os.makedirs(FILE_DIR, exist_ok=True)
+    except Exception:
+        pass
     filename = f"{uuid.uuid4().hex}{ext}"
     save_path = os.path.join(FILE_DIR, filename)
     with open(save_path, "wb") as f:

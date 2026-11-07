@@ -2,14 +2,22 @@ import os, uuid, shutil
 from fastapi import UploadFile
 from app.services.neon_storage import neon_storage
 
-UPLOAD_DIR = "uploads/content"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+UPLOAD_DIR = "/tmp/uploads/content" if is_serverless else "uploads/content"
+try:
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+except Exception:
+    pass
 
 
 def save_file(file: UploadFile) -> tuple[str, int] | tuple[None, None]:
     """Save an uploaded file to local disk and Neon Object Storage if enabled."""
     if not file:
         return None, None
+    try:
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+    except Exception:
+        pass
     ext = os.path.splitext(file.filename)[1]
     filename = f"{uuid.uuid4().hex}{ext}"
     path = os.path.join(UPLOAD_DIR, filename)
