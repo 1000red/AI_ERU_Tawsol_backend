@@ -6,8 +6,16 @@ and JWT verification via Neon JWKS.
 
 import logging
 from typing import Any, Dict, Optional
-import httpx
-from jose import jwt
+
+try:
+    import httpx
+except ImportError:
+    httpx = None
+
+try:
+    from jose import jwt
+except ImportError:
+    jwt = None
 
 from app.core.config import settings
 
@@ -28,7 +36,7 @@ class NeonAuthService:
 
     async def get_jwks(self) -> Optional[Dict[str, Any]]:
         """Fetch JWKS keys from Neon Auth endpoint."""
-        if not self.jwks_url:
+        if not self.jwks_url or not httpx:
             return None
 
         if self._cached_jwks:
@@ -48,7 +56,7 @@ class NeonAuthService:
 
     async def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
         """Verify token against Neon Auth JWKS or inspect claims."""
-        if not token:
+        if not token or not jwt:
             return None
 
         jwks = await self.get_jwks()
@@ -77,7 +85,7 @@ class NeonAuthService:
 
     async def get_session(self, auth_header: str) -> Optional[Dict[str, Any]]:
         """Check session with Neon Auth server."""
-        if not self.is_configured:
+        if not self.is_configured or not httpx:
             return None
 
         url = f"{self.base_url}/get-session"

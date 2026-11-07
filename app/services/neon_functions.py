@@ -5,7 +5,11 @@ Client for invoking long-running serverless functions deployed to Neon branches.
 
 import logging
 from typing import Any, Dict, Optional
-import httpx
+
+try:
+    import httpx
+except ImportError:
+    httpx = None
 
 from app.core.config import settings
 
@@ -35,6 +39,13 @@ class NeonFunctionsService:
             return {
                 "success": False,
                 "error": f"Base URL for Neon function '{slug}' is not configured.",
+                "status_code": 503,
+            }
+
+        if not httpx:
+            return {
+                "success": False,
+                "error": "httpx library is not installed",
                 "status_code": 503,
             }
 

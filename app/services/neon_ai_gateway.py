@@ -6,7 +6,11 @@ branch-scoped to this Neon environment.
 
 import logging
 from typing import Any, Dict, List, Optional
-import httpx
+
+try:
+    import httpx
+except ImportError:
+    httpx = None
 
 from app.core.config import settings
 
@@ -20,7 +24,7 @@ class NeonAIGatewayService:
 
     @property
     def is_configured(self) -> bool:
-        return bool(self.base_url and self.token)
+        return bool(httpx and self.base_url and self.token)
 
     @property
     def headers(self) -> Dict[str, str]:
@@ -31,7 +35,7 @@ class NeonAIGatewayService:
 
     async def list_models(self) -> List[Dict[str, Any]]:
         """List available models from the branch endpoint /v1/models."""
-        if not self.is_configured:
+        if not self.is_configured or not httpx:
             return []
 
         url = f"{self.base_url}/v1/models"
@@ -55,7 +59,7 @@ class NeonAIGatewayService:
         max_tokens: Optional[int] = None,
     ) -> Optional[str]:
         """Unified Chat Completions endpoint (/v1/chat/completions)."""
-        if not self.is_configured:
+        if not self.is_configured or not httpx:
             return None
 
         url = f"{self.base_url}/v1/chat/completions"
