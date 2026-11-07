@@ -3,6 +3,7 @@
 import sys
 import os
 import traceback
+from urllib.parse import parse_qs, urlencode
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if root_dir not in sys.path:
@@ -13,21 +14,31 @@ try:
 
     async def app(scope, receive, send):
         if scope.get("type") in ("http", "websocket"):
-            headers = dict(scope.get("headers", []))
-            # Vercel sends the client requested path in x-matched-path
-            matched = headers.get(b"x-matched-path", b"").decode("utf-8", errors="ignore")
-            if matched and not matched.startswith("/api/index"):
-                clean_path = matched.split("?")[0]
-                scope["path"] = clean_path
-                scope["raw_path"] = clean_path.encode("utf-8")
-            elif scope.get("path", "").startswith("/api/index.py"):
-                rest = scope["path"][len("/api/index.py"):] or "/"
-                scope["path"] = rest
-                scope["raw_path"] = rest.encode("utf-8")
-            elif scope.get("path", "").startswith("/api/index"):
-                rest = scope["path"][len("/api/index"):] or "/"
-                scope["path"] = rest
-                scope["raw_path"] = rest.encode("utf-8")
+            qs = scope.get("query_string", b"").decode("utf-8", errors="ignore")
+            params = parse_qs(qs, keep_blank_values=True)
+
+            if "__orig_path" in params:
+                orig = params.pop("__orig_path")[0]
+                clean = "/" + orig.strip("/") if orig.strip("/") else "/"
+                scope["path"] = clean
+                scope["raw_path"] = clean.encode("utf-8")
+                new_qs = urlencode(params, doseq=True)
+                scope["query_string"] = new_qs.encode("utf-8")
+            else:
+                headers = dict(scope.get("headers", []))
+                matched = headers.get(b"x-matched-path", b"").decode("utf-8", errors="ignore")
+                if matched and not matched.startswith("/api/index"):
+                    clean = matched.split("?")[0]
+                    scope["path"] = clean
+                    scope["raw_path"] = clean.encode("utf-8")
+                elif scope.get("path", "").startswith("/api/index.py"):
+                    rest = scope["path"][len("/api/index.py"):] or "/"
+                    scope["path"] = rest
+                    scope["raw_path"] = rest.encode("utf-8")
+                elif scope.get("path", "").startswith("/api/index"):
+                    rest = scope["path"][len("/api/index"):] or "/"
+                    scope["path"] = rest
+                    scope["raw_path"] = rest.encode("utf-8")
 
         await fastapi_app(scope, receive, send)
 
