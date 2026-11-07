@@ -9,11 +9,17 @@ logger = logging.getLogger(__name__)
 
 def _normalize_db_url(url: str) -> str:
     if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql+psycopg2://", 1)
-    elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
-        url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
-    # Neon endpoints require TLS; make it explicit when the URL omits it so
-    # connections behave the same locally and against serverless Postgres.
+        url = url.replace("postgres://", "postgresql://", 1)
+    if url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        try:
+            import psycopg2
+            url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        except ImportError:
+            try:
+                import psycopg
+                url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+            except ImportError:
+                pass
     if "neon.tech" in url and "sslmode=" not in url:
         url = f"{url}{'&' if '?' in url else '?'}sslmode=require"
     return url
