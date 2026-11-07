@@ -8,6 +8,7 @@
   ],
   "functions": {
     "api/index.py": {
+      "includeFiles": "app/**",
       "excludeFiles": "{node_modules/**,tests/**,.git/**}"
     }
   }

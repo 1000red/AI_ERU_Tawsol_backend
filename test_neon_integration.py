@@ -273,8 +273,8 @@ class TestNeonServicesE2E(unittest.TestCase):
         # Verify api/index.py exposes app and handler
         import api.index
         self.assertIsNotNone(getattr(api.index, "app", None))
-        self.assertIsNotNone(getattr(api.index, "handler", None))
-        self.assertIs(api.index.app, api.index.handler)
+        self.assertFalse(hasattr(api.index, "handler"))
+        self.assertIn("includeFiles", vcfg.get("functions", {}).get("api/index.py", {}))
         print("PASS: Vercel serverless configuration and entrypoint verified.")
 
 
