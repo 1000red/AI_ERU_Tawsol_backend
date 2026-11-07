@@ -28,6 +28,7 @@ app = FastAPI(
     description="School platform for WE Applied Technology Schools — connect students, teachers, and School Admins",
     docs_url="/docs",
     redoc_url="/redoc",
+    redirect_slashes=False,
 )
 
 # ── Middleware ────────────────────────────────────────────────────────────────
@@ -73,6 +74,8 @@ app.include_router(neon_router)
 # ── Health check ──────────────────────────────────────────────────────────────
 
 @app.get("/", tags=["Health"])
+@app.get("/api", tags=["Health"], include_in_schema=False)
+@app.get("/api/index.py", tags=["Health"], include_in_schema=False)
 def root():
     return {
         "app":     settings.APP_NAME,
@@ -83,6 +86,7 @@ def root():
 
 
 @app.get("/health", tags=["Health"])
+@app.get("/api/health", tags=["Health"], include_in_schema=False)
 def health():
     return {"status": "ok"}
 

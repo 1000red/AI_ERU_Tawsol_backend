@@ -9,7 +9,28 @@ if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
 try:
-    from app.main import app
+    from app.main import app as fastapi_app
+
+    async def app(scope, receive, send):
+        if scope.get("type") in ("http", "websocket"):
+            headers = dict(scope.get("headers", []))
+            # Vercel sends the client requested path in x-matched-path
+            matched = headers.get(b"x-matched-path", b"").decode("utf-8", errors="ignore")
+            if matched and not matched.startswith("/api/index"):
+                clean_path = matched.split("?")[0]
+                scope["path"] = clean_path
+                scope["raw_path"] = clean_path.encode("utf-8")
+            elif scope.get("path", "").startswith("/api/index.py"):
+                rest = scope["path"][len("/api/index.py"):] or "/"
+                scope["path"] = rest
+                scope["raw_path"] = rest.encode("utf-8")
+            elif scope.get("path", "").startswith("/api/index"):
+                rest = scope["path"][len("/api/index"):] or "/"
+                scope["path"] = rest
+                scope["raw_path"] = rest.encode("utf-8")
+
+        await fastapi_app(scope, receive, send)
+
 except Exception as e:
     from fastapi import FastAPI
     from fastapi.responses import JSONResponse
