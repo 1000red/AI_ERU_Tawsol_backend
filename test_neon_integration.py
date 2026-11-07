@@ -257,6 +257,27 @@ class TestNeonServicesE2E(unittest.TestCase):
         self.assertNotIn("pooler", settings.DATABASE_URL_UNPOOLED)
         print("PASS: Alembic direct unpooled connection configuration verified.")
 
+    def test_13_vercel_configuration_and_entrypoint(self):
+        """Verify Vercel serverless configuration and API entrypoint integrity."""
+        import json
+        vercel_json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vercel.json")
+        self.assertTrue(os.path.isfile(vercel_json_path))
+        with open(vercel_json_path, "r", encoding="utf-8") as f:
+            vcfg = json.load(f)
+
+        # Verify deprecated version field is removed
+        self.assertNotIn("version", vcfg)
+        self.assertIn("rewrites", vcfg)
+        self.assertTrue(any(r.get("destination") == "/api/index.py" for r in vcfg["rewrites"]))
+
+        # Verify api/index.py exposes app and handler
+        import api.index
+        self.assertIsNotNone(getattr(api.index, "app", None))
+        self.assertIsNotNone(getattr(api.index, "handler", None))
+        self.assertIs(api.index.app, api.index.handler)
+        print("PASS: Vercel serverless configuration and entrypoint verified.")
+
 
 if __name__ == "__main__":
     unittest.main()
+
