@@ -14,7 +14,14 @@ try:
 
     async def app(scope, receive, send):
         if scope.get("type") in ("http", "websocket"):
+            raw_p = scope.get("path", "")
             qs = scope.get("query_string", b"").decode("utf-8", errors="ignore")
+
+            if "?" in raw_p:
+                path_part, qs_part = raw_p.split("?", 1)
+                scope["path"] = path_part
+                qs = f"{qs}&{qs_part}" if qs else qs_part
+
             params = parse_qs(qs, keep_blank_values=True)
 
             if "__orig_path" in params:

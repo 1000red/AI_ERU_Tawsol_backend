@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
@@ -71,17 +71,22 @@ app.include_router(quiz_router)
 app.include_router(neon_router)
 
 
-# ── Health check ──────────────────────────────────────────────────────────────
+# ── Health check & Diagnostics ────────────────────────────────────────────────
 
 @app.get("/", tags=["Health"])
 @app.get("/api", tags=["Health"], include_in_schema=False)
 @app.get("/api/index.py", tags=["Health"], include_in_schema=False)
-def root():
+def root(request: Request):
     return {
-        "app":     settings.APP_NAME,
-        "version": settings.APP_VERSION,
-        "status":  "running",
-        "docs":    "/docs",
+        "app":         settings.APP_NAME,
+        "version":     settings.APP_VERSION,
+        "status":      "running",
+        "docs":        "/docs",
+        "scope_path":  request.scope.get("path"),
+        "raw_path":    request.scope.get("raw_path", b"").decode("utf-8", errors="ignore"),
+        "query_string": request.scope.get("query_string", b"").decode("utf-8", errors="ignore"),
+        "matched_header": request.headers.get("x-matched-path"),
+        "forwarded_uri": request.headers.get("x-forwarded-uri"),
     }
 
 
