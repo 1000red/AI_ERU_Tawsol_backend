@@ -42,11 +42,16 @@ app.add_middleware(
 
 # ── Static files ──────────────────────────────────────────────────────────────
 
-os.makedirs("uploads/materials", exist_ok=True)
-os.makedirs("uploads/content", exist_ok=True)
-os.makedirs("uploads/voice", exist_ok=True)
-os.makedirs("uploads/files", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+try:
+    os.makedirs("uploads/materials", exist_ok=True)
+    os.makedirs("uploads/content", exist_ok=True)
+    os.makedirs("uploads/voice", exist_ok=True)
+    os.makedirs("uploads/files", exist_ok=True)
+    if os.path.exists("uploads"):
+        app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+except Exception as e:
+    import logging
+    logging.getLogger("uvicorn.error").warning(f"Could not mount static uploads directory: {e}")
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 
