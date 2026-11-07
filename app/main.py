@@ -33,6 +33,18 @@ app = FastAPI(
 
 # ── Middleware ────────────────────────────────────────────────────────────────
 
+@app.middleware("http")
+async def vercel_routing_middleware(request: Request, call_next):
+    orig = request.query_params.get("__orig_path")
+    if orig:
+        clean = "/" + orig.strip("/") if orig.strip("/") else "/"
+        request.scope["path"] = clean
+        request.scope["raw_path"] = clean.encode("utf-8")
+    elif request.scope.get("path") in ("/api/index.py", "/api/index"):
+        request.scope["path"] = "/"
+        request.scope["raw_path"] = b"/"
+    return await call_next(request)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -71,22 +83,17 @@ app.include_router(quiz_router)
 app.include_router(neon_router)
 
 
-# ── Health check & Diagnostics ────────────────────────────────────────────────
+# ── Health check ──────────────────────────────────────────────────────────────
 
 @app.get("/", tags=["Health"])
 @app.get("/api", tags=["Health"], include_in_schema=False)
 @app.get("/api/index.py", tags=["Health"], include_in_schema=False)
-def root(request: Request):
+def root():
     return {
-        "app":         settings.APP_NAME,
-        "version":     settings.APP_VERSION,
-        "status":      "running",
-        "docs":        "/docs",
-        "scope_path":  request.scope.get("path"),
-        "raw_path":    request.scope.get("raw_path", b"").decode("utf-8", errors="ignore"),
-        "query_string": request.scope.get("query_string", b"").decode("utf-8", errors="ignore"),
-        "matched_header": request.headers.get("x-matched-path"),
-        "forwarded_uri": request.headers.get("x-forwarded-uri"),
+        "app":     settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status":  "running",
+        "docs":    "/docs",
     }
 
 
