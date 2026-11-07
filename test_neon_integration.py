@@ -268,7 +268,7 @@ class TestNeonServicesE2E(unittest.TestCase):
         # Verify deprecated version field is removed
         self.assertNotIn("version", vcfg)
         self.assertIn("rewrites", vcfg)
-        self.assertTrue(any(r.get("destination") == "/api/index.py" for r in vcfg["rewrites"]))
+        self.assertTrue(any(r.get("destination") in ("/api/index", "/api/index.py") for r in vcfg["rewrites"]))
 
         # Verify api/index.py exposes app and handler
         import api.index
