@@ -69,7 +69,7 @@ except Exception as e:
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 
-from app.routers import auth, support, users, materials, chat as chat_router, content  # noqa
+from app.routers import auth, support, users, materials, chat as chat_router, content, admin_dashboard  # noqa
 from app.routers.quiz import router as quiz_router  # noqa
 from app.routers.neon_services import router as neon_router  # noqa
 
@@ -82,6 +82,8 @@ app.include_router(content.router)
 app.include_router(support.router)
 app.include_router(quiz_router)
 app.include_router(neon_router)
+app.include_router(admin_dashboard.router)
+app.include_router(admin_dashboard.router, prefix="/dashboard")
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

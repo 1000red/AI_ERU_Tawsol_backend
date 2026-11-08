@@ -139,3 +139,135 @@ def reset_password(db: Session, reset_token: str, new_password: str) -> None:
     user.password = hash_password(new_password)
     db.commit()
 
+
+
+# ── Admin User Management & Dashboard Services ───────────────────────────────
+
+def list_all_users(
+    db: Session,
+    search: str | None = None,
+    role: str | None = None,
+    department: str | None = None,
+    limit: int = 200,
+    offset: int = 0,
+) -> list[User]:
+    query = db.query(User)
+    if role:
+        query = query.filter(User.type_code == role.strip().upper())
+    if department:
+        query = query.filter(User.department.ilike(f"%{department.strip()}%"))
+    if search:
+        s = f"%{search.strip().lower()}%"
+        query = query.filter(
+            or_(
+                func.lower(User.name).like(s),
+                func.lower(User.email).like(s),
+                func.lower(User.uni_code).like(s),
+            )
+        )
+    return query.order_by(User.user_id).offset(offset).limit(limit).all()
+
+
+def create_user_admin(db: Session, data) -> User:
+    # check email or uni_code unique
+    existing = db.query(User).filter(
+        or_(
+            func.lower(User.email) == data.email.strip().lower(),
+            func.lower(User.uni_code) == data.uni_code.strip().lower()
+        )
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"User with this email ({data.email}) or university code ({data.uni_code}) already exists."
+        )
+
+    user = User(
+        uni_code=data.uni_code.strip(),
+        name=data.name.strip(),
+        email=data.email.strip().lower(),
+        password=hash_password(data.password),
+        type_code=data.type_code.strip().upper(),
+        level=data.level or 0,
+        department=data.department.strip() if data.department else None,
+        current_password=bool(data.current_password),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def update_user_admin(db: Session, user_id: int, data) -> User:
+    user = get_user_by_id(db, user_id)
+    if data.name is not None:
+        user.name = data.name.strip()
+    if data.email is not None:
+        user.email = data.email.strip().lower()
+    if data.uni_code is not None:
+        user.uni_code = data.uni_code.strip()
+    if data.type_code is not None:
+        user.type_code = data.type_code.strip().upper()
+    if data.level is not None:
+        user.level = data.level
+    if data.department is not None:
+        user.department = data.department.strip() if data.department else None
+    if data.current_password is not None:
+        user.current_password = bool(data.current_password)
+
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def reset_password_admin(db: Session, user_id: int, new_password: str) -> None:
+    user = get_user_by_id(db, user_id)
+    if not new_password or len(new_password) < 4:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 4 characters long."
+        )
+    user.password = hash_password(new_password)
+    user.current_password = False
+    db.commit()
+
+
+def delete_user_admin(db: Session, user_id: int) -> None:
+    user = get_user_by_id(db, user_id)
+    # clean up foreign key references if any
+    from app.models.material import MaterialStudent, MaterialTeacher
+    db.query(MaterialStudent).filter(MaterialStudent.user_id == user_id).delete(synchronize_session=False)
+    db.query(MaterialTeacher).filter(MaterialTeacher.user_id == user_id).delete(synchronize_session=False)
+    db.delete(user)
+    db.commit()
+
+
+def get_dashboard_stats(db: Session) -> dict:
+    from app.models.material import Material
+    from app.models.content.announcement import Announcement
+    from app.models.content.assignment import Assignment
+    from app.models.content.material_file import MaterialFile
+    from app.models.chat import ChatHistory
+
+    total_users = db.query(func.count(User.user_id)).scalar() or 0
+    students = db.query(func.count(User.user_id)).filter(User.type_code == "STU").scalar() or 0
+    doctors = db.query(func.count(User.user_id)).filter(User.type_code == "DR").scalar() or 0
+    admins = db.query(func.count(User.user_id)).filter(User.type_code == "ADM").scalar() or 0
+    courses = db.query(func.count(Material.material_id)).scalar() or 0
+    announcements = db.query(func.count(Announcement.announcement_id)).scalar() or 0
+    assignments = db.query(func.count(Assignment.assignment_id)).scalar() or 0
+    files = db.query(func.count(MaterialFile.file_id)).scalar() or 0
+    messages = db.query(func.count(ChatHistory.message_id)).scalar() or 0
+
+    return {
+        "total_users": total_users,
+        "students_count": students,
+        "doctors_count": doctors,
+        "admins_count": admins,
+        "courses_count": courses,
+        "announcements_count": announcements,
+        "assignments_count": assignments,
+        "files_count": files,
+        "messages_count": messages,
+        "status": "healthy"
+    }

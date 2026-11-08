@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
 
 
@@ -10,13 +10,13 @@ class UserLogin(BaseModel):
 
 
 class UserOut(BaseModel):
-    user_id:              int
-    uni_code:             str
-    name:                 str
-    email:                EmailStr
-    type_code:            str
-    level:                int = 0
-    department:           Optional[str] = None
+    user_id:          int
+    uni_code:         str
+    name:             str
+    email:            str
+    type_code:        str
+    level:            int = 0
+    department:       Optional[str] = None
     current_password: bool = False
     model_config = {"from_attributes": True}
 
@@ -27,6 +27,33 @@ class UserUpdate(BaseModel):
 
 class ChangePasswordRequest(BaseModel):
     old_password: str
+    new_password: str
+
+
+# ── Admin User Management Schemas ─────────────────────────────────────────────
+
+class AdminUserCreate(BaseModel):
+    uni_code:         str
+    name:             str
+    email:            str
+    password:         str
+    type_code:        str = "STU" # "STU", "DR", "ADM"
+    level:            Optional[int] = 3
+    department:       Optional[str] = None
+    current_password: Optional[bool] = False
+
+
+class AdminUserUpdate(BaseModel):
+    uni_code:         Optional[str] = None
+    name:             Optional[str] = None
+    email:            Optional[str] = None
+    type_code:        Optional[str] = None
+    level:            Optional[int] = None
+    department:       Optional[str] = None
+    current_password: Optional[bool] = None
+
+
+class AdminPasswordReset(BaseModel):
     new_password: str
 
 
@@ -41,11 +68,11 @@ class TokenOut(BaseModel):
 # ── OTP / Password reset ──────────────────────────────────────────────────────
 
 class ForgotPasswordRequest(BaseModel):
-    email: EmailStr
+    email: str
 
 
 class VerifyOTPRequest(BaseModel):
-    email: EmailStr
+    email: str
     otp:   str
 
 
