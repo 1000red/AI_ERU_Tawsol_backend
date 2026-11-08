@@ -200,18 +200,46 @@ def create_user_admin(db: Session, data) -> User:
 
 def update_user_admin(db: Session, user_id: int, data) -> User:
     user = get_user_by_id(db, user_id)
-    if data.name is not None:
+    
+    if data.name is not None and data.name.strip():
         user.name = data.name.strip()
-    if data.email is not None:
-        user.email = data.email.strip().lower()
-    if data.uni_code is not None:
-        user.uni_code = data.uni_code.strip()
-    if data.type_code is not None:
+        
+    if data.email is not None and data.email.strip():
+        new_email = data.email.strip().lower()
+        if new_email != user.email.lower():
+            existing = db.query(User).filter(func.lower(User.email) == new_email, User.user_id != user_id).first()
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"البريد الإلكتروني ({new_email}) مستخدم بالفعل من قبل حساب آخر."
+                )
+            user.email = new_email
+            
+    if data.uni_code is not None and data.uni_code.strip():
+        new_code = data.uni_code.strip()
+        if new_code != user.uni_code:
+            existing = db.query(User).filter(func.lower(User.uni_code) == new_code.lower(), User.user_id != user_id).first()
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"الكود التعريفي ({new_code}) مستخدم بالفعل من قبل حساب آخر."
+                )
+            user.uni_code = new_code
+            
+    if data.type_code is not None and data.type_code.strip():
         user.type_code = data.type_code.strip().upper()
+        
     if data.level is not None:
         user.level = data.level
+        
     if data.department is not None:
-        user.department = data.department.strip() if data.department else None
+        dept = data.department.strip()
+        user.department = dept if dept else None
+        
+    if hasattr(data, "password") and data.password and len(data.password.strip()) >= 4:
+        user.password = hash_password(data.password.strip())
+        user.current_password = False
+        
     if data.current_password is not None:
         user.current_password = bool(data.current_password)
 

@@ -47,6 +47,7 @@ class AdminUserUpdate(BaseModel):
     uni_code:         Optional[str] = None
     name:             Optional[str] = None
     email:            Optional[str] = None
+    password:         Optional[str] = None
     type_code:        Optional[str] = None
     level:            Optional[int] = None
     department:       Optional[str] = None

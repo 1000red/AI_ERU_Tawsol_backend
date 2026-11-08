@@ -269,8 +269,8 @@ DASHBOARD_HTML = """<!DOCTYPE html>
                 <th class="p-3.5">البريد الإلكتروني</th>
                 <th class="p-3.5">كود الجامعة</th>
                 <th class="p-3.5">النوع (Role)</th>
-                <th class="p-3.5">القسم</th>
-                <th class="p-3.5">المستوى</th>
+                <th class="p-3.5">القسم / التخصص</th>
+                <th class="p-3.5">المستوى / الفرقة</th>
                 <th class="p-3.5 rounded-l-xl text-center">إجراءات التحكم</th>
               </tr>
             </thead>
@@ -386,6 +386,69 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         <div class="pt-3 flex justify-end gap-2">
           <button type="button" onclick="closeModal('modal-add-user')" class="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-800 font-semibold">إلغاء</button>
           <button type="submit" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold">حفظ المستخدم</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MODAL: EDIT USER ────────────────────────────────────────────────── -->
+  <div id="modal-edit-user" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <span>✏️</span> تعديل بيانات المستخدم
+          <span id="edit-user-badge" class="text-xs px-2 py-0.5 rounded-full font-mono font-bold bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"></span>
+        </h3>
+        <button onclick="closeModal('modal-edit-user')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+      </div>
+
+      <form id="form-edit-user" onsubmit="submitEditUser(event)" class="space-y-3.5 text-xs">
+        <input type="hidden" id="edit-user-id">
+        
+        <div>
+          <label class="block font-semibold mb-1">الاسم الكامل *</label>
+          <input type="text" id="edit-user-name" required placeholder="مثال: د. أحمد محمد" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold mb-1">البريد الإلكتروني *</label>
+            <input type="email" id="edit-user-email" required class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">كود الجامعة / الكود التعريفي (Uni Code) *</label>
+            <input type="text" id="edit-user-unicode" required class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold mb-1">نوع الحساب والصلاحية *</label>
+            <select id="edit-user-role" required class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-semibold">
+              <option value="STU">طالب (STU)</option>
+              <option value="DR">دكتور / عضو هيئة تدريس (DR)</option>
+              <option value="ADM">مدير نظام / إداري (ADM)</option>
+              <option value="TA">معيد (TA)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">القسم والتخصص</label>
+            <input type="text" id="edit-user-department" placeholder="AI / Networking / CS / عام" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">المستوى / الفرقة / الفصل</label>
+            <input type="number" id="edit-user-level" min="0" max="100" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1">تغيير كلمة المرور (اختياري - اتركه فارغاً للإبقاء على الحالية)</label>
+          <input type="text" id="edit-user-password" placeholder="اتركه فارغاً إذا كنت لا ترغب بتغيير كلمة المرور" class="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono">
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-200 dark:border-slate-800">
+          <button type="button" onclick="closeModal('modal-edit-user')" class="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 font-semibold transition">إلغاء</button>
+          <button type="submit" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-600/30 transition">💾 حفظ التعديلات</button>
         </div>
       </form>
     </div>
@@ -577,17 +640,74 @@ DASHBOARD_HTML = """<!DOCTYPE html>
           <td class="p-3 text-xs">${u.department || '-'}</td>
           <td class="p-3 text-xs font-bold">${u.level || 0}</td>
           <td class="p-3 text-center">
-            <div class="flex items-center justify-center gap-1.5">
-              <button onclick="promptResetPassword(${u.user_id}, '${u.name}')" title="إعادة تعيين كلمة المرور" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white transition">
+            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+              <button onclick="openEditUserModal(${u.user_id})" title="تعديل بيانات المستخدم" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-600 hover:bg-blue-600 hover:text-white transition">
+                ✏️ تعديل
+              </button>
+              <button onclick="promptResetPassword(${u.user_id})" title="إعادة تعيين كلمة المرور" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white transition">
                 🔑 كلمة المرور
               </button>
-              <button onclick="confirmDeleteUser(${u.user_id}, '${u.name}')" title="حذف المستخدم" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/10 text-rose-600 hover:bg-rose-500 hover:text-white transition">
+              <button onclick="confirmDeleteUser(${u.user_id})" title="حذف المستخدم" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-500/10 text-rose-600 hover:bg-rose-500 hover:text-white transition">
                 🗑️ حذف
               </button>
             </div>
           </td>
         </tr>
       `).join('');
+    }
+
+    function openEditUserModal(uid) {
+      const user = currentUsers.find(u => u.user_id === uid);
+      if (!user) {
+        showToast('لم يتم العثور على بيانات المستخدم', true);
+        return;
+      }
+      document.getElementById('edit-user-id').value = user.user_id;
+      document.getElementById('edit-user-badge').innerText = `#${user.user_id}`;
+      document.getElementById('edit-user-name').value = user.name || '';
+      document.getElementById('edit-user-email').value = user.email || '';
+      document.getElementById('edit-user-unicode').value = user.uni_code || '';
+      document.getElementById('edit-user-role').value = user.type_code || 'STU';
+      document.getElementById('edit-user-department').value = user.department || '';
+      document.getElementById('edit-user-level').value = (user.level !== undefined && user.level !== null) ? user.level : 0;
+      document.getElementById('edit-user-password').value = '';
+      openModal('modal-edit-user');
+    }
+
+    async function submitEditUser(e) {
+      e.preventDefault();
+      const uid = document.getElementById('edit-user-id').value;
+      const pwd = document.getElementById('edit-user-password').value.trim();
+      
+      const payload = {
+        name: document.getElementById('edit-user-name').value.trim(),
+        email: document.getElementById('edit-user-email').value.trim(),
+        uni_code: document.getElementById('edit-user-unicode').value.trim(),
+        type_code: document.getElementById('edit-user-role').value,
+        department: document.getElementById('edit-user-department').value.trim() || null,
+        level: parseInt(document.getElementById('edit-user-level').value) || 0,
+      };
+      if (pwd && pwd.length > 0) {
+        payload.password = pwd;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/users/${uid}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'فشل تحديث بيانات المستخدم');
+        }
+        showToast('تم حفظ التعديلات بنجاح! 🎉');
+        closeModal('modal-edit-user');
+        loadUsers();
+        loadStats();
+      } catch (err) {
+        showToast(err.message, true);
+      }
     }
 
     function updateDoctorDropdown(users) {
@@ -628,7 +748,9 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       }
     }
 
-    function promptResetPassword(uid, name) {
+    function promptResetPassword(uid) {
+      const u = currentUsers.find(x => x.user_id === uid);
+      const name = u ? u.name : ('#' + uid);
       document.getElementById('reset-pwd-uid').value = uid;
       document.getElementById('reset-pwd-user-name').innerText = name;
       document.getElementById('reset-pwd-new').value = '';
@@ -664,7 +786,9 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       }
     }
 
-    async function confirmDeleteUser(uid, name) {
+    async function confirmDeleteUser(uid) {
+      const u = currentUsers.find(x => x.user_id === uid);
+      const name = u ? u.name : ('#' + uid);
       if (!confirm(`هل أنت متأكد من رغبتك في حذف المستخدم "${name}"؟`)) return;
       try {
         const res = await fetch(`${API_BASE}/admin/api/users/${uid}`, { method: 'DELETE' });
