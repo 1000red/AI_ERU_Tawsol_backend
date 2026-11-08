@@ -8,7 +8,7 @@ from app.core.config import settings
 from app.db.database import engine
 from app.db import base  # noqa: F401 
 
-from app.models import user, material, chat, content  # noqa: F401
+from app.models import user, material, chat, content, attendance  # noqa: F401
 
 # Create all tables on startup only when explicitly requested. Alembic
 # (alembic upgrade head) is the source of truth for the schema; silently
@@ -70,7 +70,7 @@ except Exception as e:
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 
-from app.routers import auth, support, users, materials, chat as chat_router, content, admin_dashboard  # noqa
+from app.routers import auth, support, users, materials, chat as chat_router, content, admin_dashboard, attendance  # noqa
 from app.routers.quiz import router as quiz_router  # noqa
 from app.routers.neon_services import router as neon_router  # noqa
 
@@ -83,6 +83,7 @@ app.include_router(content.router)
 app.include_router(support.router)
 app.include_router(quiz_router)
 app.include_router(neon_router)
+app.include_router(attendance.router)
 app.include_router(admin_dashboard.router)
 
 @app.get("/dashboard", response_class=HTMLResponse, tags=["Admin Dashboard"])
