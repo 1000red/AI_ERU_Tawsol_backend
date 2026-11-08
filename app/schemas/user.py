@@ -5,7 +5,7 @@ from typing import Optional
 # ── User ──────────────────────────────────────────────────────────────────────
 
 class UserLogin(BaseModel):
-    email:    EmailStr
+    email:    str
     password: str
 
 

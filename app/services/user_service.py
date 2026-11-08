@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func, or_
 from fastapi import HTTPException, status
 from datetime import datetime, timedelta, timezone
 import random
@@ -31,7 +32,13 @@ def get_user_by_id(db: Session, user_id: int) -> User:
 
 
 def get_user_by_email(db: Session, email: str) -> User | None:
-    return db.query(User).filter(User.email == email).first()
+    cleaned = (email or '').strip().lower()
+    return db.query(User).filter(
+        or_(
+            func.lower(User.email) == cleaned,
+            func.lower(User.uni_code) == cleaned
+        )
+    ).first()
 
 
 def update_user(db: Session, user_id: int, data: UserUpdate) -> User:
