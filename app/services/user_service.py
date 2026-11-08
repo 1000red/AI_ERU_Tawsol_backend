@@ -257,7 +257,7 @@ def get_dashboard_stats(db: Session) -> dict:
     announcements = db.query(func.count(Announcement.announcement_id)).scalar() or 0
     assignments = db.query(func.count(Assignment.assignment_id)).scalar() or 0
     files = db.query(func.count(MaterialFile.file_id)).scalar() or 0
-    messages = db.query(func.count(ChatHistory.message_id)).scalar() or 0
+    messages = db.query(func.count(ChatHistory.chat_id)).scalar() or 0
 
     return {
         "total_users": total_users,

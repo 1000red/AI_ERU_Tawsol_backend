@@ -83,7 +83,11 @@ app.include_router(support.router)
 app.include_router(quiz_router)
 app.include_router(neon_router)
 app.include_router(admin_dashboard.router)
-app.include_router(admin_dashboard.router, prefix="/dashboard")
+
+@app.get("/dashboard", response_class=HTMLResponse, tags=["Admin Dashboard"])
+def dashboard_view():
+    from app.routers.admin_dashboard import DASHBOARD_HTML
+    return HTMLResponse(content=DASHBOARD_HTML)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────
