@@ -243,31 +243,54 @@ def delete_user_admin(db: Session, user_id: int) -> None:
 
 
 def get_dashboard_stats(db: Session) -> dict:
-    from app.models.material import Material
-    from app.models.content.announcement import Announcement
-    from app.models.content.assignment import Assignment
-    from app.models.content.material_file import MaterialFile
-    from app.models.chat import ChatHistory
-
-    total_users = db.query(func.count(User.user_id)).scalar() or 0
-    students = db.query(func.count(User.user_id)).filter(User.type_code == "STU").scalar() or 0
-    doctors = db.query(func.count(User.user_id)).filter(User.type_code == "DR").scalar() or 0
-    admins = db.query(func.count(User.user_id)).filter(User.type_code == "ADM").scalar() or 0
-    courses = db.query(func.count(Material.material_id)).scalar() or 0
-    announcements = db.query(func.count(Announcement.announcement_id)).scalar() or 0
-    assignments = db.query(func.count(Assignment.assignment_id)).scalar() or 0
-    files = db.query(func.count(MaterialFile.file_id)).scalar() or 0
-    messages = db.query(func.count(ChatHistory.chat_id)).scalar() or 0
-
-    return {
-        "total_users": total_users,
-        "students_count": students,
-        "doctors_count": doctors,
-        "admins_count": admins,
-        "courses_count": courses,
-        "announcements_count": announcements,
-        "assignments_count": assignments,
-        "files_count": files,
-        "messages_count": messages,
+    stats = {
+        "total_users": 0,
+        "students_count": 0,
+        "doctors_count": 0,
+        "admins_count": 0,
+        "courses_count": 0,
+        "announcements_count": 0,
+        "assignments_count": 0,
+        "files_count": 0,
+        "messages_count": 0,
         "status": "healthy"
     }
+    try:
+        stats["total_users"] = db.query(func.count(User.user_id)).scalar() or 0
+        stats["students_count"] = db.query(func.count(User.user_id)).filter(User.type_code == "STU").scalar() or 0
+        stats["doctors_count"] = db.query(func.count(User.user_id)).filter(User.type_code == "DR").scalar() or 0
+        stats["admins_count"] = db.query(func.count(User.user_id)).filter(User.type_code == "ADM").scalar() or 0
+    except Exception as e:
+        print("[Stats] Error querying users:", e)
+
+    try:
+        from app.models.material import Material
+        stats["courses_count"] = db.query(func.count(Material.material_id)).scalar() or 0
+    except Exception as e:
+        print("[Stats] Error querying material:", e)
+
+    try:
+        from app.models.content.announcement import Announcement
+        stats["announcements_count"] = db.query(func.count(Announcement.announcement_id)).scalar() or 0
+    except Exception as e:
+        pass
+
+    try:
+        from app.models.content.assignment import Assignment
+        stats["assignments_count"] = db.query(func.count(Assignment.assignment_id)).scalar() or 0
+    except Exception as e:
+        pass
+
+    try:
+        from app.models.content.material_file import MaterialFile
+        stats["files_count"] = db.query(func.count(MaterialFile.file_id)).scalar() or 0
+    except Exception as e:
+        pass
+
+    try:
+        from app.models.chat import ChatHistory
+        stats["messages_count"] = db.query(func.count(ChatHistory.chat_id)).scalar() or 0
+    except Exception as e:
+        pass
+
+    return stats
