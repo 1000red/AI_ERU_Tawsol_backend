@@ -75,7 +75,8 @@ from app.routers.neon_services import router as neon_router  # noqa
 
 app.include_router(auth.router)
 app.include_router(users.router)
-app.include_router(materials.router)
+app.include_router(materials.router, prefix="/materials")
+app.include_router(materials.router, prefix="/courses")
 app.include_router(chat_router.router)
 app.include_router(content.router)
 app.include_router(support.router)
