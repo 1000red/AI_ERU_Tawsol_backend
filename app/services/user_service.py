@@ -321,4 +321,10 @@ def get_dashboard_stats(db: Session) -> dict:
     except Exception as e:
         pass
 
+    try:
+        from app.models.attendance import AttendanceRecord
+        stats["attendance_records_count"] = db.query(func.count(AttendanceRecord.record_id)).scalar() or 0
+    except Exception as e:
+        pass
+
     return stats
