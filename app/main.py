@@ -8,7 +8,7 @@ from app.core.config import settings
 from app.db.database import engine
 from app.db import base  # noqa: F401 
 
-from app.models import user, material, chat, content, attendance  # noqa: F401
+from app.models import user, material, chat, content, attendance, password_reset_otp  # noqa: F401
 
 # Create all tables on startup only when explicitly requested. Alembic
 # (alembic upgrade head) is the source of truth for the schema; silently

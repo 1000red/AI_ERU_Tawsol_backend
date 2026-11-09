@@ -29,8 +29,8 @@ def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/verify-otp")
-def verify_otp(data: VerifyOTPRequest):
-    reset_token = svc.verify_otp(data.email, data.otp)
+def verify_otp(data: VerifyOTPRequest, db: Session = Depends(get_db)):
+    reset_token = svc.verify_otp(db, data.email, data.otp)
     return {"message": "OTP verified.", "reset_token": reset_token}
 
 

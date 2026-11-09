@@ -94,7 +94,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>لوحة تحكم إدارة النظام | AI ERU Tawasol</title>
+  <title>لوحة تحكم إدارة النظام | منصة مدرسة WE للتكنولوجيا التطبيقية بالسويس</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -128,10 +128,10 @@ DASHBOARD_HTML = """<!DOCTYPE html>
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 min-h-[3.75rem] py-2 sm:py-0 flex items-center justify-between gap-2">
       <div class="flex items-center gap-2.5 sm:gap-3 shrink-0">
         <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-500 flex items-center justify-center text-white font-black text-base sm:text-lg shadow-md shadow-blue-500/30">
-          ERU
+          WE
         </div>
         <div>
-          <h1 class="text-sm sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-tight">AI ERU Tawasol</h1>
+          <h1 class="text-sm sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-tight">مدرسة WE للتكنولوجيا التطبيقية بالسويس</h1>
           <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 hidden xs:block">لوحة الإدارة والتحكم الشاملة</p>
         </div>
       </div>
@@ -339,7 +339,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         <form id="form-auth-test" onsubmit="runAuthTest(event)" class="space-y-3 sm:space-y-4">
           <div>
             <label class="block text-xs font-semibold mb-1">البريد الإلكتروني أو كود الجامعة</label>
-            <input type="text" id="test-identifier" placeholder="مثال: admin@eru.edu.eg أو ADMIN001 أو 10524001" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm">
+            <input type="text" id="test-identifier" placeholder="مثال: admin@weschool-suez.edu.eg أو ADMIN001 أو 10524001" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm">
           </div>
           <div>
             <label class="block text-xs font-semibold mb-1">كلمة المرور</label>
@@ -371,7 +371,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         </div>
         <div>
           <label class="block font-semibold mb-1">البريد الإلكتروني *</label>
-          <input type="email" id="add-user-email" required placeholder="name@eru.edu.eg أو name@gmail.com" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-mono">
+          <input type="email" id="add-user-email" required placeholder="name@weschool-suez.edu.eg أو name@suez1.moe.edu.eg أو name@gmail.com" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-mono">
         </div>
         <div>
           <label class="block font-semibold mb-1">كود الجامعة / الكود التعريفي (Uni Code) *</label>

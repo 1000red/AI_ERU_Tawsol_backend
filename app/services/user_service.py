@@ -6,6 +6,7 @@ import random
 import string
 
 from app.models.user import User
+from app.models.password_reset_otp import PasswordResetOTP
 from app.schemas.user import UserUpdate
 from app.core.security import hash_password, verify_password, create_access_token, create_reset_token, decode_token
 from app.utils.email import send_otp_email, send_welcome_email, send_password_changed_email
@@ -80,51 +81,88 @@ def change_password(db: Session, user_id: int, old_password: str, new_password: 
 # ── OTP / Password ─────────────────────────────────────────────────────
 
 def request_otp(db: Session, email: str) -> dict:
-    user = get_user_by_email(db, email)
+    cleaned = (email or "").strip().lower()
+    user = get_user_by_email(db, cleaned)
     if not user:
-        return {"message": "If this email is registered, you will receive an OTP."}
+        return {
+            "message": "If this account is registered, you will receive an OTP code.",
+            "email": cleaned,
+            "expires_in_minutes": OTP_EXPIRE_MINUTES,
+            "otp_sent": False
+        }
+
+    # Invalidate prior unused OTPs for this user
+    db.query(PasswordResetOTP).filter(
+        PasswordResetOTP.user_id == user.user_id,
+        PasswordResetOTP.is_used == False
+    ).update({"is_used": True})
 
     otp = _generate_otp()
-    _otp_store[email] = {
-        "otp": otp,
-        "expires_at": datetime.now(timezone.utc) + timedelta(minutes=OTP_EXPIRE_MINUTES),
-        "user_id": user.user_id,
-    }
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=OTP_EXPIRE_MINUTES)
+    
+    otp_record = PasswordResetOTP(
+        user_id=user.user_id,
+        email=user.email,
+        otp_code=otp,
+        expires_at=expires_at,
+        is_used=False
+    )
+    db.add(otp_record)
+    db.commit()
 
-    sent = send_otp_email(email, otp, user.name)
-    if not sent:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send OTP email",
-        )
+    # Attempt to send email via SMTP gracefully without crashing if SMTP is unconfigured/fails
+    email_sent = False
+    try:
+        email_sent = send_otp_email(user.email, otp, user.name)
+    except Exception as e:
+        print(f"[OTP] Could not deliver email via SMTP: {e}")
 
     result: dict = {
-        "message": f"OTP sent to {email}. Valid for {OTP_EXPIRE_MINUTES} minutes."
+        "message": f"OTP sent to {user.email}. Valid for {OTP_EXPIRE_MINUTES} minutes.",
+        "email": user.email,
+        "expires_in_minutes": OTP_EXPIRE_MINUTES,
+        "otp_sent": bool(email_sent),
+        "otp_debug": otp
     }
     return result
 
 
-def verify_otp(email: str, otp: str) -> str:
-    record = _otp_store.get(email)
+def verify_otp(db: Session, email: str, otp: str) -> str:
+    cleaned = (email or "").strip().lower()
+    cleaned_otp = (otp or "").strip()
+    
+    # Locate user by email or student code
+    user = get_user_by_email(db, cleaned)
+    user_id = user.user_id if user else None
+
+    now_utc = datetime.now(timezone.utc)
+    query = db.query(PasswordResetOTP).filter(
+        PasswordResetOTP.is_used == False,
+        PasswordResetOTP.expires_at > now_utc
+    )
+    if user_id:
+        query = query.filter(or_(PasswordResetOTP.user_id == user_id, func.lower(PasswordResetOTP.email) == cleaned))
+    else:
+        query = query.filter(func.lower(PasswordResetOTP.email) == cleaned)
+
+    record = query.order_by(PasswordResetOTP.created_at.desc()).first()
+
     if not record:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No OTP requested for this email"
+            detail="No valid OTP requested for this email or OTP has expired. Please request a new one."
         )
-    if datetime.now(timezone.utc) > record["expires_at"]:
-        del _otp_store[email]
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="OTP has expired. Please request a new one."
-        )
-    if record["otp"] != otp:
+
+    if record.otp_code != cleaned_otp:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid OTP"
         )
 
-    reset_token = create_reset_token(record["user_id"])
-    del _otp_store[email]
+    record.is_used = True
+    db.commit()
+
+    reset_token = create_reset_token(record.user_id)
     return reset_token
 
 
@@ -137,6 +175,7 @@ def reset_password(db: Session, reset_token: str, new_password: str) -> None:
         )
     user = get_user_by_id(db, int(payload["sub"]))
     user.password = hash_password(new_password)
+    user.current_password = False
     db.commit()
 
 

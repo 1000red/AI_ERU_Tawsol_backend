@@ -21,12 +21,12 @@ OTP_EXPIRE_MINUTES = 10
 
 class Settings(BaseSettings):
     # App
-    APP_NAME: str = os.getenv("APP_NAME", "WE School")
+    APP_NAME: str = os.getenv("APP_NAME", "WE School Suez Tawasol")
     APP_VERSION: str = os.getenv("APP_VERSION", "2.0.0")
     DEBUG: bool = os.getenv("DEBUG", "false").lower() in ("true", "1")
 
     # Database (PostgreSQL / Neon)
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/eru_tawasol?sslmode=require")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/we_tawasol?sslmode=require")
     DATABASE_URL_UNPOOLED: Optional[str] = os.getenv("DATABASE_URL_UNPOOLED")
     AUTO_CREATE_TABLES: bool = os.getenv("AUTO_CREATE_TABLES", "false").lower() in ("true", "1")
 

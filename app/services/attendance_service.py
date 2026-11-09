@@ -35,7 +35,7 @@ def create_attendance_session(db: Session, doctor_user: User, data: AttendanceSe
     duration = max(1, min(data.duration_minutes or 15, 120))
     now = datetime.now(timezone.utc)
     expires_at = now + timedelta(minutes=duration)
-    token = f"ERU-ATT-{secrets.token_urlsafe(16)}"
+    token = f"WE-ATT-{secrets.token_urlsafe(16)}"
 
     session = AttendanceSession(
         material_id=data.material_id,
