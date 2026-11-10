@@ -41,15 +41,34 @@ LECTURE CONTENT:
 
 
 def _make_client():
+    import ssl
     from google import genai
+    from google.genai import types
 
     api_key = settings.GEMINI_API_KEY
-    if not api_key:
+    if not api_key or not str(api_key).strip():
         raise HTTPException(
             status_code=503,
             detail="GEMINI_API_KEY is not set. Add it to backend/.env and restart.",
         )
-    return genai.Client(api_key=api_key)
+    api_key = str(api_key).strip()
+
+    try:
+        ctx = ssl.create_default_context()
+        ctx.load_default_certs()
+        http_options = types.HttpOptions(
+            client_args={"verify": ctx},
+            async_client_args={"verify": ctx},
+        )
+        return genai.Client(api_key=api_key, http_options=http_options)
+    except Exception:
+        try:
+            return genai.Client(api_key=api_key)
+        except Exception as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Failed to initialize Gemini AI client: {e}",
+            )
 
 
 def _handle_error(exc: Exception) -> None:
@@ -65,10 +84,15 @@ def _handle_error(exc: Exception) -> None:
             status_code=429,
             detail="Gemini free-tier rate limit reached. Wait a minute and try again.",
         )
-    if "deadline" in msg or "timeout" in msg:
+    if (
+        "deadline" in msg
+        or "timeout" in msg
+        or "timed out" in msg
+        or "time out" in msg
+    ):
         raise HTTPException(
             status_code=504,
-            detail="Gemini API timed out. Please try again.",
+            detail="AI generation timed out.",
         )
     raise HTTPException(status_code=502, detail=f"Gemini API error: {exc}")
 

@@ -1,10 +1,17 @@
 import os
 from functools import lru_cache
+from pathlib import Path
 from typing import Optional
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+ENV_PATH = BASE_DIR / ".env"
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    if ENV_PATH.exists():
+        load_dotenv(dotenv_path=ENV_PATH)
+    else:
+        load_dotenv()
 except Exception:
     pass
 
@@ -71,7 +78,7 @@ class Settings(BaseSettings):
 
     if HAS_PYDANTIC_SETTINGS and SettingsConfigDict is not None:
         model_config = SettingsConfigDict(
-            env_file=".env",
+            env_file=str(ENV_PATH) if ENV_PATH.exists() else ".env",
             extra="ignore",
             case_sensitive=False,
         )

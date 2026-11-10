@@ -1,4 +1,4 @@
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 from typing import Optional, Any
 
 
@@ -45,7 +45,7 @@ class MaterialOut(BaseModel):
 
 
 class MaterialCreate(BaseModel):
-    material_id: str
+    material_id: str = Field(..., min_length=1)
     name:        str
     description: Optional[str] = None
     duration:    Optional[int] = 0

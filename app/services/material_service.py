@@ -31,8 +31,12 @@ def get_material_by_id(db: Session, material_id: str) -> Material:
 
 
 def get_student_materials(db: Session, user_id: int) -> list[Material]:
+    if user_id <= 0:
+        return []
     user = db.query(User).filter(User.user_id == user_id).first()
-    if user and user.type_code == "ADM":
+    if not user:
+        return []
+    if user.type_code == "ADM":
         return get_all_materials(db)
 
     assigned = (
@@ -42,16 +46,16 @@ def get_student_materials(db: Session, user_id: int) -> list[Material]:
         .options(joinedload(Material.teacher_assignments).joinedload(MaterialTeacher.teacher))
         .all()
     )
-    if assigned:
-        return assigned
-    
-    # Fallback if student not yet assigned: show available materials
-    return get_all_materials(db)
+    return assigned
 
 
 def get_teacher_materials(db: Session, user_id: int) -> list[Material]:
+    if user_id <= 0:
+        return []
     user = db.query(User).filter(User.user_id == user_id).first()
-    if user and user.type_code == "ADM":
+    if not user:
+        return []
+    if user.type_code == "ADM":
         return get_all_materials(db)
 
     assigned = (
@@ -61,14 +65,15 @@ def get_teacher_materials(db: Session, user_id: int) -> list[Material]:
         .options(joinedload(Material.teacher_assignments).joinedload(MaterialTeacher.teacher))
         .all()
     )
-    if assigned:
-        return assigned
-
-    # Fallback for newly created teachers who don't have explicit assignments yet
-    return get_all_materials(db)
+    return assigned
 
 
 def create_material(db: Session, data: MaterialCreate) -> Material:
+    if not data.material_id or not str(data.material_id).strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="material_id cannot be empty"
+        )
     existing = db.query(Material).filter(Material.material_id == data.material_id).first()
     if existing:
         raise HTTPException(
