@@ -2,7 +2,6 @@
 
 import sys
 import os
-import json
 import traceback
 from urllib.parse import parse_qs, urlencode
 
@@ -48,29 +47,9 @@ try:
                     scope["path"] = rest
                     scope["raw_path"] = rest.encode("utf-8")
 
-        try:
-            await fastapi_app(scope, receive, send)
-        except BaseException as app_exc:
-            err = traceback.format_exc()
-            print("RUNTIME INVOCATION ERROR:\n", err, file=sys.stderr)
-            if scope.get("type") == "http":
-                body = json.dumps({"error": str(app_exc), "traceback": err}).encode("utf-8")
-                await send({
-                    "type": "http.response.start",
-                    "status": 500,
-                    "headers": [
-                        (b"content-type", b"application/json"),
-                        (b"content-length", str(len(body)).encode("ascii")),
-                    ],
-                })
-                await send({
-                    "type": "http.response.body",
-                    "body": body,
-                })
-            else:
-                raise
+        await fastapi_app(scope, receive, send)
 
-except BaseException as e:
+except Exception as e:
     from fastapi import FastAPI
     from fastapi.responses import JSONResponse
     err_text = traceback.format_exc()
