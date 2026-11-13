@@ -26,21 +26,30 @@ def _normalize_db_url(url: str) -> str:
 
 db_url = _normalize_db_url(settings.DATABASE_URL)
 
-# Configure engine based on database dialect (PostgreSQL vs SQLite for tests)
+# Configure engine based on database dialect and runtime environment
+is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
+
 if db_url.startswith("sqlite"):
     engine = create_engine(
         db_url,
         connect_args={"check_same_thread": False},
     )
+elif is_serverless:
+    from sqlalchemy.pool import NullPool
+    engine = create_engine(
+        db_url,
+        poolclass=NullPool,
+        connect_args={"connect_timeout": 10},
+    )
 else:
     engine = create_engine(
         db_url,
         pool_pre_ping=True,
-        pool_size=10,
-        max_overflow=20,
-        pool_recycle=900,   # Recycle connections before serverless idle cut-offs
-        pool_use_lifo=True, # Reuse newest connections to keep idle count low
-        connect_args={"connect_timeout": 15},
+        pool_size=5,
+        max_overflow=10,
+        pool_recycle=300,
+        pool_use_lifo=True,
+        connect_args={"connect_timeout": 10},
     )
 
 def check_connection() -> bool:
