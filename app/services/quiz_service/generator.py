@@ -52,6 +52,7 @@ def _make_client():
 
     try:
         http_options = types.HttpOptions(
+            api_version="v1beta",
             client_args={"verify": False},
             async_client_args={"verify": False},
         )
