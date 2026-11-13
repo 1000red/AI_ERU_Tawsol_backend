@@ -1,12 +1,17 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, Query
+import os
+from fastapi import APIRouter, Depends, UploadFile, File, Form, Query, HTTPException
+from fastapi.responses import RedirectResponse, FileResponse, Response
 from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.db.database import get_db
 from app.core.security import get_current_user_id
+from app.core.config import settings
+from app.models.content import MaterialFile
 from app.schemas.content import MaterialFileCreate, MaterialFileUpdate, MaterialFileOut
 from app.services import content_service as svc
 from app.routers.content._helpers import save_file
+from app.services.neon_storage import neon_storage
 
 router = APIRouter(prefix="/files", tags=["Material Files"])
 
@@ -25,6 +30,70 @@ def get_all_files(
         db, user_id, user.type_code,
         file_type=file_type, skip=skip, limit=limit,
     )
+
+
+@router.get("/download/{file_id}")
+@router.get("/{file_id}/download")
+def download_material_file(
+    file_id: int,
+    db: Session = Depends(get_db),
+):
+    """Download or redirect to the material file content."""
+    mf = db.query(MaterialFile).filter(MaterialFile.file_id == file_id).first()
+    if not mf:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if mf.link_url:
+        return RedirectResponse(url=mf.link_url, status_code=302)
+
+    if mf.file_path and mf.file_path.startswith("http"):
+        return RedirectResponse(url=mf.file_path, status_code=302)
+
+    # If stored in Neon S3 storage
+    if mf.file_path and neon_storage.is_configured:
+        key = mf.file_path.strip("/")
+        if key.startswith("tmp/"):
+            key = key[4:]
+        if key.startswith("uploads/"):
+            key = key[8:]
+
+        # Public HTTPS URL from Neon storage bucket
+        public_url = f"{settings.AWS_ENDPOINT_URL_S3.rstrip('/')}/{settings.NEON_STORAGE_BUCKET}/{key}"
+
+        # Fetch object content to serve directly or redirect
+        try:
+            data, ctype = neon_storage.get_object(key)
+            if data:
+                filename = mf.title or os.path.basename(key)
+                if not any(filename.lower().endswith(ext) for ext in [".pdf", ".pptx", ".ppt", ".docx", ".doc", ".png", ".jpg"]):
+                    ext = os.path.splitext(key)[1]
+                    if ext:
+                        filename = f"{filename}{ext}"
+                return Response(
+                    content=data,
+                    media_type=ctype or "application/octet-stream",
+                    headers={
+                        "Content-Disposition": f'inline; filename="{filename}"',
+                        "Cache-Control": "public, max-age=86400",
+                    },
+                )
+        except Exception:
+            pass
+
+        return RedirectResponse(url=public_url, status_code=302)
+
+    # Check local disk
+    if mf.file_path:
+        for candidate in (
+            mf.file_path,
+            os.path.join(os.getcwd(), mf.file_path),
+            os.path.join("/tmp", mf.file_path.lstrip("/")),
+            os.path.join("uploads", mf.file_path.lstrip("/")),
+        ):
+            if os.path.exists(candidate) and os.path.isfile(candidate):
+                return FileResponse(candidate, filename=mf.title or os.path.basename(candidate))
+
+    raise HTTPException(status_code=404, detail="File content not found on server or storage.")
 
 
 @router.get("/{material_id}", response_model=list[MaterialFileOut])

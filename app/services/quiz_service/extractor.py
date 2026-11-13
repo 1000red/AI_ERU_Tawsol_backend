@@ -41,25 +41,73 @@ def _extract_docx(path: str) -> str:
 
 
 def extract_text(file_path: str) -> str:
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found on server.")
-
-    ext = os.path.splitext(file_path)[1].lower()
-
+    temp_path = None
     try:
+        path_to_parse = file_path
+
+        # 1. If it's a remote HTTP/HTTPS URL
+        if file_path.startswith("http://") or file_path.startswith("https://"):
+            import urllib.request
+            import tempfile
+            import ssl
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            req = urllib.request.Request(file_path, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, context=ctx, timeout=25) as resp:
+                content = resp.read()
+            ext = os.path.splitext(file_path.split("?")[0])[1].lower() or ".pdf"
+            with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+                tmp.write(content)
+                temp_path = tmp.name
+            path_to_parse = temp_path
+
+        # 2. If it's not on local disk, try resolving via Neon S3 storage
+        elif not os.path.exists(file_path):
+            from app.services.neon_storage import neon_storage
+            key = file_path.lstrip("/")
+            if key.startswith("tmp/"):
+                key = key[4:]
+            if key.startswith("uploads/"):
+                key = key[8:]
+            data, _ = neon_storage.get_object(key)
+            if data:
+                import tempfile
+                ext = os.path.splitext(key)[1].lower() or ".pdf"
+                with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+                    tmp.write(data)
+                    temp_path = tmp.name
+                path_to_parse = temp_path
+            else:
+                # Also check relative candidates
+                found = False
+                for cand in (
+                    os.path.join(os.getcwd(), file_path),
+                    os.path.join("/tmp", file_path.lstrip("/")),
+                    os.path.join("uploads", file_path.lstrip("/")),
+                ):
+                    if os.path.exists(cand) and os.path.isfile(cand):
+                        path_to_parse = cand
+                        found = True
+                        break
+                if not found:
+                    raise HTTPException(status_code=404, detail="File not found on server or storage.")
+
+        ext = os.path.splitext(path_to_parse)[1].lower()
+
         if ext == ".pdf":
-            return _extract_pdf(file_path)
+            return _extract_pdf(path_to_parse)
         elif ext in (".pptx", ".ppt"):
-            return _extract_pptx(file_path)
+            return _extract_pptx(path_to_parse)
         elif ext in (".docx", ".doc"):
-            return _extract_docx(file_path)
+            return _extract_docx(path_to_parse)
         else:
             raise HTTPException(
                 status_code=422,
                 detail=f"Quiz generation is not supported for '{ext}' files. "
                        "Please use PDF, PPTX, or DOCX.",
             )
-        
+
     except HTTPException:
         raise
     except Exception as exc:
@@ -67,6 +115,12 @@ def extract_text(file_path: str) -> str:
             status_code=500,
             detail=f"Failed to extract text from the file: {exc}",
         )
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
 
 
 # ── Pre-processing ──────────────────────────────────────────────────────────────

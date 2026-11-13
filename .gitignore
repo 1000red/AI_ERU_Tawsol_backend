@@ -11,3 +11,5 @@ __pycache__/
 uploads/
 node_modules/
 .neon
+generated_files/
+seed_curriculum_files.py

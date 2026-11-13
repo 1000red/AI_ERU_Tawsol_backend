@@ -34,15 +34,15 @@ async def generate_quiz_endpoint(
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
-    # ── Verify caller is a student ─────────────────────────────────────────
+    # ── Verify caller has access ──────────────────────────────────────────
     caller: User = db.query(User).filter(User.user_id == user_id).first()
 
     if not caller:
         raise HTTPException(status_code=404, detail="User not found.")
-    if caller.type_code != "STU":
+    if caller.type_code not in ("STU", "DR", "TA", "ADM"):
         raise HTTPException(
             status_code=403,
-            detail="Only students can generate quizzes.",
+            detail="Only students, teachers, and admins can generate quizzes.",
         )
 
     # ── Load the file ──────────────────────────────────────────────────────
@@ -55,16 +55,15 @@ async def generate_quiz_endpoint(
     if not material_file:
         raise HTTPException(status_code=404, detail="File not found.")
 
-    # ── File must be uploaded by DR or TA ─────────────────────────────────
+    # ── File must be uploaded by staff or admin ───────────────────────────
     author: User | None = (
         db.query(User).filter(User.user_id == material_file.author_id).first()
     )
 
-    if not author or author.type_code not in _STAFF_TYPES:
+    if author and author.type_code not in ("DR", "TA", "ADM"):
         raise HTTPException(
             status_code=403,
-            detail="Quiz generation is only available for official course materials "
-                   "uploaded by a Teacher.",
+            detail="Quiz generation is only available for official course materials.",
         )
 
     # ── File must belong to a course ──────────────────────────────────────
@@ -74,21 +73,22 @@ async def generate_quiz_endpoint(
             detail="This file is not associated with any course.",
         )
 
-    # ── Student must be enrolled in that course ────────────────────────────
-    enrollment = (
-        db.query(MaterialStudent)
-        .filter(
-            MaterialStudent.material_id == material_file.material_id,
-            MaterialStudent.user_id == user_id,
+    # ── If caller is a student, must be enrolled in that course ───────────
+    if caller.type_code == "STU":
+        enrollment = (
+            db.query(MaterialStudent)
+            .filter(
+                MaterialStudent.material_id == material_file.material_id,
+                MaterialStudent.user_id == user_id,
+            )
+            .first()
         )
-        .first()
-    )
 
-    if not enrollment:
-        raise HTTPException(
-            status_code=403,
-            detail="You are not enrolled in the course this file belongs to.",
-        )
+        if not enrollment:
+            raise HTTPException(
+                status_code=403,
+                detail="You are not enrolled in the course this file belongs to.",
+            )
 
     # ── File must be a supported type ─────────────────────────────────────
     if material_file.file_type not in _FILE_TYPES:
@@ -106,8 +106,7 @@ async def generate_quiz_endpoint(
 
     # ── Extract text & generate ────────────────────────────────────────────
     try:
-        abs_path = os.path.join(os.getcwd(), material_file.file_path)
-        text = extract_text(abs_path)
+        text = extract_text(material_file.file_path)
         stored_questions = await generate_quiz(text)
     except HTTPException:
         raise

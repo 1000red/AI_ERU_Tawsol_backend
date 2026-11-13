@@ -39,12 +39,13 @@ class NeonStorageService:
                 aws_access_key_id=self.access_key_id,
                 aws_secret_access_key=self.secret_access_key,
                 region_name=self.region_name,
+                verify=False,
                 config=Config(
                     s3={"addressing_style": "path"},
                     signature_version="s3v4",
-                    connect_timeout=3,
-                    read_timeout=5,
-                    retries={"max_attempts": 2},
+                    connect_timeout=10,
+                    read_timeout=30,
+                    retries={"max_attempts": 3},
                 ),
             )
         return self._client

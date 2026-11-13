@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
@@ -7,6 +7,7 @@ import os
 from app.core.config import settings
 from app.db.database import engine
 from app.db import base  # noqa: F401 
+from app.services.neon_storage import neon_storage 
 
 from app.models import user, material, chat, content, attendance, password_reset_otp  # noqa: F401
 
@@ -54,19 +55,31 @@ app.add_middleware(
     allow_credentials=True,
 )
 
-# ── Static files ──────────────────────────────────────────────────────────────
-
+# ── Static uploads & Neon S3 Storage Fallback ────────────────────────────────
 is_serverless = bool(os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"))
 upload_root = "/tmp/uploads" if is_serverless else "uploads"
 
 try:
     for sub in ("materials", "content", "voice", "files"):
         os.makedirs(os.path.join(upload_root, sub), exist_ok=True)
-    if os.path.exists(upload_root):
-        app.mount("/uploads", StaticFiles(directory=upload_root), name="uploads")
-except Exception as e:
-    import logging
-    logging.getLogger("uvicorn.error").warning(f"Could not mount static uploads directory: {e}")
+except Exception:
+    pass
+
+@app.get("/tmp/uploads/{file_path:path}", include_in_schema=False)
+@app.get("/uploads/{file_path:path}", include_in_schema=False)
+def serve_upload_file(file_path: str):
+    clean = file_path.lstrip("/")
+    # Check local filesystem first
+    for prefix in (upload_root, "/tmp/uploads", "uploads"):
+        cand = os.path.join(prefix, clean)
+        if os.path.exists(cand) and os.path.isfile(cand):
+            return FileResponse(cand)
+    # Check Neon S3 storage
+    if neon_storage.is_configured:
+        key = clean if clean.startswith("content/") else f"content/{clean}"
+        public_url = f"{settings.AWS_ENDPOINT_URL_S3.rstrip('/')}/{settings.NEON_STORAGE_BUCKET}/{key}"
+        return RedirectResponse(url=public_url, status_code=302)
+    raise HTTPException(status_code=404, detail="Uploaded file not found.")
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 

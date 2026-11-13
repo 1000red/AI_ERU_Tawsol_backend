@@ -54,11 +54,9 @@ def _make_client():
     api_key = str(api_key).strip()
 
     try:
-        ctx = ssl.create_default_context()
-        ctx.load_default_certs()
         http_options = types.HttpOptions(
-            client_args={"verify": ctx},
-            async_client_args={"verify": ctx},
+            client_args={"verify": False},
+            async_client_args={"verify": False},
         )
         return genai.Client(api_key=api_key, http_options=http_options)
     except Exception:

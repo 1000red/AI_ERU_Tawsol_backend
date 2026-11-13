@@ -25,15 +25,17 @@ def save_file(file: UploadFile) -> tuple[str, int] | tuple[None, None]:
         shutil.copyfileobj(file.file, buffer)
     size = os.path.getsize(path)
 
-    # If Neon Object Storage is configured, sync to Neon bucket
+    # If Neon Object Storage is configured, sync to Neon bucket and return permanent public URL
     if neon_storage.is_configured:
         try:
             with open(path, "rb") as f:
-                neon_storage.upload_file(
+                ok, s3_url = neon_storage.upload_file(
                     file_obj=f,
                     object_key=f"content/{filename}",
                     content_type=file.content_type or "application/octet-stream",
                 )
+                if ok and s3_url:
+                    return s3_url, size
         except Exception:
             pass
 
