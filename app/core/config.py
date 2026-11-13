@@ -36,11 +36,11 @@ class Settings(BaseSettings):
     # Database (PostgreSQL / Neon)
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://neondb_owner:npg_wGQXMY13UvyP@ep-silent-haze-b5t42cpv-pooler.c-7.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require"
+        "postgresql://neondb_owner:npg_wGQXMY13UvyP@ep-silent-haze-b5t42cpv-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require"
     )
     DATABASE_URL_UNPOOLED: Optional[str] = os.getenv(
         "DATABASE_URL_UNPOOLED",
-        "postgresql://neondb_owner:npg_wGQXMY13UvyP@ep-silent-haze-b5t42cpv.c-7.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require"
+        "postgresql://neondb_owner:npg_wGQXMY13UvyP@ep-silent-haze-b5t42cpv.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require"
     )
     AUTO_CREATE_TABLES: bool = os.getenv("AUTO_CREATE_TABLES", "false").lower() in ("true", "1")
 

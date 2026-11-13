@@ -7,7 +7,6 @@ import os
 from app.core.config import settings
 from app.db.database import engine
 from app.db import base  # noqa: F401 
-from app.services.neon_storage import neon_storage 
 
 from app.models import user, material, chat, content, attendance, password_reset_otp  # noqa: F401
 
@@ -75,10 +74,14 @@ def serve_upload_file(file_path: str):
         if os.path.exists(cand) and os.path.isfile(cand):
             return FileResponse(cand)
     # Check Neon S3 storage
-    if neon_storage.is_configured:
-        key = clean if clean.startswith("content/") else f"content/{clean}"
-        public_url = f"{settings.AWS_ENDPOINT_URL_S3.rstrip('/')}/{settings.NEON_STORAGE_BUCKET}/{key}"
-        return RedirectResponse(url=public_url, status_code=302)
+    try:
+        from app.services.neon_storage import neon_storage
+        if neon_storage.is_configured:
+            key = clean if clean.startswith("content/") else f"content/{clean}"
+            public_url = f"{settings.AWS_ENDPOINT_URL_S3.rstrip('/')}/{settings.NEON_STORAGE_BUCKET}/{key}"
+            return RedirectResponse(url=public_url, status_code=302)
+    except Exception:
+        pass
     raise HTTPException(status_code=404, detail="Uploaded file not found.")
 
 # ── Routers ───────────────────────────────────────────────────────────────────
