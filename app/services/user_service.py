@@ -84,12 +84,10 @@ def request_otp(db: Session, email: str) -> dict:
     cleaned = (email or "").strip().lower()
     user = get_user_by_email(db, cleaned)
     if not user:
-        return {
-            "message": "If this account is registered, you will receive an OTP code.",
-            "email": cleaned,
-            "expires_in_minutes": OTP_EXPIRE_MINUTES,
-            "otp_sent": False
-        }
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="البريد الإلكتروني أو كود المستخدم غير مسجل في النظام. يرجى التأكد من صحة البيانات."
+        )
 
     # Invalidate prior unused OTPs for this user
     db.query(PasswordResetOTP).filter(
@@ -118,10 +116,11 @@ def request_otp(db: Session, email: str) -> dict:
         print(f"[OTP] Could not deliver email via SMTP: {e}")
 
     result: dict = {
-        "message": f"OTP sent to {user.email}. Valid for {OTP_EXPIRE_MINUTES} minutes.",
+        "message": f"تم إنشاء رمز التحقق بنجاح لحساب {user.email}. صالح لمدة {OTP_EXPIRE_MINUTES} دقائق.",
         "email": user.email,
         "expires_in_minutes": OTP_EXPIRE_MINUTES,
         "otp_sent": bool(email_sent),
+        "otp": otp,
         "otp_debug": otp
     }
     return result

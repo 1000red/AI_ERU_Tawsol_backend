@@ -79,6 +79,18 @@ def get_recipients(
     )
 
 
+# ── Unread count ──────────────────────────────────────────────────────────────
+
+@router.get("/unread-count", response_model=UnreadCountOut)
+def get_unread_count(
+    user_id: int  = Depends(get_current_user_id),
+    db: Session   = Depends(get_db),
+):
+    user = svc.get_user_info(db, user_id)
+    count = svc.get_unread_count(db, user_id, user.type_code, user.level, user.department)
+    return {"unread_count": count}
+
+
 # ── Single announcement detail ────────────────────────────────────────────────
 
 @router.get("/{announcement_id}", response_model=AnnouncementOut)
@@ -131,14 +143,7 @@ def mark_as_read(
     svc.mark_announcement_read(db, announcement_id, user_id)
 
 
-@router.get("/unread-count", response_model=UnreadCountOut)
-def get_unread_count(
-    user_id: int  = Depends(get_current_user_id),
-    db: Session   = Depends(get_db),
-):
-    user = svc.get_user_info(db, user_id)
-    count = svc.get_unread_count(db, user_id, user.type_code, user.level, user.department)
-    return {"unread_count": count}
+
 
 
 # ── WebSocket ─────────────────────────────────────────────────────────────────
