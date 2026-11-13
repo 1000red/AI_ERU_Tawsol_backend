@@ -40,7 +40,7 @@ else:
         max_overflow=20,
         pool_recycle=900,   # Recycle connections before serverless idle cut-offs
         pool_use_lifo=True, # Reuse newest connections to keep idle count low
-        connect_args={"connect_timeout": 5},
+        connect_args={"connect_timeout": 15},
     )
 
 def check_connection() -> bool:
