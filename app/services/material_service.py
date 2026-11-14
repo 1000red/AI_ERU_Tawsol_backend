@@ -65,6 +65,8 @@ def get_teacher_materials(db: Session, user_id: int) -> list[Material]:
         .options(joinedload(Material.teacher_assignments).joinedload(MaterialTeacher.teacher))
         .all()
     )
+    for m in assigned:
+        m.teacher_name = user.name
     return assigned
 
 

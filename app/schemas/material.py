@@ -27,8 +27,8 @@ class MaterialOut(BaseModel):
                 "teacher_name": data.get("teacher_name"),
             }
 
-        teacher_name = None
-        if hasattr(data, "teacher_assignments") and data.teacher_assignments:
+        teacher_name = getattr(data, "teacher_name", None)
+        if not teacher_name and hasattr(data, "teacher_assignments") and data.teacher_assignments:
             first = data.teacher_assignments[0]
             if hasattr(first, "teacher") and first.teacher:
                 teacher_name = first.teacher.name
