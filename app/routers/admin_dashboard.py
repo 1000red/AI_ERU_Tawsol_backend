@@ -21,19 +21,32 @@ router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
 
 def require_admin_access(request: Request, db: Session = Depends(get_db)) -> int:
     """Security guard requiring authenticated Administrator role or admin API key."""
-    # Check X-Admin-Key header
-    admin_key = request.headers.get("x-admin-key")
+    # Check X-Admin-Key header or query parameter
+    admin_key = request.headers.get("x-admin-key") or request.query_params.get("admin_key") or request.query_params.get("key")
     if admin_key and admin_key == settings.SECRET_KEY:
         return 1
 
-    # Check Bearer token
+    # Check Bearer token from header, query param, or cookie
+    token = None
     auth = request.headers.get("authorization")
     if auth and auth.startswith("Bearer "):
         token = auth.split(" ")[1]
+    elif request.query_params.get("token"):
+        token = request.query_params.get("token")
+    elif request.cookies.get("admin_token"):
+        token = request.cookies.get("admin_token")
+
+    if token:
         try:
             payload = decode_token(token)
-            if payload.get("type") == "ADM":
-                return int(payload.get("sub", 1))
+            user_type = payload.get("type")
+            user_id = int(payload.get("sub", 0))
+            if user_type == "ADM":
+                return user_id
+            if user_id > 0:
+                user = user_svc.get_user_by_id(db, user_id)
+                if user and user.type_code == "ADM":
+                    return user_id
         except Exception:
             pass
 
@@ -46,13 +59,12 @@ def require_admin_access(request: Request, db: Session = Depends(get_db)) -> int
 # ── API Endpoints ─────────────────────────────────────────────────────────────
 
 @router.get("/api/stats")
-def get_stats(db: Session = Depends(get_db)):
+def get_stats(
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
     """Return dashboard analytics & metrics."""
-    try:
-        return user_svc.get_dashboard_stats(db)
-    except Exception as e:
-        import traceback
-        return {"error": str(e), "traceback": traceback.format_exc(), "total_users": 142, "students_count": 124, "doctors_count": 14, "admins_count": 4, "courses_count": 14, "messages_count": 0, "status": "fallback"}
+    return user_svc.get_dashboard_stats(db)
 
 
 @router.get("/api/users", response_model=list[UserOut])
@@ -62,6 +74,7 @@ def get_users(
     department: Optional[str] = None,
     limit: int = Query(200, ge=1, le=500),
     offset: int = Query(0, ge=0),
+    admin_id: int = Depends(require_admin_access),
     db: Session = Depends(get_db),
 ):
     """List users with search, role filter, and pagination."""
@@ -113,7 +126,10 @@ def delete_user(
 
 
 @router.get("/api/courses", response_model=list[MaterialOut])
-def get_courses(db: Session = Depends(get_db)):
+def get_courses(
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
     """List all courses with assigned teachers."""
     return mat_svc.get_all_materials(db)
 
@@ -225,6 +241,24 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       </button>
     </div>
   </nav>
+
+  <!-- Admin Authentication Banner -->
+  <div id="admin-auth-bar" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4">
+    <div id="admin-auth-box" class="p-3 sm:p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-amber-50/70 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-xs">
+      <div class="flex items-center gap-2">
+        <span id="auth-status-icon" class="text-base sm:text-lg">🔐</span>
+        <div>
+          <span id="auth-status-title" class="font-bold text-slate-800 dark:text-slate-200">جلسة المسؤول (Admin Authorization):</span>
+          <span id="auth-status-desc" class="text-slate-600 dark:text-slate-400 block sm:inline mr-1">أدخل مفتاح النظام (Secret Key) أو سجل الدخول بحساب ADM لتفعيل وظائف الإدارة.</span>
+        </div>
+      </div>
+      <div id="auth-action-controls" class="flex items-center gap-2 w-full sm:w-auto">
+        <input type="password" id="input-admin-key" placeholder="مفتاح المسؤول أو Token..." class="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button onclick="saveAdminKey()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shrink-0 transition">حفظ</button>
+        <button id="btn-admin-logout" onclick="clearAdminSession()" class="hidden px-2.5 py-1.5 bg-rose-500/10 text-rose-600 hover:bg-rose-500 hover:text-white font-bold rounded-lg shrink-0 transition">خروج</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Main Container -->
   <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -666,10 +700,83 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       setTimeout(() => toast.classList.add('hidden'), 4000);
     }
 
+    // ── AUTH HELPERS ──────────────────────────────────────────────────────────
+    function getAdminAuthHeaders(extraHeaders = {}) {
+      const headers = { ...extraHeaders };
+      const token = localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+      const key = localStorage.getItem('admin_key') || sessionStorage.getItem('admin_key');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      } else if (key) {
+        headers['X-Admin-Key'] = key;
+      }
+      return headers;
+    }
+
+    async function authFetch(url, options = {}) {
+      options.headers = getAdminAuthHeaders(options.headers || {});
+      const res = await fetch(url, options);
+      if (res.status === 401 || res.status === 403) {
+        updateAuthStatus(false);
+      } else if (res.ok) {
+        updateAuthStatus(true);
+      }
+      return res;
+    }
+
+    function saveAdminKey() {
+      const val = document.getElementById('input-admin-key').value.trim();
+      if (!val) {
+        showToast('يرجى إدخال مفتاح المسؤول أو الـ Token', true);
+        return;
+      }
+      if (val.startsWith('eyJ')) {
+        localStorage.setItem('admin_token', val);
+      } else {
+        localStorage.setItem('admin_key', val);
+      }
+      showToast('تم حفظ مفتاح المصادقة بنجاح!');
+      document.getElementById('input-admin-key').value = '';
+      updateAuthStatus(true);
+      refreshAll();
+    }
+
+    function clearAdminSession() {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_key');
+      sessionStorage.removeItem('admin_token');
+      sessionStorage.removeItem('admin_key');
+      showToast('تم تسجيل الخروج من لوحة التحكم');
+      updateAuthStatus(false);
+      refreshAll();
+    }
+
+    function updateAuthStatus(isAuthed) {
+      const token = localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
+      const key = localStorage.getItem('admin_key') || sessionStorage.getItem('admin_key');
+      const box = document.getElementById('admin-auth-box');
+      const desc = document.getElementById('auth-status-desc');
+      const icon = document.getElementById('auth-status-icon');
+      const logoutBtn = document.getElementById('btn-admin-logout');
+      if (!box || !desc || !icon) return;
+
+      if (token || key || isAuthed) {
+        icon.innerText = '✅';
+        desc.innerText = 'جلسة المسؤول مفعلة ومصرح بها (الوصول كامل)';
+        box.className = 'p-3 sm:p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-xs';
+        if (logoutBtn) logoutBtn.classList.remove('hidden');
+      } else {
+        icon.innerText = '⚠️';
+        desc.innerText = 'غير مسجل. يرجى إدخال مفتاح المسؤول أو تسجيل الدخول من تبويب "فحص الدخول" لتفعيل الإجراءات.';
+        box.className = 'p-3 sm:p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-amber-50/70 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-xs';
+        if (logoutBtn) logoutBtn.classList.add('hidden');
+      }
+    }
+
     // ── STATS ─────────────────────────────────────────────────────────────────
     async function loadStats() {
       try {
-        const res = await fetch(`${API_BASE}/admin/api/stats`);
+        const res = await authFetch(`${API_BASE}/admin/api/stats`);
         const data = await res.json();
         document.getElementById('stat-total-users').innerText = data.total_users ?? 0;
         document.getElementById('stat-students').innerText = data.students_count ?? 0;
@@ -699,7 +806,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       if (role) url += `&role=${encodeURIComponent(role)}`;
 
       try {
-        const res = await fetch(url);
+        const res = await authFetch(url);
         currentUsers = await res.json();
         renderUsersTable(currentUsers);
         updateDoctorDropdown(currentUsers);
@@ -835,7 +942,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       }
 
       try {
-        const res = await fetch(`${API_BASE}/admin/api/users/${uid}`, {
+        const res = await authFetch(`${API_BASE}/admin/api/users/${uid}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -873,7 +980,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       };
 
       try {
-        const res = await fetch(`${API_BASE}/admin/api/users`, {
+        const res = await authFetch(`${API_BASE}/admin/api/users`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -913,7 +1020,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       const newPass = document.getElementById('reset-pwd-new').value.trim();
 
       try {
-        const res = await fetch(`${API_BASE}/admin/api/users/${uid}/reset-password`, {
+        const res = await authFetch(`${API_BASE}/admin/api/users/${uid}/reset-password`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ new_password: newPass })
@@ -934,7 +1041,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       const name = u ? u.name : ('#' + uid);
       if (!confirm(`هل أنت متأكد من رغبتك في حذف المستخدم "${name}"؟`)) return;
       try {
-        const res = await fetch(`${API_BASE}/admin/api/users/${uid}`, { method: 'DELETE' });
+        const res = await authFetch(`${API_BASE}/admin/api/users/${uid}`, { method: 'DELETE' });
         if (!res.ok) {
           const err = await res.json();
           throw new Error(err.detail || 'فشل حذف المستخدم');
@@ -952,7 +1059,14 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       const tbody = document.getElementById('courses-tbody');
       const mobileContainer = document.getElementById('courses-mobile-cards');
       try {
-        const res = await fetch(`${API_BASE}/admin/api/courses`);
+        const res = await authFetch(`${API_BASE}/admin/api/courses`);
+        currentCourses = await res.json();
+        renderCoursesTable(currentCourses);
+      } catch (e) {
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-rose-500 font-bold">فشل تحميل الكورسات: ${e.message}</td></tr>`;
+        if (mobileContainer) mobileContainer.innerHTML = `<div class="text-center py-6 text-rose-500 font-bold bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900">فشل تحميل الكورسات: ${e.message}</div>`;
+      }
+    }
         currentCourses = await res.json();
         renderCoursesTable(currentCourses);
       } catch (e) {
@@ -1035,7 +1149,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       };
 
       try {
-        const res = await fetch(`${API_BASE}/admin/api/courses`, {
+        const res = await authFetch(`${API_BASE}/admin/api/courses`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -1056,7 +1170,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
     async function confirmDeleteCourse(id, name) {
       if (!confirm(`هل أنت متأكد من رغبتك في حذف الكورس "${name}"؟`)) return;
       try {
-        const res = await fetch(`${API_BASE}/admin/api/courses/${id}`, { method: 'DELETE' });
+        const res = await authFetch(`${API_BASE}/admin/api/courses/${id}`, { method: 'DELETE' });
         if (!res.ok) {
           const err = await res.json();
           throw new Error(err.detail || 'فشل حذف الكورس');
@@ -1087,6 +1201,11 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         });
         const data = await res.json();
         if (res.ok) {
+          if (data.user && data.user.type_code === 'ADM') {
+            localStorage.setItem('admin_token', data.access_token);
+            updateAuthStatus(true);
+            refreshAll();
+          }
           resBox.className = 'mt-4 sm:mt-6 p-4 rounded-xl text-xs font-mono bg-emerald-50 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 block';
           resBox.innerHTML = `✅ نجح تسجيل الدخول بنجاح تام! (HTTP 200)
 User ID: ${data.user.user_id}
@@ -1094,7 +1213,8 @@ Name: ${data.user.name}
 Role: ${data.user.type_code}
 Email: ${data.user.email}
 UniCode: ${data.user.uni_code}
-Access Token: ${data.access_token.substring(0, 32)}...`;
+Access Token: ${data.access_token.substring(0, 32)}...
+${data.user.type_code === 'ADM' ? '<span class="text-emerald-600 font-bold">🌟 تم تفعيل صلاحيات الإدارة للوحة التحكم تلقائياً!</span>' : ''}`;
         } else {
           resBox.className = 'mt-4 sm:mt-6 p-4 rounded-xl text-xs font-mono bg-rose-50 dark:bg-rose-950 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-800 block';
           resBox.innerHTML = `❌ فشل تسجيل الدخول (HTTP ${res.status}):
@@ -1115,6 +1235,7 @@ ${JSON.stringify(data, null, 2)}`;
 
     // On load
     window.addEventListener('DOMContentLoaded', () => {
+      updateAuthStatus();
       refreshAll();
     });
   </script>

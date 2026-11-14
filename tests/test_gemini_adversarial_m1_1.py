@@ -301,6 +301,10 @@ class TestAdversarialLiveGeminiVerification(unittest.TestCase):
                 self.assertEqual(set(q.options.keys()), {"A", "B", "C", "D"})
                 self.assertIn(q.correct, ["A", "B", "C", "D"])
                 self.assertTrue(bool(q.explanation))
+        except HTTPException as e:
+            if e.status_code == 429:
+                self.skipTest(f"Gemini free-tier daily quota exhausted: {e.detail}")
+            raise
         finally:
             loop.close()
 

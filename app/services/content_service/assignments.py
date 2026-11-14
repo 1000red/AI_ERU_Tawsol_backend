@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from sqlalchemy import and_, select
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from typing import Optional
@@ -104,14 +104,14 @@ def get_all_assignments_for_user(
     now = datetime.utcnow()
 
     if user_type == "STU":
-        enrolled = db.query(MaterialStudent.material_id).filter(
+        enrolled = select(MaterialStudent.material_id).where(
             MaterialStudent.user_id == user_id
-        ).subquery()
+        )
         base = db.query(Assignment).filter(Assignment.material_id.in_(enrolled))
     else:
-        taught = db.query(MaterialTeacher.material_id).filter(
+        taught = select(MaterialTeacher.material_id).where(
             MaterialTeacher.user_id == user_id
-        ).subquery()
+        )
         base = db.query(Assignment).filter(Assignment.material_id.in_(taught))
 
     if status == "upcoming":
@@ -141,9 +141,9 @@ def get_upcoming_deadlines(
     cutoff = now + timedelta(days=days)
 
     if user_type == "STU":
-        enrolled = db.query(MaterialStudent.material_id).filter(
+        enrolled = select(MaterialStudent.material_id).where(
             MaterialStudent.user_id == user_id
-        ).subquery()
+        )
         assignments = (
             db.query(Assignment)
               .filter(
@@ -155,9 +155,9 @@ def get_upcoming_deadlines(
               .all()
         )
     else:
-        taught = db.query(MaterialTeacher.material_id).filter(
+        taught = select(MaterialTeacher.material_id).where(
             MaterialTeacher.user_id == user_id
-        ).subquery()
+        )
         assignments = (
             db.query(Assignment)
               .filter(

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, select
 from fastapi import HTTPException
 from typing import Optional
 
@@ -178,9 +178,9 @@ def get_announcements_for_user(
             or_(Announcement.title.ilike(like), Announcement.content.ilike(like))
         )
     if unread_only:
-        read_ids = db.query(AnnouncementRead.announcement_id).filter(
+        read_ids = select(AnnouncementRead.announcement_id).where(
             AnnouncementRead.user_id == user_id
-        ).subquery()
+        )
         query = query.filter(Announcement.announcement_id.notin_(read_ids))
 
     announcements = (
@@ -300,27 +300,27 @@ def get_available_recipients(
     if requester.type_code == "ADM":
         pass
     elif requester.type_code in ("DR", "TA"):
-        taught_ids = db.query(MaterialTeacher.material_id).filter(
+        taught_ids = select(MaterialTeacher.material_id).where(
             MaterialTeacher.user_id == requester_id
-        ).subquery()
-        enrolled_user_ids = db.query(MaterialStudent.user_id).filter(
+        )
+        enrolled_user_ids = select(MaterialStudent.user_id).where(
             MaterialStudent.material_id.in_(taught_ids)
-        ).subquery()
+        )
         if course_id:
             # narrow to specific course
-            specific_enrolled = db.query(MaterialStudent.user_id).filter(
+            specific_enrolled = select(MaterialStudent.user_id).where(
                 MaterialStudent.material_id == course_id
-            ).subquery()
+            )
             query = query.filter(User.user_id.in_(specific_enrolled))
         else:
             query = query.filter(User.user_id.in_(enrolled_user_ids))
     elif requester.type_code == "STU":
-        enrolled_material_ids = db.query(MaterialStudent.material_id).filter(
+        enrolled_material_ids = select(MaterialStudent.material_id).where(
             MaterialStudent.user_id == requester_id
-        ).subquery()
-        staff_ids = db.query(MaterialTeacher.user_id).filter(
+        )
+        staff_ids = select(MaterialTeacher.user_id).where(
             MaterialTeacher.material_id.in_(enrolled_material_ids)
-        ).subquery()
+        )
         query = query.filter(
             User.user_id.in_(staff_ids),
             User.type_code.in_(["DR", "TA"]),

@@ -431,6 +431,52 @@ class TestTier1FeatureCoverage(unittest.TestCase):
             mat_svc.get_material_by_id(self.db, "DS301")
         self.assertEqual(ctx.exception.status_code, 404)
 
+    def test_f6_06_admin_api_stats_protected(self):
+        """F6.6: GET /admin/api/stats rejects unauthenticated and non-admin callers."""
+        resp = client.get("/admin/api/stats")
+        self.assertEqual(resp.status_code, 403)
+        resp = client.get("/admin/api/stats", headers=auth_header(5))
+        self.assertEqual(resp.status_code, 403)
+        resp = client.get("/admin/api/stats", headers=auth_header(2))
+        self.assertEqual(resp.status_code, 403)
+        resp = client.get("/admin/api/stats", headers=auth_header(1))
+        self.assertEqual(resp.status_code, 200)
+
+    def test_f6_07_admin_api_users_protected(self):
+        """F6.7: GET /admin/api/users rejects unauthenticated callers and non-admin roles."""
+        resp = client.get("/admin/api/users")
+        self.assertEqual(resp.status_code, 403)
+        resp = client.get("/admin/api/users", headers=auth_header(5))
+        self.assertEqual(resp.status_code, 403)
+        resp = client.get("/admin/api/users", headers=auth_header(1))
+        self.assertEqual(resp.status_code, 200)
+        self.assertIsInstance(resp.json(), list)
+
+    def test_f6_08_admin_api_courses_protected(self):
+        """F6.8: GET /admin/api/courses rejects unauthenticated callers and non-admin roles."""
+        resp = client.get("/admin/api/courses")
+        self.assertEqual(resp.status_code, 403)
+        resp = client.get("/admin/api/courses", headers=auth_header(2))
+        self.assertEqual(resp.status_code, 403)
+        resp = client.get("/admin/api/courses", headers=auth_header(1))
+        self.assertEqual(resp.status_code, 200)
+
+    def test_f6_09_admin_api_key_authentication(self):
+        """F6.9: Accessing /admin/api routes via X-Admin-Key succeeds."""
+        resp = client.get("/admin/api/stats", headers={"x-admin-key": settings.SECRET_KEY})
+        self.assertEqual(resp.status_code, 200)
+
+    def test_f6_10_admin_api_mutations_protected(self):
+        """F6.10: POST and DELETE /admin/api/... require admin credentials."""
+        resp = client.post("/admin/api/users", json={"name": "Hacker", "email": "h@test.com", "password": "123"})
+        self.assertEqual(resp.status_code, 403)
+        resp = client.delete("/admin/api/users/999")
+        self.assertEqual(resp.status_code, 403)
+        resp = client.post("/admin/api/courses", json={"material_id": "X99", "name": "Fake"})
+        self.assertEqual(resp.status_code, 403)
+        resp = client.delete("/admin/api/courses/CS101")
+        self.assertEqual(resp.status_code, 403)
+
     # ── Feature 7: Backend Automated Pytest Suite (5 cases) ───────────────────
 
     def test_f7_01_migration_chain_test_file_exists(self):
