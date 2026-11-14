@@ -67,6 +67,17 @@ async def upload_voice(
     with open(save_path, "wb") as f:
         f.write(contents)
 
+    # Persist to Neon S3 Object Storage
+    try:
+        from app.services.neon_storage import neon_storage
+        import io
+        if neon_storage.is_configured:
+            content_type = file.content_type or "audio/m4a"
+            neon_storage.upload_file(io.BytesIO(contents), f"voice/{filename}", content_type=content_type)
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").warning(f"Failed to upload voice to Neon storage: {e}")
+
     return {
         "file_url":        f"/uploads/voice/{filename}",
         "file_name":       file.filename,
@@ -97,6 +108,17 @@ async def upload_file(
     save_path = os.path.join(FILE_DIR, filename)
     with open(save_path, "wb") as f:
         f.write(contents)
+
+    # Persist to Neon S3 Object Storage
+    try:
+        from app.services.neon_storage import neon_storage
+        import io
+        if neon_storage.is_configured:
+            content_type = file.content_type or "application/octet-stream"
+            neon_storage.upload_file(io.BytesIO(contents), f"files/{filename}", content_type=content_type)
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").warning(f"Failed to upload file to Neon storage: {e}")
 
     return {
         "file_url":        f"/uploads/files/{filename}",

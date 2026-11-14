@@ -77,9 +77,32 @@ def serve_upload_file(file_path: str):
     try:
         from app.services.neon_storage import neon_storage
         if neon_storage.is_configured:
-            key = clean if clean.startswith("content/") else f"content/{clean}"
-            public_url = f"{settings.AWS_ENDPOINT_URL_S3.rstrip('/')}/{settings.NEON_STORAGE_BUCKET}/{key}"
-            return RedirectResponse(url=public_url, status_code=302)
+            candidates = [clean]
+            if not clean.startswith("content/"):
+                candidates.append(f"content/{clean}")
+            if "/" in clean:
+                sub = clean.split("/")[-1]
+                candidates.append(sub)
+                candidates.append(f"voice/{sub}")
+                candidates.append(f"files/{sub}")
+            
+            for key in candidates:
+                try:
+                    obj = neon_storage.client.get_object(Bucket=neon_storage.bucket_name, Key=key)
+                    body = obj["Body"].read()
+                    # Cache to local file for fast subsequent responses
+                    try:
+                        save_cand = os.path.join(upload_root, clean)
+                        os.makedirs(os.path.dirname(save_cand), exist_ok=True)
+                        with open(save_cand, "wb") as f:
+                            f.write(body)
+                        return FileResponse(save_cand)
+                    except Exception:
+                        from fastapi.responses import Response
+                        media_type = obj.get("ContentType", "application/octet-stream")
+                        return Response(content=body, media_type=media_type)
+                except Exception:
+                    continue
     except Exception:
         pass
     raise HTTPException(status_code=404, detail="Uploaded file not found.")

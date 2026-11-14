@@ -286,10 +286,6 @@ def edit_message(db: Session, chat_id: int, new_text: str, user_id: int) -> Chat
     if msg.content_type != "text":
         raise HTTPException(status_code=400, detail="Only text messages can be edited")
 
-    elapsed = (datetime.now(timezone.utc) - msg.sent_at.replace(tzinfo=timezone.utc)).total_seconds() / 60
-    if elapsed > EDIT_DELETE_WINDOW_MINUTES:
-        raise HTTPException(status_code=403, detail=f"Cannot edit after {EDIT_DELETE_WINDOW_MINUTES} minutes")
-
     msg.message   = new_text
     msg.edited_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
@@ -305,10 +301,6 @@ def delete_message(db: Session, chat_id: int, user_id: int) -> ChatHistory:
         raise HTTPException(status_code=403, detail="You can only delete your own messages")
     if msg.is_deleted:
         raise HTTPException(status_code=400, detail="Message already deleted")
-
-    elapsed = (datetime.now(timezone.utc) - msg.sent_at.replace(tzinfo=timezone.utc)).total_seconds() / 60
-    if elapsed > EDIT_DELETE_WINDOW_MINUTES:
-        raise HTTPException(status_code=403, detail=f"Cannot delete after {EDIT_DELETE_WINDOW_MINUTES} minutes")
 
     msg.is_deleted = True
     msg.message    = None
