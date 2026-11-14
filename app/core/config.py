@@ -73,7 +73,15 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
     RESET_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("RESET_TOKEN_EXPIRE_MINUTES", "5"))
 
-    # SMTP email
+    # Email delivery — Resend (HTTPS API, works on Vercel) with SMTP fallback
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
+    RESEND_API_URL: str = os.getenv("RESEND_API_URL", "https://api.resend.com/emails")
+    RESEND_FROM_EMAIL: str = os.getenv(
+        "RESEND_FROM_EMAIL",
+        os.getenv("FROM_EMAIL", "noreply@weschool-suez.edu.eg"),
+    )
+
+    # SMTP email (fallback when RESEND_API_KEY is not set)
     SMTP_HOST: str = os.getenv("SMTP_HOST", "")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")

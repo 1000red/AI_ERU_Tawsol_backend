@@ -2,6 +2,8 @@ from email.message import EmailMessage
 import smtplib
 import ssl
 
+import httpx
+
 from app.core.config import OTP_EXPIRE_MINUTES, settings
 
 
@@ -13,12 +15,37 @@ _ISSUE_LABELS = {
 }
 
 
-def _send_email(to_email: str, subject: str, html_body: str) -> bool:
-    """Send an HTML email using the configured SMTP server."""
-    if not all((settings.SMTP_HOST, settings.SMTP_USERNAME, settings.SMTP_PASSWORD, settings.FROM_EMAIL)):
-        print("[SMTP] Email is not configured; set SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD, and FROM_EMAIL")
+def _send_via_resend(to_email: str, subject: str, html_body: str) -> bool:
+    """Send an HTML email through Resend's HTTPS API (Vercel-friendly)."""
+    try:
+        response = httpx.post(
+            settings.RESEND_API_URL,
+            headers={
+                "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "from": settings.RESEND_FROM_EMAIL,
+                "to": [to_email],
+                "subject": subject,
+                "html": html_body,
+            },
+            timeout=20.0,
+        )
+        if response.is_success:
+            return True
+        print(
+            f"[Resend] Failed to send email to {to_email}: "
+            f"{response.status_code} {response.text}"
+        )
+        return False
+    except Exception as exc:
+        print(f"[Resend] Failed to send email to {to_email}: {exc}")
         return False
 
+
+def _send_via_smtp(to_email: str, subject: str, html_body: str) -> bool:
+    """Send an HTML email using the configured SMTP server."""
     message = EmailMessage()
     message["From"] = settings.FROM_EMAIL
     message["To"] = to_email
@@ -41,6 +68,21 @@ def _send_email(to_email: str, subject: str, html_body: str) -> bool:
     except Exception as exc:
         print(f"[SMTP] Failed to send email to {to_email}: {exc}")
         return False
+
+
+def _send_email(to_email: str, subject: str, html_body: str) -> bool:
+    """Send an HTML email using Resend (preferred) or SMTP."""
+    if settings.RESEND_API_KEY:
+        return _send_via_resend(to_email, subject, html_body)
+
+    if all((settings.SMTP_HOST, settings.SMTP_USERNAME, settings.SMTP_PASSWORD, settings.FROM_EMAIL)):
+        return _send_via_smtp(to_email, subject, html_body)
+
+    print(
+        "[Email] No email provider configured; set RESEND_API_KEY "
+        "(or SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD, and FROM_EMAIL)"
+    )
+    return False
 
 
 def send_otp_email(to_email: str, otp: str, user_name: str) -> bool:

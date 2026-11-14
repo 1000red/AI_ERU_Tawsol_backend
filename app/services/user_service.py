@@ -61,7 +61,6 @@ def login_user(db: Session, email: str, password: str) -> dict:
             detail="Invalid email or password",
         )
     token = create_access_token({"sub": str(user.user_id), "type": user.type_code})
-    send_welcome_email(user.email, user.name)
     return {"access_token": token, "token_type": "bearer", "user": user}
 
 
@@ -113,22 +112,26 @@ def request_otp(db: Session, email: str) -> dict:
     db.add(otp_record)
     db.commit()
 
-    # Attempt to send email via SMTP gracefully without crashing if SMTP is unconfigured/fails
+    # Deliver the OTP by email. Never return the code in the HTTP response:
+    # doing so would let anyone reset any account without access to the inbox.
     email_sent = False
     try:
         email_sent = send_otp_email(user.email, otp, user.name)
     except Exception as e:
-        print(f"[OTP] Could not deliver email via SMTP: {e}")
+        print(f"[OTP] Could not deliver email: {e}")
 
-    result: dict = {
-        "message": f"تم إنشاء رمز التحقق بنجاح لحساب {user.email}. صالح لمدة {OTP_EXPIRE_MINUTES} دقائق.",
+    if not email_sent:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="تعذر إرسال رمز التحقق إلى بريدك الإلكتروني. يرجى المحاولة لاحقاً أو التواصل مع الدعم الفني.",
+        )
+
+    return {
+        "message": f"تم إرسال رمز التحقق إلى البريد الإلكتروني {user.email}. صالح لمدة {OTP_EXPIRE_MINUTES} دقائق.",
         "email": user.email,
         "expires_in_minutes": OTP_EXPIRE_MINUTES,
-        "otp_sent": bool(email_sent),
-        "otp": otp,
-        "otp_debug": otp
+        "otp_sent": True,
     }
-    return result
 
 
 import time
@@ -207,6 +210,10 @@ def reset_password(db: Session, reset_token: str, new_password: str) -> None:
     user.password = hash_password(new_password)
     user.current_password = False
     db.commit()
+    try:
+        send_password_changed_email(user.email, user.name)
+    except Exception as e:
+        print(f"[ResetPassword] Could not deliver confirmation email: {e}")
 
 
 
@@ -264,6 +271,10 @@ def create_user_admin(db: Session, data) -> User:
     db.add(user)
     db.commit()
     db.refresh(user)
+    try:
+        send_welcome_email(user.email, user.name)
+    except Exception as e:
+        print(f"[CreateUser] Could not deliver welcome email: {e}")
     return user
 
 

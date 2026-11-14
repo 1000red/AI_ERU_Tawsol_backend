@@ -65,6 +65,10 @@ SECRET_KEY="replace-with-a-long-random-secret"
 ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 RESET_TOKEN_EXPIRE_MINUTES=5
+# Resend (preferred: HTTPS API, required on Vercel where SMTP is often blocked)
+RESEND_API_KEY="re_..."
+RESEND_FROM_EMAIL="noreply@example.com"
+# SMTP fallback (used only when RESEND_API_KEY is empty)
 SMTP_HOST="smtp.example.com"
 SMTP_PORT=587
 SMTP_USERNAME="your-smtp-username"
