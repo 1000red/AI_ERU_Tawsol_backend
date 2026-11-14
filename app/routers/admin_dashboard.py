@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, HTTPException, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 
+from app.core.config import settings
+from app.core.security import decode_token
 from app.db.database import get_db
 from app.schemas.user import (
     UserOut,
@@ -15,6 +17,30 @@ from app.services import user_service as user_svc
 from app.services import material_service as mat_svc
 
 router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
+
+
+def require_admin_access(request: Request, db: Session = Depends(get_db)) -> int:
+    """Security guard requiring authenticated Administrator role or admin API key."""
+    # Check X-Admin-Key header
+    admin_key = request.headers.get("x-admin-key")
+    if admin_key and admin_key == settings.SECRET_KEY:
+        return 1
+
+    # Check Bearer token
+    auth = request.headers.get("authorization")
+    if auth and auth.startswith("Bearer "):
+        token = auth.split(" ")[1]
+        try:
+            payload = decode_token(token)
+            if payload.get("type") == "ADM":
+                return int(payload.get("sub", 1))
+        except Exception:
+            pass
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="صلاحيات المسؤول مطلوبة لتنفيذ هذا الإجراء. يرجى تسجيل الدخول بحساب مسؤول أولاً.",
+    )
 
 
 # ── API Endpoints ─────────────────────────────────────────────────────────────
@@ -43,26 +69,44 @@ def get_users(
 
 
 @router.post("/api/users", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def create_user(data: AdminUserCreate, db: Session = Depends(get_db)):
+def create_user(
+    data: AdminUserCreate,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
     """Create a new user (student, doctor, admin) with encrypted password."""
     return user_svc.create_user_admin(db, data)
 
 
 @router.put("/api/users/{user_id}", response_model=UserOut)
-def update_user(user_id: int, data: AdminUserUpdate, db: Session = Depends(get_db)):
+def update_user(
+    user_id: int,
+    data: AdminUserUpdate,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
     """Update user information."""
     return user_svc.update_user_admin(db, user_id, data)
 
 
 @router.post("/api/users/{user_id}/reset-password")
-def reset_password(user_id: int, data: AdminPasswordReset, db: Session = Depends(get_db)):
+def reset_password(
+    user_id: int,
+    data: AdminPasswordReset,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
     """Reset any user's password directly."""
     user_svc.reset_password_admin(db, user_id, data.new_password)
     return {"message": "Password reset successfully", "user_id": user_id}
 
 
 @router.delete("/api/users/{user_id}", status_code=status.HTTP_200_OK)
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(
+    user_id: int,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
     """Delete a user."""
     user_svc.delete_user_admin(db, user_id)
     return {"message": "User deleted successfully", "user_id": user_id}
@@ -75,13 +119,21 @@ def get_courses(db: Session = Depends(get_db)):
 
 
 @router.post("/api/courses", response_model=MaterialOut, status_code=status.HTTP_201_CREATED)
-def create_course(data: MaterialCreate, db: Session = Depends(get_db)):
+def create_course(
+    data: MaterialCreate,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
     """Add a new course / material."""
     return mat_svc.create_material(db, data)
 
 
 @router.delete("/api/courses/{material_id}")
-def delete_course(material_id: str, db: Session = Depends(get_db)):
+def delete_course(
+    material_id: str,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
     """Delete a course."""
     mat_svc.delete_material(db, material_id)
     return {"message": f"Course '{material_id}' deleted successfully"}

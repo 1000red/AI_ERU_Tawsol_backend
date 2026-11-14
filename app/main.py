@@ -34,6 +34,8 @@ app = FastAPI(
 
 # ── Middleware ────────────────────────────────────────────────────────────────
 
+from app.core.middleware import SecurityHeadersMiddleware, RateLimitMiddleware
+
 @app.middleware("http")
 async def vercel_routing_middleware(request: Request, call_next):
     orig = request.query_params.get("__orig_path")
@@ -45,6 +47,10 @@ async def vercel_routing_middleware(request: Request, call_next):
         request.scope["path"] = "/"
         request.scope["raw_path"] = b"/"
     return await call_next(request)
+
+# Security Headers and Rate Limiting Protection against Brute-Force & DoS
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -67,12 +73,18 @@ except Exception:
 @app.get("/tmp/uploads/{file_path:path}", include_in_schema=False)
 @app.get("/uploads/{file_path:path}", include_in_schema=False)
 def serve_upload_file(file_path: str):
-    clean = file_path.lstrip("/")
-    # Check local filesystem first
+    # Path traversal protection (CWE-22)
+    clean = os.path.normpath(file_path.lstrip("/\\"))
+    if ".." in clean.split(os.sep) or clean.startswith(".."):
+        raise HTTPException(status_code=400, detail="Invalid path traversal sequence.")
+
+    # Check local filesystem first with canonical path containment
     for prefix in (upload_root, "/tmp/uploads", "uploads"):
+        prefix_real = os.path.realpath(prefix)
         cand = os.path.join(prefix, clean)
-        if os.path.exists(cand) and os.path.isfile(cand):
-            return FileResponse(cand)
+        cand_real = os.path.realpath(cand)
+        if cand_real.startswith(prefix_real) and os.path.exists(cand_real) and os.path.isfile(cand_real):
+            return FileResponse(cand_real)
     # Check Neon S3 storage
     try:
         from app.services.neon_storage import neon_storage

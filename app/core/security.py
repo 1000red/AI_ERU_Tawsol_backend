@@ -41,14 +41,6 @@ def decode_token(token: str) -> dict:
     try:
         return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     except JWTError as e:
-        # Support Neon Auth JWTs
-        if settings.NEON_AUTH_BASE_URL:
-            try:
-                claims = jwt.get_unverified_claims(token)
-                if claims and ("sub" in claims or "id" in claims):
-                    return claims
-            except Exception:
-                pass
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
@@ -62,6 +54,12 @@ def get_current_user_id(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
 ) -> int:
     payload = decode_token(credentials.credentials)
+    if payload.get("purpose") == "reset":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Reset token cannot be used for standard API authentication",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     user_id = payload.get("sub")
     if user_id is None:
         raise HTTPException(status_code=401, detail="Token missing subject")
@@ -70,7 +68,30 @@ def get_current_user_id(
 
 def get_current_user_id_ws(token: str) -> int:
     payload = decode_token(token)
+    if payload.get("purpose") == "reset":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Reset token cannot be used for WebSocket authentication",
+        )
     user_id = payload.get("sub")
     if user_id is None:
         raise HTTPException(status_code=401, detail="Token missing subject")
+    return int(user_id)
+
+
+def require_admin_role(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> int:
+    payload = decode_token(credentials.credentials)
+    if payload.get("purpose") == "reset":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Reset token cannot be used for API authentication",
+        )
+    user_id = payload.get("sub")
+    user_type = payload.get("type")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Token missing subject")
+    if user_type != "ADM":
+        raise HTTPException(status_code=403, detail="Administrator privileges required")
     return int(user_id)

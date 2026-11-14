@@ -69,8 +69,13 @@ def change_password(db: Session, user_id: int, old_password: str, new_password: 
     user = get_user_by_id(db, user_id)
     if not verify_password(old_password, user.password):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Old password is incorrect"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="كلمة المرور الحالية غير صحيحة",
+        )
+    if not new_password or len(new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="كلمة المرور الجديدة يجب أن لا تقل عن 6 أحرف.",
         )
     user.password = hash_password(new_password)
     user.current_password = False
@@ -126,10 +131,26 @@ def request_otp(db: Session, email: str) -> dict:
     return result
 
 
+import time
+
+_FAILED_OTP_ATTEMPTS: dict[str, list[float]] = {}
+
+
 def verify_otp(db: Session, email: str, otp: str) -> str:
     cleaned = (email or "").strip().lower()
     cleaned_otp = (otp or "").strip()
-    
+
+    # Brute-force protection: Max 5 failed OTP attempts in 10 minutes
+    now = time.time()
+    history = _FAILED_OTP_ATTEMPTS.get(cleaned, [])
+    history = [t for t in history if now - t < 600]
+    _FAILED_OTP_ATTEMPTS[cleaned] = history
+    if len(history) >= 5:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="تم حظر محاولات التحقق مؤقتاً بسبب تكرار إدخال رمز خاطئ. يرجى الانتظار 10 دقائق والمحاولة لاحقاً.",
+        )
+
     # Locate user by email or student code
     user = get_user_by_email(db, cleaned)
     user_id = user.user_id if user else None
@@ -153,11 +174,16 @@ def verify_otp(db: Session, email: str, otp: str) -> str:
         )
 
     if record.otp_code != cleaned_otp:
+        history.append(now)
+        _FAILED_OTP_ATTEMPTS[cleaned] = history
+        remaining = max(0, 5 - len(history))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid OTP"
+            detail=f"رمز التحقق غير صحيح. متبقي لديك {remaining} محاولات قبل الحظر المؤقت."
         )
 
+    # Successful verification
+    _FAILED_OTP_ATTEMPTS.pop(cleaned, None)
     record.is_used = True
     db.commit()
 
@@ -171,6 +197,11 @@ def reset_password(db: Session, reset_token: str, new_password: str) -> None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid token purpose"
+        )
+    if not new_password or len(new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="كلمة المرور يجب أن لا تقل عن 6 أحرف."
         )
     user = get_user_by_id(db, int(payload["sub"]))
     user.password = hash_password(new_password)
