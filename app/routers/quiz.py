@@ -39,10 +39,10 @@ async def generate_quiz_endpoint(
 
     if not caller:
         raise HTTPException(status_code=404, detail="User not found.")
-    if caller.type_code not in ("STU", "DR", "TA", "ADM"):
+    if caller.type_code != "STU":
         raise HTTPException(
             status_code=403,
-            detail="Only students, teachers, and admins can generate quizzes.",
+            detail="Only students can generate quizzes.",
         )
 
     # ── Load the file ──────────────────────────────────────────────────────

@@ -42,34 +42,64 @@ LECTURE CONTENT:
 
 def _make_client():
     import ssl
-    import base64
+    import traceback
     from google import genai
     from google.genai import types
 
-    api_key = (settings.GEMINI_API_KEY or "").strip()
-    if not api_key:
-        api_key = base64.b64decode("QVEuQWI4Uk42Sy1XSERHaUw1MGdreGNTNzI3OW5yaFZlWUt4dnFXSmZyREh6Ykc0WTk3RWc=").decode("utf-8")
+    api_key = settings.GEMINI_API_KEY
+    if not api_key or not str(api_key).strip():
+        raise HTTPException(
+            status_code=503,
+            detail="GEMINI_API_KEY is not set. Cannot initialize Gemini AI client.",
+        )
+    api_key = str(api_key).strip()
 
     try:
+        ctx = ssl.create_default_context()
+        ctx.load_default_certs()
         http_options = types.HttpOptions(
             api_version="v1beta",
-            client_args={"verify": False},
-            async_client_args={"verify": False},
+            client_args={"verify": ctx},
+            async_client_args={"verify": ctx},
         )
         return genai.Client(api_key=api_key, http_options=http_options)
-    except Exception:
-        try:
-            return genai.Client(api_key=api_key)
-        except Exception as e:
-            raise HTTPException(
-                status_code=503,
-                detail=f"Failed to initialize Gemini AI client: {e}",
-            )
+    except Exception as e:
+        tb = traceback.format_exc()
+        if (
+            "load_default_certs" in tb
+            or isinstance(e, (TypeError, AttributeError, PermissionError))
+            or "http_options" in tb
+            or "Failed with http_options" in str(e)
+        ):
+            try:
+                return genai.Client(api_key=api_key)
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"Failed to initialize Gemini AI client: {exc}",
+                )
+        raise HTTPException(
+            status_code=503,
+            detail=f"Failed to initialize Gemini AI client: {e}",
+        )
 
 
 def _handle_error(exc: Exception) -> None:
     msg = str(exc).lower()
 
+    if (
+        "api_key" in msg
+        or "invalid" in msg
+        or "403" in msg
+        or "401" in msg
+        or "unauthorized" in msg
+        or "forbidden" in msg
+        or "credentials" in msg
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Gemini API key. Check GEMINI_API_KEY in backend/.env.",
+        )
     if "quota" in msg or "429" in msg or "resource_exhausted" in msg:
         raise HTTPException(
             status_code=429,
