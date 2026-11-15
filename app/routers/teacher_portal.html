@@ -1551,8 +1551,7 @@
 
     function simulateGeminiQuestions(text, num, diff) {
       const questions = [];
-      const keywords = text.split(/[\s,،.
-]+/).filter(w => w.length > 3).slice(0, num);
+      const keywords = text.split(/[\\s,،.\\n]+/).filter(w => w.length > 3).slice(0, num);
       for (let i = 0; i < num; i++) {
         const kw = keywords[i % keywords.length] || `المفهوم رقم ${i+1}`;
         questions.push({
@@ -1612,9 +1611,7 @@
 
     function copyGeneratedQuiz() {
       if (!lastGeneratedQuiz || !lastGeneratedQuiz.questions) return;
-      let text = '📋 أسئلة الاختبار المولدة بالذكاء الاصطناعي (Gemini AI):
-
-';
+      let text = '📋 أسئلة الاختبار المولدة بالذكاء الاصطناعي (Gemini AI):\n\n';
       lastGeneratedQuiz.questions.forEach((q, i) => {
         text += `${i+1}. ${q.question}
 `;
