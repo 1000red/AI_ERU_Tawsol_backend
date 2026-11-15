@@ -29,6 +29,9 @@ def get_user_by_id(db: Session, user_id: int) -> User:
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="User not found"
         )
+    from app.models.material import MaterialTeacher
+    rows = db.query(MaterialTeacher.material_id).filter(MaterialTeacher.user_id == user_id).all()
+    user.assigned_courses = [r[0] for r in rows]
     return user
 
 
@@ -241,7 +244,17 @@ def list_all_users(
                 func.lower(User.uni_code).like(s),
             )
         )
-    return query.order_by(User.user_id).offset(offset).limit(limit).all()
+    users = query.order_by(User.user_id).offset(offset).limit(limit).all()
+    user_ids = [u.user_id for u in users]
+    if user_ids:
+        from app.models.material import MaterialTeacher
+        rows = db.query(MaterialTeacher.user_id, MaterialTeacher.material_id).filter(MaterialTeacher.user_id.in_(user_ids)).all()
+        course_map = {}
+        for uid, mid in rows:
+            course_map.setdefault(uid, []).append(mid)
+        for u in users:
+            u.assigned_courses = course_map.get(u.user_id, [])
+    return users
 
 
 def create_user_admin(db: Session, data) -> User:
@@ -323,8 +336,19 @@ def update_user_admin(db: Session, user_id: int, data) -> User:
     if data.current_password is not None:
         user.current_password = bool(data.current_password)
 
+    if hasattr(data, "assigned_courses") and data.assigned_courses is not None:
+        from app.models.material import MaterialTeacher
+        db.query(MaterialTeacher).filter(MaterialTeacher.user_id == user_id).delete()
+        for cid in data.assigned_courses:
+            cid_clean = str(cid).strip()
+            if cid_clean:
+                db.add(MaterialTeacher(material_id=cid_clean, user_id=user_id))
+
     db.commit()
     db.refresh(user)
+    from app.models.material import MaterialTeacher
+    rows = db.query(MaterialTeacher.material_id).filter(MaterialTeacher.user_id == user_id).all()
+    user.assigned_courses = [r[0] for r in rows]
     return user
 
 

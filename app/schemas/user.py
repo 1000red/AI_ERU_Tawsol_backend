@@ -18,6 +18,7 @@ class UserOut(BaseModel):
     level:            int = 0
     department:       Optional[str] = None
     current_password: bool = False
+    assigned_courses: list[str] = []
     model_config = {"from_attributes": True}
 
 
@@ -52,6 +53,12 @@ class AdminUserUpdate(BaseModel):
     level:            Optional[int] = None
     department:       Optional[str] = None
     current_password: Optional[bool] = None
+    assigned_courses: Optional[list[str]] = None
+
+
+class TeacherAssignmentUpdate(BaseModel):
+    department: Optional[str] = None
+    assigned_courses: list[str] = []
 
 
 class AdminPasswordReset(BaseModel):

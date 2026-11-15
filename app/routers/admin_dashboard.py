@@ -11,6 +11,7 @@ from app.schemas.user import (
     AdminUserCreate,
     AdminUserUpdate,
     AdminPasswordReset,
+    TeacherAssignmentUpdate,
 )
 from app.schemas.material import MaterialOut, MaterialCreate
 from app.services import user_service as user_svc
@@ -100,6 +101,33 @@ def update_user(
 ):
     """Update user information."""
     return user_svc.update_user_admin(db, user_id, data)
+
+
+@router.put("/api/users/{user_id}/courses", response_model=UserOut)
+def update_teacher_courses(
+    user_id: int,
+    data: TeacherAssignmentUpdate,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Assign/update teacher's department and scoped courses."""
+    user = user_svc.get_user_by_id(db, user_id)
+    if data.department is not None:
+        dept = data.department.strip()
+        user.department = dept if dept else None
+
+    from app.models.material import MaterialTeacher
+    db.query(MaterialTeacher).filter(MaterialTeacher.user_id == user_id).delete()
+    for cid in data.assigned_courses:
+        cid_clean = str(cid).strip()
+        if cid_clean:
+            db.add(MaterialTeacher(material_id=cid_clean, user_id=user_id))
+    db.commit()
+    db.refresh(user)
+
+    rows = db.query(MaterialTeacher.material_id).filter(MaterialTeacher.user_id == user_id).all()
+    user.assigned_courses = [r[0] for r in rows]
+    return user
 
 
 @router.post("/api/users/{user_id}/reset-password")

@@ -450,6 +450,206 @@
   <!-- ========================================================================= -->
   <!-- MODAL: EDIT USER                                                          -->
   <!-- ========================================================================= -->
+    <!-- ========================================================================= -->
+  <!-- MODAL: ASSIGN TEACHER DEPARTMENT & COURSES                               -->
+  <!-- ========================================================================= -->
+  <div id="modal-assign-teacher" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 flex items-center justify-center text-base font-bold shadow-sm">
+            <i class="fa-solid fa-chalkboard-user"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-base text-slate-900 dark:text-white">تخصيص القسم والمقررات الدراسية للمعلم</h3>
+            <p id="assign-teacher-subtitle" class="text-xs text-slate-400 mt-0.5">تحديد التخصص الأكاديمي والفصول المسندة للمعلم</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-assign-teacher')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="form-assign-teacher" onsubmit="submitAssignTeacher(event)" class="mt-4 space-y-4 text-xs sm:text-sm">
+        <input type="hidden" id="assign-teacher-id">
+
+        <!-- Teacher Card Info -->
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-3">
+          <div id="assign-teacher-avatar" class="w-10 h-10 rounded-xl bg-brand-500 text-white font-bold flex items-center justify-center text-sm shadow-sm">
+            TE
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 id="assign-teacher-name" class="font-bold text-slate-900 dark:text-white truncate">اسم المعلم</h4>
+            <p id="assign-teacher-email" class="text-xs text-slate-500 dark:text-slate-400 truncate">teacher@weschool-suez.edu.eg</p>
+          </div>
+          <div class="text-end">
+            <span id="assign-teacher-code" class="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">DR0000</span>
+          </div>
+        </div>
+
+        <!-- 1. Department Selection -->
+        <div>
+          <label class="block font-bold mb-1.5 text-slate-700 dark:text-slate-300">
+            <i class="fa-solid fa-building-columns text-emerald-500 me-1"></i> القسم الأكاديمي المعتمد *
+          </label>
+          <select id="assign-teacher-dept" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 outline-none font-medium">
+            <option value="Telecommunications">هندسة الاتصالات (Telecommunications)</option>
+            <option value="Networking">تكنولوجيا الشبكات (Networking)</option>
+            <option value="Software Development">تطوير البرمجيات (Software Development)</option>
+            <option value="AI">الذكاء الاصطناعي (AI)</option>
+            <option value="General IT">تكنولوجيا المعلومات العامة (General IT)</option>
+          </select>
+          <p class="text-[11px] text-slate-400 mt-1">يحدد هذا الخيار الشعبة التخصصية التي يتبع لها المعلم في مدرسة WE بالسويس.</p>
+        </div>
+
+        <!-- 2. Courses Checklist -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="font-bold text-slate-700 dark:text-slate-300">
+              <i class="fa-solid fa-book-open-reader text-purple-500 me-1"></i> المقررات والفصول المسندة للمعلم
+            </label>
+            <span id="assign-selected-count" class="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
+              0 فصول مختارة
+            </span>
+          </div>
+
+          <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40 max-h-56 overflow-y-auto space-y-2">
+            <!-- Level 3 Specialization Classes -->
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">فصول التخصص (الصف الثالث - Level 3)</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="C6" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                    <span>C6: اتصالات</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold">15 طالب</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400">Communication (Telecommunications)</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="C2" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                    <span>C2: شبكات</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">21 طالب</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400">Networking (د. ندى)</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="C1" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                    <span>C1: شبكات</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">23 طالب</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400">Networking (م. فاطمة الزهراء)</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="C3" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                    <span>C3: شبكات</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold">24 طالب</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400">Networking (م. فاطمة حمدي)</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="C4" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                    <span>C4: برمجيات</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold">21 طالب</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400">Programming (د. مهند)</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="C5" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white flex items-center justify-between">
+                    <span>C5: برمجيات</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold">20 طالب</span>
+                  </div>
+                  <div class="text-[10px] text-slate-400">Programming (م. عبد الله)</div>
+                </div>
+              </label>
+            </div>
+
+            <!-- Level 2 & Foundation Courses -->
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-3 mb-1">مقررات عامة وتأسيسية (Level 1 & 2)</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="B3" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white">B3: الذكاء الاصطناعي</div>
+                  <div class="text-[10px] text-slate-400">AI (د. ألفريد)</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="B1" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white">B1: أساسيات الشبكات</div>
+                  <div class="text-[10px] text-slate-400">Networking L2</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="B2" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white">B2: أساسيات البرمجة</div>
+                  <div class="text-[10px] text-slate-400">Programming L2</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="A4" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white">A4: تكنولوجيا المعلومات</div>
+                  <div class="text-[10px] text-slate-400">General IT (م. لينا)</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="CS201" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white">CS201: هندسة البرمجيات</div>
+                  <div class="text-[10px] text-slate-400">Software Engineering</div>
+                </div>
+              </label>
+
+              <label class="flex items-center gap-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition">
+                <input type="checkbox" name="assign-course-item" value="A1" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
+                <div class="flex-1 min-w-0">
+                  <div class="font-bold text-slate-900 dark:text-white">A1: مقدمة في الحاسب</div>
+                  <div class="text-[10px] text-slate-400">IT Level 1</div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" onclick="closeModal('modal-assign-teacher')" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition">
+            إلغاء
+          </button>
+          <button type="submit" id="btn-submit-assign" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md shadow-emerald-500/20 transition flex items-center gap-2">
+            <span>حفظ وتطبيق فوراً</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div id="modal-edit-user" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
@@ -466,6 +666,24 @@
 
       <form id="form-edit-user" onsubmit="submitEditUser(event)" class="mt-4 space-y-4 text-xs sm:text-sm">
         <input type="hidden" id="edit-user-id">
+
+        <!-- Teacher Courses Scoping Banner -->
+        <div id="edit-teacher-courses-banner" class="hidden p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-chalkboard-user text-emerald-600 dark:text-emerald-400 text-base"></i>
+              <div>
+                <span class="font-bold text-slate-800 dark:text-slate-200 block text-xs">الفصول والمقررات المسندة:</span>
+                <span id="edit-teacher-courses-preview" class="text-xs text-emerald-700 dark:text-emerald-300 font-bold"></span>
+              </div>
+            </div>
+            <button type="button" onclick="closeModal('modal-edit-user'); openAssignTeacherModal(parseInt(document.getElementById('edit-user-id').value));" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center gap-1 transition">
+              <i class="fa-solid fa-sliders"></i>
+              <span>تخصيص الفصول</span>
+            </button>
+          </div>
+        </div>
+
 
         <div>
           <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">الاسم الكامل *</label>
@@ -1039,6 +1257,14 @@
                 <span class="font-medium text-slate-700 dark:text-slate-300 text-xs">${escapeHtml(deptText)}</span>
                 ${levelBadge}
               </div>
+              ${(u.type_code === 'DR' || u.type_code === 'TA') ? `
+                <div class="flex items-center gap-1 flex-wrap mt-1">
+                  ${(u.assigned_courses && u.assigned_courses.length > 0)
+                    ? u.assigned_courses.map(c => `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800" title="مقرر مسند">${escapeHtml(c)}</span>`).join('')
+                    : `<button onclick="openAssignTeacherModal(${u.user_id})" class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold hover:underline flex items-center gap-1"><i class="fa-solid fa-plus text-[8px]"></i> تخصيص فصول</button>`
+                  }
+                </div>
+              ` : ''}
             </td>
 
             <!-- Password Status -->
@@ -1047,6 +1273,11 @@
             <!-- Actions Menu -->
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-1">
+                ${(u.type_code === 'DR' || u.type_code === 'TA') ? `
+                  <button onclick="openAssignTeacherModal(${u.user_id})" class="p-2 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 transition" title="تخصيص القسم والمقررات الدراسية للمعلم">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                  </button>
+                ` : ''}
                 <button onclick="openEditUserModal(${u.user_id})" class="p-2 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 transition" title="تعديل المستخدم">
                   <i class="fa-solid fa-pen-to-square"></i>
                 </button>
@@ -1222,6 +1453,19 @@
       document.getElementById('edit-level').value = user.level || 0;
       document.getElementById('edit-password').value = '';
 
+      const isTeacher = (user.type_code === 'DR' || user.type_code === 'TA');
+      const banner = document.getElementById('edit-teacher-courses-banner');
+      if (banner) {
+        if (isTeacher) {
+          banner.classList.remove('hidden');
+          const previewEl = document.getElementById('edit-teacher-courses-preview');
+          const courses = user.assigned_courses || [];
+          previewEl.innerText = courses.length > 0 ? courses.join('، ') : 'لم يتم إسناد فصول بعد (انقر لتخصيص فصول)';
+        } else {
+          banner.classList.add('hidden');
+        }
+      }
+
       openModal('modal-edit-user');
     }
 
@@ -1347,6 +1591,89 @@
     }
 
     // ── CSV EXPORT ───────────────────────────────────────────────────────────
+    
+    function openAssignTeacherModal(userId) {
+      if (!getAdminToken()) {
+        showToast('يرجى تسجيل الدخول بحساب مسؤول لتخصيص المقررات', 'error');
+        openLoginModal();
+        return;
+      }
+      const user = allUsers.find(u => u.user_id === userId);
+      if (!user) return;
+
+      document.getElementById('assign-teacher-id').value = user.user_id;
+      document.getElementById('assign-teacher-name').innerText = user.name || 'معلم';
+      document.getElementById('assign-teacher-email').innerText = user.email || '';
+      document.getElementById('assign-teacher-code').innerText = user.uni_code || `DR${user.user_id}`;
+      document.getElementById('assign-teacher-avatar').innerText = (user.name || 'TE').substring(0, 2).toUpperCase();
+
+      const deptSelect = document.getElementById('assign-teacher-dept');
+      if (user.department) {
+        deptSelect.value = user.department;
+        if (!deptSelect.value) {
+          const opt = new Option(user.department, user.department, true, true);
+          deptSelect.add(opt);
+        }
+      } else {
+        deptSelect.selectedIndex = 0;
+      }
+
+      const currentCourses = user.assigned_courses || [];
+      const checkboxes = document.querySelectorAll('input[name="assign-course-item"]');
+      checkboxes.forEach(cb => {
+        cb.checked = currentCourses.includes(cb.value);
+      });
+      updateAssignSelectedCount();
+
+      openModal('modal-assign-teacher');
+    }
+
+    function updateAssignSelectedCount() {
+      const checked = document.querySelectorAll('input[name="assign-course-item"]:checked');
+      const countEl = document.getElementById('assign-selected-count');
+      if (countEl) countEl.innerText = `${checked.length} فصول مختارة`;
+    }
+
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.name === 'assign-course-item') {
+        updateAssignSelectedCount();
+      }
+    });
+
+    async function submitAssignTeacher(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-assign');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري الحفظ...';
+
+      const userId = document.getElementById('assign-teacher-id').value;
+      const dept = document.getElementById('assign-teacher-dept').value;
+      const checkedBoxes = document.querySelectorAll('input[name="assign-course-item"]:checked');
+      const selectedCourses = Array.from(checkedBoxes).map(cb => cb.value);
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/users/${userId}/courses`, {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            department: dept,
+            assigned_courses: selectedCourses
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'فشل تحديث بيانات وتعيينات المعلم');
+
+        showToast(`تم بنجاح تحديث قسم ${data.name} وإسناد ${selectedCourses.length} فصول! ✅`, 'success');
+        closeModal('modal-assign-teacher');
+        refreshData();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>حفظ وتطبيق فوراً</span>';
+      }
+    }
+
     function exportToCSV() {
       if (!filteredUsers || filteredUsers.length === 0) {
         showToast('لا توجد بيانات مستخدمين لتصديرها', 'error');
