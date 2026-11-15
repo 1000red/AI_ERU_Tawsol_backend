@@ -1,7 +1,10 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class QuizGenerateRequest(BaseModel):
-    file_id: int
+    file_id: Optional[int] = None
+    text_content: Optional[str] = None
+    topic: Optional[str] = None
 
 
 class QuizOption(BaseModel):
@@ -19,14 +22,14 @@ class QuizQuestion(BaseModel):
 
 class QuizGenerateResponse(BaseModel):
     session_id: str
-    file_id: int
+    file_id: Optional[int] = None
     questions: list[QuizQuestion]
 
 
 class QuizEvaluateRequest(BaseModel):
     session_id: str
     question_id: int
-    selected: str  # "A" | "B" | "C" | "D"
+    selected: Optional[str] = None  # "A" | "B" | "C" | "D" or empty for reveal
 
 
 class QuizEvaluateResponse(BaseModel):

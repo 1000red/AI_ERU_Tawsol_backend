@@ -601,66 +601,76 @@
   <!-- ========================================================================= -->
   <!-- MODAL: ADD LECTURE / MATERIAL FILE                                        -->
   <!-- ========================================================================= -->
-  <div id="modal-add-file" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div id="modal-add-file" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
         <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
-          <i class="fa-solid fa-cloud-arrow-up text-brand-700"></i>
-          <span>رفع محاضرة / ملف دراسي جديد</span>
+          <i class="fa-solid fa-cloud-arrow-up text-brand-700 dark:text-brand-400"></i>
+          <span>رفع مادة / محاضرة دراسية جديدة</span>
         </h3>
-        <button onclick="closeModal('modal-add-file')" class="text-slate-400 hover:text-slate-600">
+        <button onclick="closeModal('modal-add-file')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <form onsubmit="handleCreateFile(event)" class="mt-4 space-y-3.5 text-xs sm:text-sm">
+      <form onsubmit="handleCreateFile(event)" class="mt-4 space-y-4 text-xs sm:text-sm">
         <div>
-          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">المقرر الدراسي</label>
-          <select id="file-modal-course" required class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none">
+          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">المقرر / الفصل الدراسي *</label>
+          <select id="file-modal-course" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-brand-500">
             <!-- Injected via JS -->
           </select>
         </div>
 
+        <!-- Easy Drag & Drop Upload Zone -->
         <div>
-          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">نوع المحتوى / الملف</label>
-          <select id="file-modal-type" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none">
-            <option value="pdf">ملف مستند PDF (محاضرة / شيت)</option>
-            <option value="ppt">عرض تقديمي PowerPoint (سلايدات)</option>
-            <option value="word">مستند Word (ملخص / مذكرة)</option>
-            <option value="link">رابط سحابي / خارجي (Drive / YouTube / Web)</option>
-            <option value="video">فيديو تعليمي (MP4 / WebM)</option>
-            <option value="image">صورة توضيحية / مخطط (Diagram)</option>
-            <option value="zip">ملف مضغوط (ZIP / RAR)</option>
-            <option value="file">ملف دراسي عام</option>
-          </select>
+          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">الملف أو المحاضرة *</label>
+          <div id="file-dropzone" onclick="document.getElementById('file-modal-upload').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleFileDrop(event)" class="border-2 border-dashed border-brand-300 dark:border-brand-700 hover:border-brand-600 dark:hover:border-brand-400 bg-brand-50/40 dark:bg-brand-950/20 rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2.5 group">
+            <div class="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 text-brand-700 dark:text-brand-300 flex items-center justify-center text-2xl shadow-md border border-brand-100 dark:border-brand-900 group-hover:scale-105 transition transform">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <div>
+              <p class="font-bold text-sm text-slate-900 dark:text-white">اسحب وأفلت الملف هنا، أو <span class="text-brand-700 dark:text-brand-400 underline">تصفح جهازك</span></p>
+              <p class="text-xs text-slate-400 mt-1">يدعم PDF، وPowerPoint (PPT/PPTX)، وWord (DOC/DOCX)، والصور</p>
+            </div>
+            <input type="file" id="file-modal-upload" onchange="handleFileSelected(event)" class="hidden" accept=".pdf,.ppt,.pptx,.doc,.docx,.png,.jpg,.jpeg,.webp,.txt,.zip">
+          </div>
+
+          <!-- Selected File Card Preview -->
+          <div id="file-selected-preview" class="hidden mt-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <div id="file-preview-icon" class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center text-lg font-bold shrink-0">
+                <i class="fa-solid fa-file-pdf"></i>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div id="file-preview-name" class="font-bold text-slate-900 dark:text-white text-xs truncate">lecture.pdf</div>
+                <div id="file-preview-size" class="text-[11px] text-slate-400 font-mono mt-0.5">0 KB</div>
+              </div>
+            </div>
+            <button type="button" onclick="clearSelectedUploadFile()" class="p-2 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition" title="إلغاء الملف">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
         </div>
 
         <div>
-          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">عنوان المحاضرة / الملف</label>
-          <input type="text" id="file-modal-title" required placeholder="مثال: المحاضرة الأولى - مقدمة في الذكاء الاصطناعي" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none">
+          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">عنوان المحاضرة / المادة</label>
+          <input type="text" id="file-modal-title" required placeholder="يتم ملؤه تلقائياً باسم الملف أو اكتب عنواناً مخصصاً" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500">
         </div>
 
         <div>
-          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">وصف موجز للمحتوى</label>
-          <textarea id="file-modal-desc" rows="2" placeholder="أهداف المحاضرة ونقاط الشرح..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none"></textarea>
+          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">وصف موجز أو أهداف الدرس (اختياري)</label>
+          <textarea id="file-modal-desc" rows="2" placeholder="أهم المفاهيم، ملخص الوحدة، أو ملاحظات للطلاب..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"></textarea>
         </div>
 
-        <div>
-          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">رابط الملف أو رابط السحابة (Drive / YouTube / Cloud)</label>
-          <input type="url" id="file-modal-link" placeholder="https://..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none font-mono-code">
-        </div>
-
-        <div>
-          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">أو رفع ملف مباشرة من جهازك (PDF / Doc / Slide)</label>
-          <input type="file" id="file-modal-upload" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-800 file:text-white">
-        </div>
+        <input type="hidden" id="file-modal-type" value="file">
 
         <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
           <button type="button" onclick="closeModal('modal-add-file')" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition">
             إلغاء
           </button>
-          <button type="submit" id="btn-submit-file" class="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-700 to-indigo-600 text-white font-bold shadow-md shadow-brand-500/20 hover:opacity-95 transition flex items-center gap-2">
-            <span>نشر الملف للطلاب</span>
+          <button type="submit" id="btn-submit-file" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-700 to-indigo-600 text-white font-bold shadow-md shadow-brand-500/20 hover:opacity-95 transition flex items-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>رفع ونشر المحاضرة فوراً</span>
           </button>
         </div>
       </form>
@@ -1289,6 +1299,10 @@
               </div>
             </div>
             <div class="flex items-center gap-2">
+              <button onclick="openAiQuizForFile('${f.file_id || f.id}', '${escapeHtml(f.title)}', '${f.file_type}')" class="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-950 dark:text-purple-300 dark:hover:bg-purple-900 font-bold text-xs transition flex items-center gap-1.5 border border-purple-200 dark:border-purple-800 shadow-sm" title="توليد أسئلة تفاعلية ذكية بالذكاء الاصطناعي على هذه المحاضرة">
+                <i class="fa-solid fa-wand-magic-sparkles text-[10px] text-purple-600 dark:text-purple-400"></i>
+                <span>أسئلة AI</span>
+              </button>
               ${f.link_url ? `
                 <a href="${f.link_url}" target="_blank" class="px-3 py-1.5 rounded-lg bg-brand-800 hover:bg-brand-900 text-white text-xs font-bold transition flex items-center gap-1.5">
                   <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
@@ -1311,38 +1325,99 @@
       }
     }
 
+    // ── EASY DRAG & DROP FILE UPLOAD HANDLERS ─────────────────────────────────
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('file-dropzone').classList.add('border-brand-600', 'bg-brand-100/40');
+    }
+
+    function handleDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('file-dropzone').classList.remove('border-brand-600', 'bg-brand-100/40');
+    }
+
+    function handleFileDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('file-dropzone').classList.remove('border-brand-600', 'bg-brand-100/40');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const fileInput = document.getElementById('file-modal-upload');
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelected({ target: fileInput });
+      }
+    }
+
+    function handleFileSelected(e) {
+      const input = e.target;
+      if (!input.files || input.files.length === 0) return;
+      const file = input.files[0];
+
+      // Format size
+      const bytes = file.size;
+      const sizeStr = bytes < 1024 * 1024 
+        ? `${(bytes / 1024).toFixed(1)} KB` 
+        : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+
+      // Determine type & icon
+      const ext = file.name.split('.').pop().toLowerCase();
+      let fileType = 'file';
+      let iconClass = 'fa-file-lines';
+      let iconColor = 'text-purple-600 bg-purple-100 dark:bg-purple-950 dark:text-purple-300';
+
+      if (ext === 'pdf') {
+        fileType = 'pdf'; iconClass = 'fa-file-pdf'; iconColor = 'text-red-600 bg-red-100 dark:bg-red-950 dark:text-red-300';
+      } else if (['ppt', 'pptx'].includes(ext)) {
+        fileType = 'ppt'; iconClass = 'fa-file-powerpoint'; iconColor = 'text-amber-600 bg-amber-100 dark:bg-amber-950 dark:text-amber-300';
+      } else if (['doc', 'docx'].includes(ext)) {
+        fileType = 'word'; iconClass = 'fa-file-word'; iconColor = 'text-blue-600 bg-blue-100 dark:bg-blue-950 dark:text-blue-300';
+      } else if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) {
+        fileType = 'image'; iconClass = 'fa-file-image'; iconColor = 'text-emerald-600 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300';
+      } else if (['mp4', 'mov', 'webm'].includes(ext)) {
+        fileType = 'video'; iconClass = 'fa-file-video'; iconColor = 'text-violet-600 bg-violet-100 dark:bg-violet-950 dark:text-violet-300';
+      } else if (['zip', 'rar'].includes(ext)) {
+        fileType = 'zip'; iconClass = 'fa-file-zipper'; iconColor = 'text-amber-700 bg-amber-100 dark:bg-amber-950 dark:text-amber-300';
+      }
+
+      document.getElementById('file-modal-type').value = fileType;
+
+      // Update preview card
+      document.getElementById('file-preview-name').innerText = file.name;
+      document.getElementById('file-preview-size').innerText = `${sizeStr} • صيغة ${ext.toUpperCase()}`;
+      const iconEl = document.getElementById('file-preview-icon');
+      iconEl.className = `w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shrink-0 ${iconColor}`;
+      iconEl.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
+      document.getElementById('file-selected-preview').classList.remove('hidden');
+      document.getElementById('file-selected-preview').classList.add('flex');
+
+      // Auto-fill title if empty
+      const titleInput = document.getElementById('file-modal-title');
+      if (!titleInput.value.trim()) {
+        const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+        titleInput.value = cleanName;
+      }
+    }
+
+    function clearSelectedUploadFile() {
+      const input = document.getElementById('file-modal-upload');
+      input.value = '';
+      document.getElementById('file-selected-preview').classList.add('hidden');
+      document.getElementById('file-selected-preview').classList.remove('flex');
+      document.getElementById('file-modal-type').value = 'file';
+    }
+
     async function handleCreateFile(e) {
       e.preventDefault();
       const material_id = document.getElementById('file-modal-course').value;
       const title = document.getElementById('file-modal-title').value.trim();
       const description = document.getElementById('file-modal-desc').value.trim();
-      const link_url = document.getElementById('file-modal-link').value.trim();
-      const typeSelect = document.getElementById('file-modal-type');
+      const file_type = document.getElementById('file-modal-type').value || 'file';
       const fileInput = document.getElementById('file-modal-upload');
 
-      // Validation: Must provide either a file or a link
-      const hasFile = fileInput.files && fileInput.files.length > 0;
-      if (!hasFile && !link_url) {
-        showToast('يرجى اختيار ملف لرفعه أو إدخال رابط خارجي للمحاضرة', 'warning');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        showToast('يرجى اختيار ملف المحاضرة من جهازك لرفعه للطلاب', 'warning');
         return;
-      }
-
-      // Determine file_type
-      let file_type = typeSelect ? typeSelect.value : '';
-      if (!file_type) {
-        if (hasFile) {
-          const ext = fileInput.files[0].name.split('.').pop().toLowerCase();
-          const extMap = {
-            'pdf': 'pdf', 'ppt': 'ppt', 'pptx': 'ppt', 'doc': 'word', 'docx': 'word',
-            'png': 'image', 'jpg': 'image', 'jpeg': 'image', 'webp': 'image',
-            'mp4': 'video', 'mov': 'video', 'zip': 'zip', 'rar': 'rar'
-          };
-          file_type = extMap[ext] || 'file';
-        } else if (link_url) {
-          file_type = 'link';
-        } else {
-          file_type = 'file';
-        }
       }
 
       const formData = new FormData();
@@ -1350,12 +1425,11 @@
       formData.append('title', title);
       formData.append('file_type', file_type);
       if (description) formData.append('description', description);
-      if (link_url) formData.append('link_url', link_url);
-      if (hasFile) formData.append('file', fileInput.files[0]);
+      formData.append('file', fileInput.files[0]);
 
       const btn = document.getElementById('btn-submit-file');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري النشر...';
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> جاري الرفع والنشر...';
 
       try {
         const res = await fetch(`${API_BASE}/files`, {
@@ -1365,26 +1439,349 @@
         });
         if (!res.ok) {
           const errData = await res.json().catch(() => null);
-          throw new Error(formatApiError(errData, 'فشل رفع الملف'));
+          throw new Error(formatApiError(errData, 'فشل رفع ونشر الملف'));
         }
+        const createdFile = await res.json();
 
-        showToast('تم نشر المحاضرة والملف بنجاح للطلاب! 🎉', 'success');
+        showToast('تم رفع المحاضرة ونشرها بنجاح للطلاب! 🎉', 'success');
         closeModal('modal-add-file');
         
         // Clear modal form
         document.getElementById('file-modal-title').value = '';
         document.getElementById('file-modal-desc').value = '';
-        document.getElementById('file-modal-link').value = '';
-        fileInput.value = '';
+        clearSelectedUploadFile();
 
         loadCourseFiles(material_id);
+
+        // Prompt teacher to generate AI Quiz immediately
+        setTimeout(() => {
+          if (confirm(`هل ترغب في توليد بنك أسئلة وتدريبات تفاعلية ذكية (AI Quiz) الآن على محاضرة "${title}"؟`)) {
+            openAiQuizForFile(createdFile.id || createdFile.file_id, title, file_type);
+          }
+        }, 600);
+
       } catch (err) {
         showToast(err.message, 'error');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<span>نشر الملف للطلاب</span>';
+        btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> <span>رفع ونشر المحاضرة فوراً</span>';
       }
     }
+
+    // ── AI QUIZ GENERATOR & REVEAL ON CLICK ──────────────────────────────────
+    let currentQuizState = {
+      sessionId: null,
+      fileId: null,
+      fileTitle: '',
+      questions: [],
+      answers: {}, // Cache of revealed answers: { qId: { correct: 'A', explanation: '...' } }
+    };
+
+    async function openAiQuizForFile(fileId, fileTitle, fileType) {
+      if (!currentTeacher) {
+        showToast('يرجى تسجيل الدخول أولاً', 'error');
+        return;
+      }
+
+      currentQuizState = {
+        sessionId: null,
+        fileId: fileId,
+        fileTitle: fileTitle || 'المحاضرة',
+        questions: [],
+        answers: {}
+      };
+
+      document.getElementById('quiz-modal-subtitle').innerText = `المحاضرة: "${fileTitle}" • إجابات مخفية تُكشف بالضغط عليها`;
+      openModal('modal-ai-quiz');
+
+      const contentArea = document.getElementById('quiz-content-area');
+      contentArea.innerHTML = `
+        <div class="py-14 text-center">
+          <div class="w-16 h-16 rounded-2xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center text-2xl mx-auto mb-4 animate-spin">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <h4 class="font-bold text-base text-slate-800 dark:text-slate-200">جاري تحليل المحاضرة وتوليد الأسئلة الذكية...</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">يقوم نموذج Google Gemini AI بقراءة المحتوى وصياغة أسئلة تدريبية تفاعلية دقيقة</p>
+        </div>
+      `;
+
+      try {
+        let payload = {};
+        if (fileId && !isNaN(parseInt(fileId))) {
+          payload.file_id = parseInt(fileId);
+        } else {
+          payload.text_content = `محتوى مادة دراسية تخصصية في مدرسة WE للتكنولوجيا التطبيقية بالسويس: عنوان الدرس: ${fileTitle}. الرجاء توليد أسئلة اختبار تدريبية تغطي هذا المفهوم بدقة.`;
+        }
+
+        const res = await fetch(`${API_BASE}/quiz/generate`, {
+          method: 'POST',
+          headers: getAuthHeaders(true),
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          // If binary extraction failed, fallback to title text_content
+          if (res.status === 422 || res.status === 500) {
+            console.log('Retrying quiz generation with rich course topic context...');
+            const fallbackRes = await fetch(`${API_BASE}/quiz/generate`, {
+              method: 'POST',
+              headers: getAuthHeaders(true),
+              body: JSON.stringify({
+                text_content: `محتوى ومفاهيم مادة ومحاضرة: "${fileTitle}". الرجاء صياغة أسئلة اختيار من متعدد تغطي المفاهيم الأساسية، والتعريفات، ومجالات التطبيق التقنية لهذا الموضوع بمستوى متوسط.`
+              })
+            });
+            if (fallbackRes.ok) {
+              const fbData = await fallbackRes.json();
+              await handleQuizGeneratedSuccess(fbData);
+              return;
+            }
+          }
+          throw new Error(formatApiError(errData, 'فشل توليد الأسئلة بواسطة الذكاء الاصطناعي'));
+        }
+
+        const data = await res.json();
+        await handleQuizGeneratedSuccess(data);
+
+      } catch (err) {
+        contentArea.innerHTML = `
+          <div class="py-10 text-center bg-rose-50 dark:bg-rose-950/40 rounded-2xl border border-rose-200 dark:border-rose-900 p-6">
+            <i class="fa-solid fa-triangle-exclamation text-2xl text-rose-500 mb-2"></i>
+            <h4 class="font-bold text-sm text-rose-800 dark:text-rose-200">تعذر إنشاء الأسئلة حالياً</h4>
+            <p class="text-xs text-rose-600 dark:text-rose-300 mt-1">${err.message}</p>
+            <button onclick="openAiQuizForFile('${fileId}', '${escapeHtml(fileTitle)}', '${fileType}')" class="mt-4 px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition">
+              إعادة المحاولة
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    async function handleQuizGeneratedSuccess(data) {
+      currentQuizState.sessionId = data.session_id;
+      currentQuizState.questions = data.questions || [];
+
+      // Fetch all answers cache in background for instantaneous click-to-reveal
+      try {
+        const ansRes = await fetch(`${API_BASE}/quiz/session/${data.session_id}/all-answers`, {
+          headers: getAuthHeaders()
+        });
+        if (ansRes.ok) {
+          currentQuizState.answers = await ansRes.json();
+        }
+      } catch (e) {
+        console.warn('Could not prefetch answers, will evaluate on click');
+      }
+
+      renderQuizQuestions();
+    }
+
+    function renderQuizQuestions() {
+      const contentArea = document.getElementById('quiz-content-area');
+      const questions = currentQuizState.questions;
+      document.getElementById('quiz-count-badge').innerText = `${questions.length} أسئلة`;
+
+      if (!questions || questions.length === 0) {
+        contentArea.innerHTML = '<p class="text-center text-xs text-slate-400 py-8">لم يتم استرجاع أسئلة.</p>';
+        return;
+      }
+
+      contentArea.innerHTML = questions.map((q, idx) => {
+        const qNum = idx + 1;
+        const qId = q.id;
+        return `
+          <div id="quiz-card-${qId}" class="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 transition hover:border-purple-300 dark:hover:border-purple-800">
+            <div class="flex items-start gap-3 mb-3">
+              <span class="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0">
+                ${qNum}
+              </span>
+              <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-relaxed flex-1">
+                ${q.question}
+              </h4>
+            </div>
+
+            <!-- Options Grid (WITHOUT ANSWERS - CLICK TO REVEAL) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3" id="options-group-${qId}">
+              ${['A', 'B', 'C', 'D'].map(key => {
+                const optText = q.options[key] || '';
+                return `
+                  <div id="opt-btn-${qId}-${key}" onclick="handleOptionClick(${qId}, '${key}')" class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 hover:border-purple-500 cursor-pointer transition flex items-start gap-2.5 group">
+                    <span id="opt-badge-${qId}-${key}" class="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 group-hover:bg-purple-100 text-slate-700 dark:text-slate-300 group-hover:text-purple-700 font-bold text-xs flex items-center justify-center shrink-0 transition">
+                      ${key}
+                    </span>
+                    <span class="text-xs text-slate-800 dark:text-slate-200 leading-normal flex-1">${optText}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- Reveal Toggle & Explanation Area (Hidden initially) -->
+            <div class="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
+              <button type="button" onclick="toggleRevealQuestion(${qId})" id="btn-reveal-${qId}" class="text-purple-600 dark:text-purple-400 hover:text-purple-700 font-bold flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>كشف الإجابة النموذجية والشرح</span>
+              </button>
+              <span id="status-tag-${qId}" class="text-[11px] text-slate-400 font-medium">إجابة مخفية (انقر للاختبار)</span>
+            </div>
+
+            <!-- Explanation box -->
+            <div id="explanation-box-${qId}" class="hidden mt-3 p-3.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-100 animate-fadeIn">
+              <div class="font-bold flex items-center gap-1.5 mb-1 text-emerald-700 dark:text-emerald-300">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>الإجابة الصحيحة: (<span id="correct-letter-${qId}"></span>)</span>
+              </div>
+              <p id="explanation-text-${qId}" class="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px] sm:text-xs"></p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function handleOptionClick(qId, selectedKey) {
+      await revealAnswerForQuestion(qId, selectedKey);
+    }
+
+    async function toggleRevealQuestion(qId) {
+      const expBox = document.getElementById(`explanation-box-${qId}`);
+      if (expBox && !expBox.classList.contains('hidden')) {
+        hideAnswerForQuestion(qId);
+      } else {
+        await revealAnswerForQuestion(qId, null);
+      }
+    }
+
+    async function revealAnswerForQuestion(qId, userSelected) {
+      let ansInfo = currentQuizState.answers[String(qId)] || currentQuizState.answers[qId];
+
+      if (!ansInfo) {
+        // Evaluate via API
+        try {
+          const res = await fetch(`${API_BASE}/quiz/evaluate`, {
+            method: 'POST',
+            headers: getAuthHeaders(true),
+            body: JSON.stringify({
+              session_id: currentQuizState.sessionId,
+              question_id: qId,
+              selected: userSelected || 'A'
+            })
+          });
+          if (res.ok) {
+            const evalData = await res.json();
+            ansInfo = {
+              correct_answer: evalData.correct_answer,
+              explanation: evalData.explanation
+            };
+            currentQuizState.answers[qId] = ansInfo;
+          }
+        } catch (e) {
+          console.error('Evaluate failed:', e);
+          return;
+        }
+      }
+
+      if (!ansInfo) return;
+      const correctKey = ansInfo.correct_answer.toUpperCase().trim();
+
+      // Highlight options
+      ['A', 'B', 'C', 'D'].forEach(key => {
+        const btn = document.getElementById(`opt-btn-${qId}-${key}`);
+        const badge = document.getElementById(`opt-badge-${qId}-${key}`);
+        if (!btn || !badge) return;
+
+        if (key === correctKey) {
+          btn.className = "p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border-2 border-emerald-500 dark:border-emerald-500 flex items-start gap-2.5 shadow-sm";
+          badge.className = "w-6 h-6 rounded-md bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0";
+          badge.innerHTML = "✓";
+        } else if (userSelected && key === userSelected.toUpperCase()) {
+          btn.className = "p-3 rounded-xl bg-rose-50 dark:bg-rose-950/80 border-2 border-rose-500 dark:border-rose-500 flex items-start gap-2.5 shadow-sm";
+          badge.className = "w-6 h-6 rounded-md bg-rose-600 text-white font-bold text-xs flex items-center justify-center shrink-0";
+          badge.innerHTML = "✗";
+        } else {
+          btn.className = "p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 opacity-60 flex items-start gap-2.5";
+          badge.className = "w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 font-bold text-xs flex items-center justify-center shrink-0";
+          badge.innerText = key;
+        }
+      });
+
+      // Show explanation
+      const expBox = document.getElementById(`explanation-box-${qId}`);
+      if (expBox) {
+        document.getElementById(`correct-letter-${qId}`).innerText = correctKey;
+        document.getElementById(`explanation-text-${qId}`).innerText = ansInfo.explanation || 'تم تأكيد الإجابة النموذجية من محتوى المحاضرة.';
+        expBox.classList.remove('hidden');
+      }
+
+      const statusTag = document.getElementById(`status-tag-${qId}`);
+      if (statusTag) {
+        if (userSelected) {
+          const isUserCorrect = (userSelected.toUpperCase() === correctKey);
+          statusTag.innerHTML = isUserCorrect 
+            ? '<span class="text-emerald-600 font-bold">إجابة صحيحة! 🎉</span>'
+            : '<span class="text-rose-500 font-bold">إجابة غير صحيحة ❌</span>';
+        } else {
+          statusTag.innerHTML = '<span class="text-emerald-600 font-bold">تم كشف الإجابة والشرح ✅</span>';
+        }
+      }
+
+      const btnReveal = document.getElementById(`btn-reveal-${qId}`);
+      if (btnReveal) {
+        btnReveal.innerHTML = '<i class="fa-solid fa-eye-slash"></i> <span>إخفاء الإجابة</span>';
+      }
+    }
+
+    function hideAnswerForQuestion(qId) {
+      ['A', 'B', 'C', 'D'].forEach(key => {
+        const btn = document.getElementById(`opt-btn-${qId}-${key}`);
+        const badge = document.getElementById(`opt-badge-${qId}-${key}`);
+        if (!btn || !badge) return;
+        btn.className = "p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 hover:border-purple-500 cursor-pointer transition flex items-start gap-2.5 group";
+        badge.className = "w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 group-hover:bg-purple-100 text-slate-700 dark:text-slate-300 group-hover:text-purple-700 font-bold text-xs flex items-center justify-center shrink-0 transition";
+        badge.innerText = key;
+      });
+
+      const expBox = document.getElementById(`explanation-box-${qId}`);
+      if (expBox) expBox.classList.add('hidden');
+
+      const statusTag = document.getElementById(`status-tag-${qId}`);
+      if (statusTag) statusTag.innerHTML = '<span class="text-slate-400 font-medium">إجابة مخفية (انقر للاختبار)</span>';
+
+      const btnReveal = document.getElementById(`btn-reveal-${qId}`);
+      if (btnReveal) {
+        btnReveal.innerHTML = '<i class="fa-solid fa-lightbulb"></i> <span>كشف الإجابة النموذجية والشرح</span>';
+      }
+    }
+
+    async function revealAllQuizAnswers() {
+      for (const q of currentQuizState.questions) {
+        await revealAnswerForQuestion(q.id, null);
+      }
+      showToast('تم كشف جميع الإجابات النموذجية والشروحات ✅', 'success');
+    }
+
+    function hideAllQuizAnswers() {
+      for (const q of currentQuizState.questions) {
+        hideAnswerForQuestion(q.id);
+      }
+      showToast('تم إخفاء جميع الإجابات لإعادة التدريب 🔒', 'info');
+    }
+
+    function copyQuizQuestions() {
+      if (!currentQuizState.questions || currentQuizState.questions.length === 0) return;
+      let text = `✨ بنك أسئلة وتدريبات: ${currentQuizState.fileTitle}\nمدرسة WE للتكنولوجيا التطبيقية بالسويس\n\n`;
+      currentQuizState.questions.forEach((q, idx) => {
+        text += `${idx + 1}. ${q.question}\n`;
+        text += `   A) ${q.options.A}\n`;
+        text += `   B) ${q.options.B}\n`;
+        text += `   C) ${q.options.C}\n`;
+        text += `   D) ${q.options.D}\n\n`;
+      });
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('تم نسخ جميع الأسئلة والخيارات إلى الحافظة! 📋', 'success');
+      }).catch(() => {
+        showToast('فشل النسخ تلقائياً', 'error');
+      });
+    }
+
 
     async function handleDeleteFile(fileId, materialId) {
       if (!confirm('هل أنت متأكد من حذف هذا الملف؟')) return;

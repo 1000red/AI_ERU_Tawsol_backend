@@ -39,85 +39,81 @@ async def generate_quiz_endpoint(
 
     if not caller:
         raise HTTPException(status_code=404, detail="User not found.")
-    if caller.type_code != "STU":
+    if caller.type_code not in ("STU", "DR", "TA", "ADM"):
         raise HTTPException(
             status_code=403,
-            detail="Only students can generate quizzes.",
+            detail="Quiz generation is only available for students and teachers.",
         )
 
-    # ── Load the file ──────────────────────────────────────────────────────
-    material_file: MaterialFile | None = (
-        db.query(MaterialFile)
-        .filter(MaterialFile.file_id == body.file_id)
-        .first()
-    )
+    target_file_id = body.file_id or 0
+    text_to_process = ""
 
-    if not material_file:
-        raise HTTPException(status_code=404, detail="File not found.")
-
-    # ── File must be uploaded by staff or admin ───────────────────────────
-    author: User | None = (
-        db.query(User).filter(User.user_id == material_file.author_id).first()
-    )
-
-    if author and author.type_code not in ("DR", "TA", "ADM"):
-        raise HTTPException(
-            status_code=403,
-            detail="Quiz generation is only available for official course materials.",
-        )
-
-    # ── File must belong to a course ──────────────────────────────────────
-    if not material_file.material_id:
-        raise HTTPException(
-            status_code=422,
-            detail="This file is not associated with any course.",
-        )
-
-    # ── If caller is a student, must be enrolled in that course ───────────
-    if caller.type_code == "STU":
-        enrollment = (
-            db.query(MaterialStudent)
-            .filter(
-                MaterialStudent.material_id == material_file.material_id,
-                MaterialStudent.user_id == user_id,
-            )
+    # Support generating directly from text_content
+    if body.text_content and len(body.text_content.strip()) >= 50:
+        text_to_process = body.text_content.strip()
+    elif body.file_id:
+        # ── Load the file ──────────────────────────────────────────────────────
+        material_file: MaterialFile | None = (
+            db.query(MaterialFile)
+            .filter(MaterialFile.file_id == body.file_id)
             .first()
         )
 
-        if not enrollment:
-            raise HTTPException(
-                status_code=403,
-                detail="You are not enrolled in the course this file belongs to.",
+        if not material_file:
+            raise HTTPException(status_code=404, detail="File not found.")
+
+        # ── If caller is a student, must be enrolled in that course ───────────
+        if caller.type_code == "STU":
+            if not material_file.material_id:
+                raise HTTPException(
+                    status_code=422,
+                    detail="This file is not associated with any course.",
+                )
+            enrollment = (
+                db.query(MaterialStudent)
+                .filter(
+                    MaterialStudent.material_id == material_file.material_id,
+                    MaterialStudent.user_id == user_id,
+                )
+                .first()
             )
 
-    # ── File must be a supported type ─────────────────────────────────────
-    if material_file.file_type not in _FILE_TYPES:
+            if not enrollment:
+                raise HTTPException(
+                    status_code=403,
+                    detail="You are not enrolled in the course this file belongs to.",
+                )
+
+        if not material_file.file_path:
+            raise HTTPException(
+                status_code=422,
+                detail="This file has no stored content to generate a quiz from.",
+            )
+
+        # ── Extract text & generate ────────────────────────────────────────────
+        try:
+            text_to_process = extract_text(material_file.file_path)
+        except HTTPException:
+            raise
+        except Exception as exc:
+            # Fallback to title/description if rich
+            if material_file.description and len(material_file.description.strip()) >= 100:
+                text_to_process = f"{material_file.title}\n{material_file.description}"
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"An unexpected error occurred while processing the file: {exc}",
+                )
+    else:
         raise HTTPException(
             status_code=422,
-            detail=f"Quiz generation is not supported for '{material_file.file_type}' files. "
-                   "Supported types: PDF, PPTX, DOCX.",
+            detail="Either file_id or text_content must be provided.",
         )
 
-    if not material_file.file_path:
-        raise HTTPException(
-            status_code=422,
-            detail="This file has no stored content to generate a quiz from.",
-        )
-
-    # ── Extract text & generate ────────────────────────────────────────────
-    try:
-        text = extract_text(material_file.file_path)
-        stored_questions = await generate_quiz(text)
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=f"An unexpected error occurred while processing the file: {exc}",
-        )
+    stored_questions = await generate_quiz(text_to_process)
 
     # ── Create session (server stores correct answers) ─────────────────────
-    session_id = create_session(body.file_id, stored_questions)
+    session_id = create_session(target_file_id, stored_questions)
 
     # ── Return questions WITHOUT correct answers ────────────────────────────
     public_questions = [
@@ -131,7 +127,7 @@ async def generate_quiz_endpoint(
 
     return QuizGenerateResponse(
         session_id=session_id,
-        file_id=body.file_id,
+        file_id=target_file_id,
         questions=public_questions,
     )
 
@@ -140,12 +136,6 @@ async def generate_quiz_endpoint(
 def evaluate_answer(
     body: QuizEvaluateRequest,
 ):
-    if body.selected.upper() not in {"A", "B", "C", "D"}:
-        raise HTTPException(
-            status_code=422,
-            detail="Selected answer must be A, B, C, or D.",
-        )
-
     question = get_question(body.session_id, body.question_id)
     if question is None:
         raise HTTPException(
@@ -153,10 +143,26 @@ def evaluate_answer(
             detail="Quiz session not found or has expired. Please generate a new quiz.",
         )
 
-    is_correct = body.selected.upper() == question.correct
+    is_correct = (body.selected.strip().upper() == question.correct) if (body.selected and body.selected.strip()) else False
 
     return QuizEvaluateResponse(
         correct=is_correct,
         correct_answer=question.correct,
         explanation=question.explanation,
     )
+
+
+@router.get("/session/{session_id}/all-answers")
+def get_all_session_answers(session_id: str):
+    """Retrieve all answers and explanations for a session (revealed when clicked)."""
+    from app.services.quiz_service.session import _sessions
+    session = _sessions.get(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Quiz session not found or expired.")
+    return {
+        str(q_id): {
+            "correct_answer": q.correct,
+            "explanation": q.explanation
+        }
+        for q_id, q in session.questions.items()
+    }
