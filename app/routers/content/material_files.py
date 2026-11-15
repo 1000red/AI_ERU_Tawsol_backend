@@ -110,7 +110,7 @@ def create_file(
     material_id:     Optional[str]  = Form(None),
     title:           str            = Form(...),
     description:     Optional[str]  = Form(None),
-    file_type:       str            = Form(...),
+    file_type:       Optional[str]  = Form(None),
     link_url:        Optional[str]  = Form(None),
     text_content:    Optional[str]  = Form(None),
     announcement_id: Optional[int]  = Form(None),
@@ -119,6 +119,23 @@ def create_file(
     db: Session   = Depends(get_db),
 ):
     file_path, file_size = save_file(file)
+
+    # Auto-detect or fallback file_type if not provided
+    if not file_type or not str(file_type).strip():
+        if file and getattr(file, "filename", None) and file.filename.strip():
+            ext = os.path.splitext(file.filename)[1].lower().lstrip(".")
+            ext_map = {
+                "pdf": "pdf", "doc": "word", "docx": "word", "ppt": "ppt", "pptx": "ppt",
+                "xls": "file", "xlsx": "file", "txt": "text", "csv": "file",
+                "png": "image", "jpg": "image", "jpeg": "image", "webp": "image",
+                "mp4": "video", "mov": "video", "zip": "zip", "rar": "rar", "7z": "7z"
+            }
+            file_type = ext_map.get(ext, "file")
+        elif link_url and str(link_url).strip():
+            file_type = "link"
+        else:
+            file_type = "file"
+
     data = MaterialFileCreate(
         material_id=material_id,
         title=title,

@@ -622,6 +622,20 @@
         </div>
 
         <div>
+          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">نوع المحتوى / الملف</label>
+          <select id="file-modal-type" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none">
+            <option value="pdf">ملف مستند PDF (محاضرة / شيت)</option>
+            <option value="ppt">عرض تقديمي PowerPoint (سلايدات)</option>
+            <option value="word">مستند Word (ملخص / مذكرة)</option>
+            <option value="link">رابط سحابي / خارجي (Drive / YouTube / Web)</option>
+            <option value="video">فيديو تعليمي (MP4 / WebM)</option>
+            <option value="image">صورة توضيحية / مخطط (Diagram)</option>
+            <option value="zip">ملف مضغوط (ZIP / RAR)</option>
+            <option value="file">ملف دراسي عام</option>
+          </select>
+        </div>
+
+        <div>
           <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">عنوان المحاضرة / الملف</label>
           <input type="text" id="file-modal-title" required placeholder="مثال: المحاضرة الأولى - مقدمة في الذكاء الاصطناعي" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none">
         </div>
@@ -637,7 +651,7 @@
         </div>
 
         <div>
-          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">أو رفع ملف مباشرة (PDF / Doc / Slide)</label>
+          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">أو رفع ملف مباشرة من جهازك (PDF / Doc / Slide)</label>
           <input type="file" id="file-modal-upload" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-brand-800 file:text-white">
         </div>
 
@@ -776,23 +790,33 @@
       ? window.location.origin
       : 'https://ai-eru-tawsol-backend-weschool.vercel.app';
 
+    // ── API ERROR FORMATTER (PREVENTS [object Object] DISPLAY) ────────────────
+    function formatApiError(errData, fallbackMsg = 'حدث خطأ أثناء العملية') {
+      if (!errData) return fallbackMsg;
+      if (typeof errData === 'string') return errData;
+      if (typeof errData.detail === 'string') return errData.detail;
+      if (Array.isArray(errData.detail)) {
+        return errData.detail.map(d => {
+          const loc = Array.isArray(d.loc) ? d.loc.filter(x => x !== 'body').join('.') : '';
+          return (loc ? loc + ': ' : '') + (d.msg || JSON.stringify(d));
+        }).join(' | ');
+      }
+      if (errData.detail && typeof errData.detail === 'object') {
+        return JSON.stringify(errData.detail);
+      }
+      if (typeof errData.message === 'string') return errData.message;
+      return fallbackMsg;
+    }
+
     // ── VERIFIED TEACHER CREDENTIALS DIRECTORY ───────────────────────────────
     const TEACHER_DIRECTORY = [
-      {
-        name: 'Dr. Eekram',
-        role: 'أستاذ دكتور (DR)',
-        dept: 'AI & IT',
-        email: 'eekram@weschool-suez.edu.eg',
-        pass: 'Eekram@123456',
-        courses: 'B3, A1, A2, CS201'
-      },
       {
         name: 'Dr. Nada',
         role: 'أستاذ دكتور (DR)',
         dept: 'Networking',
         email: 'nada@weschool-suez.edu.eg',
         pass: 'Nada@123456',
-        courses: 'B3, C1, C2'
+        courses: 'C2, B3, C1'
       },
       {
         name: 'Dr. Mohaned',
@@ -809,6 +833,14 @@
         email: 'alfred@weschool-suez.edu.eg',
         pass: 'Alfred@123456',
         courses: 'B3, B2, A4'
+      },
+      {
+        name: 'Eng. Ekram',
+        role: 'مهندسة (ENG)',
+        dept: 'AI & IT',
+        email: 'ekramezzeldien@gmail.com',
+        pass: 'Eekram@123456',
+        courses: 'B3, A1, A2, CS201'
       },
       {
         name: 'Eng. Lena Ashraf',
@@ -855,6 +887,8 @@
       renderTeacherQuickCards();
       checkBackendHealth();
       checkExistingSession();
+      initModalsClickOutside();
+      initFileTypeAutoDetect();
     });
 
     // ── THEME MANAGEMENT ──────────────────────────────────────────────────────
@@ -1001,7 +1035,7 @@
           body: JSON.stringify({ email, password })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'فشل تسجيل الدخول');
+        if (!res.ok) throw new Error(formatApiError(data, 'فشل تسجيل الدخول'));
 
         localStorage.setItem('teacher_token', data.access_token);
         localStorage.setItem('teacher_user', JSON.stringify(data.user));
@@ -1034,7 +1068,7 @@
           body: JSON.stringify({ email, password })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'بيانات الدخول غير صحيحة');
+        if (!res.ok) throw new Error(formatApiError(data, 'بيانات الدخول غير صحيحة'));
 
         localStorage.setItem('teacher_token', data.access_token);
         localStorage.setItem('teacher_user', JSON.stringify(data.user));
@@ -1077,7 +1111,10 @@
         const res = await fetch(`${API_BASE}/courses/teacher/${currentTeacher.user_id}`, {
           headers: getAuthHeaders()
         });
-        if (!res.ok) throw new Error('فشل جلب المقررات الدراسية');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل جلب المقررات الدراسية'));
+        }
         teacherCourses = await res.json();
         renderCourses(teacherCourses);
         populateCourseDropdowns(teacherCourses);
@@ -1184,6 +1221,36 @@
       if (tabId === 'announcements') loadTeacherAnnouncements();
     }
 
+    // ── FILE TYPE AUTO DETECTION ──────────────────────────────────────────────
+    function initFileTypeAutoDetect() {
+      const upload = document.getElementById('file-modal-upload');
+      const link = document.getElementById('file-modal-link');
+      const typeSelect = document.getElementById('file-modal-type');
+
+      if (upload && typeSelect) {
+        upload.addEventListener('change', function() {
+          if (this.files && this.files.length > 0) {
+            const ext = this.files[0].name.split('.').pop().toLowerCase();
+            if (ext === 'pdf') typeSelect.value = 'pdf';
+            else if (['ppt', 'pptx'].includes(ext)) typeSelect.value = 'ppt';
+            else if (['doc', 'docx'].includes(ext)) typeSelect.value = 'word';
+            else if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) typeSelect.value = 'image';
+            else if (['mp4', 'mov', 'webm'].includes(ext)) typeSelect.value = 'video';
+            else if (['zip', 'rar', '7z'].includes(ext)) typeSelect.value = 'zip';
+            else typeSelect.value = 'file';
+          }
+        });
+      }
+
+      if (link && typeSelect) {
+        link.addEventListener('input', function() {
+          if (this.value.trim() && (!upload || !upload.files || upload.files.length === 0)) {
+            typeSelect.value = 'link';
+          }
+        });
+      }
+    }
+
     // ── FILES MANAGEMENT ──────────────────────────────────────────────────────
     async function loadCourseFiles(materialId) {
       if (!materialId) return;
@@ -1194,7 +1261,10 @@
         const res = await fetch(`${API_BASE}/files/${materialId}`, {
           headers: getAuthHeaders()
         });
-        if (!res.ok) throw new Error('فشل جلب الملفات');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل جلب الملفات'));
+        }
         const files = await res.json();
 
         if (!files || files.length === 0) {
@@ -1211,11 +1281,11 @@
           <div class="glass-card rounded-xl p-4 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center text-lg shrink-0">
-                <i class="fa-solid fa-file-pdf"></i>
+                <i class="fa-solid ${f.file_type === 'link' ? 'fa-link' : f.file_type === 'ppt' ? 'fa-file-powerpoint' : f.file_type === 'word' ? 'fa-file-word' : 'fa-file-pdf'}"></i>
               </div>
               <div>
                 <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">${f.title}</h5>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">${f.description || 'ملف دراسي'}</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">${f.description || (f.file_type === 'link' ? 'رابط سحابي' : 'ملف دراسي')}</p>
               </div>
             </div>
             <div class="flex items-center gap-2">
@@ -1225,9 +1295,9 @@
                   <span>فتح الرابط</span>
                 </a>
               ` : `
-                <a href="${API_BASE}/files/download/${f.file_id}" target="_blank" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5">
+                <a href="${f.file_path || `${API_BASE}/files/download/${f.file_id}`}" target="_blank" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5">
                   <i class="fa-solid fa-download text-[10px]"></i>
-                  <span>تحميل</span>
+                  <span>تحميل / استعراض</span>
                 </a>
               `}
               <button onclick="handleDeleteFile(${f.file_id}, '${materialId}')" class="p-1.5 text-slate-400 hover:text-rose-500 transition" title="حذف">
@@ -1247,14 +1317,41 @@
       const title = document.getElementById('file-modal-title').value.trim();
       const description = document.getElementById('file-modal-desc').value.trim();
       const link_url = document.getElementById('file-modal-link').value.trim();
+      const typeSelect = document.getElementById('file-modal-type');
       const fileInput = document.getElementById('file-modal-upload');
+
+      // Validation: Must provide either a file or a link
+      const hasFile = fileInput.files && fileInput.files.length > 0;
+      if (!hasFile && !link_url) {
+        showToast('يرجى اختيار ملف لرفعه أو إدخال رابط خارجي للمحاضرة', 'warning');
+        return;
+      }
+
+      // Determine file_type
+      let file_type = typeSelect ? typeSelect.value : '';
+      if (!file_type) {
+        if (hasFile) {
+          const ext = fileInput.files[0].name.split('.').pop().toLowerCase();
+          const extMap = {
+            'pdf': 'pdf', 'ppt': 'ppt', 'pptx': 'ppt', 'doc': 'word', 'docx': 'word',
+            'png': 'image', 'jpg': 'image', 'jpeg': 'image', 'webp': 'image',
+            'mp4': 'video', 'mov': 'video', 'zip': 'zip', 'rar': 'rar'
+          };
+          file_type = extMap[ext] || 'file';
+        } else if (link_url) {
+          file_type = 'link';
+        } else {
+          file_type = 'file';
+        }
+      }
 
       const formData = new FormData();
       formData.append('material_id', material_id);
       formData.append('title', title);
+      formData.append('file_type', file_type);
       if (description) formData.append('description', description);
       if (link_url) formData.append('link_url', link_url);
-      if (fileInput.files.length > 0) formData.append('file', fileInput.files[0]);
+      if (hasFile) formData.append('file', fileInput.files[0]);
 
       const btn = document.getElementById('btn-submit-file');
       btn.disabled = true;
@@ -1267,12 +1364,19 @@
           body: formData
         });
         if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.detail || 'فشل رفع الملف');
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل رفع الملف'));
         }
 
-        showToast('تم رفع الملف ونشره بنجاح! 🎉', 'success');
+        showToast('تم نشر المحاضرة والملف بنجاح للطلاب! 🎉', 'success');
         closeModal('modal-add-file');
+        
+        // Clear modal form
+        document.getElementById('file-modal-title').value = '';
+        document.getElementById('file-modal-desc').value = '';
+        document.getElementById('file-modal-link').value = '';
+        fileInput.value = '';
+
         loadCourseFiles(material_id);
       } catch (err) {
         showToast(err.message, 'error');
@@ -1289,7 +1393,10 @@
           method: 'DELETE',
           headers: getAuthHeaders()
         });
-        if (!res.ok) throw new Error('فشل حذف الملف');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل حذف الملف'));
+        }
         showToast('تم حذف الملف بنجاح', 'info');
         loadCourseFiles(materialId);
       } catch (err) {
@@ -1307,7 +1414,10 @@
         const res = await fetch(`${API_BASE}/assignments/${materialId}`, {
           headers: getAuthHeaders()
         });
-        if (!res.ok) throw new Error('فشل جلب التكليفات');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل جلب التكليفات'));
+        }
         const assignments = await res.json();
 
         if (!assignments || assignments.length === 0) {
@@ -1374,8 +1484,8 @@
           body: formData
         });
         if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.detail || 'فشل نشر التكليف');
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل نشر التكليف'));
         }
 
         showToast('تم نشر التكليف بنجاح للطلاب! 📝', 'success');
@@ -1396,7 +1506,10 @@
           method: 'DELETE',
           headers: getAuthHeaders()
         });
-        if (!res.ok) throw new Error('فشل حذف التكليف');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل حذف التكليف'));
+        }
         showToast('تم حذف التكليف بنجاح', 'info');
         loadCourseAssignments(materialId);
       } catch (err) {
@@ -1413,7 +1526,10 @@
         const res = await fetch(`${API_BASE}/announcements`, {
           headers: getAuthHeaders()
         });
-        if (!res.ok) throw new Error('فشل جلب الإعلانات');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل جلب الإعلانات'));
+        }
         const list = await res.json();
 
         if (!list || list.length === 0) {
@@ -1474,8 +1590,8 @@
           body: JSON.stringify(payload)
         });
         if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.detail || 'فشل نشر الإعلان');
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل نشر الإعلان'));
         }
 
         showToast('تم نشر الإعلان بنجاح للطلاب! 📢', 'success');
@@ -1496,7 +1612,10 @@
           method: 'DELETE',
           headers: getAuthHeaders()
         });
-        if (!res.ok) throw new Error('فشل حذف الإعلان');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل حذف الإعلان'));
+        }
         showToast('تم حذف الإعلان', 'info');
         loadTeacherAnnouncements();
       } catch (err) {
@@ -1517,7 +1636,6 @@
       btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles fa-spin"></i> جاري توليد الأسئلة بواسطة Gemini...';
 
       try {
-        // Direct generation using live Gemini endpoint
         const res = await fetch(`${API_BASE}/quiz/generate`, {
           method: 'POST',
           headers: getAuthHeaders(),
@@ -1528,12 +1646,10 @@
           })
         });
 
-        // If backend expects file_id, we create questions dynamically or fallback gracefully
         let quizData;
         if (res.ok) {
           quizData = await res.json();
         } else {
-          // Client-side intelligent generator fallback with Gemini structure
           quizData = simulateGeminiQuestions(content, numQuestions, difficulty);
         }
 
@@ -1551,7 +1667,7 @@
 
     function simulateGeminiQuestions(text, num, diff) {
       const questions = [];
-      const keywords = text.split(/[\\s,،.\\n]+/).filter(w => w.length > 3).slice(0, num);
+      const keywords = text.split(/[\s,،.\n]+/).filter(w => w.length > 3).slice(0, num);
       for (let i = 0; i < num; i++) {
         const kw = keywords[i % keywords.length] || `المفهوم رقم ${i+1}`;
         questions.push({
@@ -1613,15 +1729,11 @@
       if (!lastGeneratedQuiz || !lastGeneratedQuiz.questions) return;
       let text = '📋 أسئلة الاختبار المولدة بالذكاء الاصطناعي (Gemini AI):\n\n';
       lastGeneratedQuiz.questions.forEach((q, i) => {
-        text += `${i+1}. ${q.question}
-`;
+        text += `${i+1}. ${q.question}\n`;
         (q.options || []).forEach((opt, oi) => {
-          text += `   [${['أ', 'ب', 'ج', 'د'][oi] || oi+1}] ${opt}
-`;
+          text += `   [${['أ', 'ب', 'ج', 'د'][oi] || oi+1}] ${opt}\n`;
         });
-        text += `   الإجابة الصحيحة: ${q.options[q.correct]}
-
-`;
+        text += `   الإجابة الصحيحة: ${q.options[q.correct]}\n\n`;
       });
       navigator.clipboard.writeText(text);
       showToast('تم نسخ الأسئلة للحافظة بنجاح! 📋', 'success');
@@ -1649,7 +1761,10 @@
             duration_minutes: 45
           })
         });
-        if (!res.ok) throw new Error('فشل فتح جلسة الحضور');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل فتح جلسة الحضور'));
+        }
         const data = await res.json();
         activeSession = data;
         renderActiveSession(data);
@@ -1697,8 +1812,8 @@
           body: JSON.stringify({ old_password, new_password })
         });
         if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.detail || 'فشل تغيير كلمة المرور');
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل تغيير كلمة المرور'));
         }
         showToast('تم تغيير كلمة المرور بنجاح! 🔒', 'success');
         document.getElementById('change-old-pass').value = '';
@@ -1759,6 +1874,16 @@
         m.classList.add('hidden');
         m.classList.remove('flex');
       }
+    }
+
+    function initModalsClickOutside() {
+      document.querySelectorAll('[id^="modal-"]').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            closeModal(modal.id);
+          }
+        });
+      });
     }
 
     function showToast(message, type = 'info') {

@@ -20,7 +20,7 @@ except Exception:
 
 def save_file(file: UploadFile) -> tuple[str, int] | tuple[None, None]:
     """Save an uploaded file to local disk and Neon Object Storage if enabled."""
-    if not file:
+    if not file or not getattr(file, "filename", None) or not file.filename.strip():
         return None, None
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_CONTENT_EXTENSIONS:
