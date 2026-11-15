@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -14,6 +15,13 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 @router.post("/login", response_model=TokenOut)
 def login(data: UserLogin, db: Session = Depends(get_db)):
     return svc.login_user(db, data.email, data.password)
+
+
+@router.get("/login", response_class=HTMLResponse, include_in_schema=False)
+def auth_login_page():
+    """Serve User Management web portal when accessed via browser GET."""
+    from app.routers.user_management_web import USER_MANAGEMENT_HTML
+    return HTMLResponse(content=USER_MANAGEMENT_HTML)
 
 
 @router.post("/logout")

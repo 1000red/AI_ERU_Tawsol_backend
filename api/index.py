@@ -26,7 +26,13 @@ try:
 
             if "__orig_path" in params:
                 orig = params.pop("__orig_path")[0]
-                clean = "/" + orig.strip("/") if orig.strip("/") else "/"
+                if "?" in orig:
+                    orig_path, orig_qs = orig.split("?", 1)
+                    clean = "/" + orig_path.strip("/") if orig_path.strip("/") else "/"
+                    extra_params = parse_qs(orig_qs, keep_blank_values=True)
+                    params.update(extra_params)
+                else:
+                    clean = "/" + orig.strip("/") if orig.strip("/") else "/"
                 scope["path"] = clean
                 scope["raw_path"] = clean.encode("utf-8")
                 new_qs = urlencode(params, doseq=True)

@@ -1,11 +1,12 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
 import os
 
 from app.core.config import settings
-from app.db.database import engine
+from app.db.database import engine, get_db
 from app.db import base  # noqa: F401 
 
 from app.models import user, material, chat, content, attendance, password_reset_otp  # noqa: F401
@@ -121,7 +122,7 @@ def serve_upload_file(file_path: str):
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 
-from app.routers import auth, support, users, materials, chat as chat_router, content, admin_dashboard, attendance  # noqa
+from app.routers import auth, support, users, materials, chat as chat_router, content, admin_dashboard, attendance, user_management_web  # noqa
 from app.routers.quiz import router as quiz_router  # noqa
 from app.routers.neon_services import router as neon_router  # noqa
 
@@ -136,11 +137,26 @@ app.include_router(quiz_router)
 app.include_router(neon_router)
 app.include_router(attendance.router)
 app.include_router(admin_dashboard.router)
+app.include_router(user_management_web.router)
 
 @app.get("/dashboard", response_class=HTMLResponse, tags=["Admin Dashboard"])
 def dashboard_view():
     from app.routers.admin_dashboard import DASHBOARD_HTML
     return HTMLResponse(content=DASHBOARD_HTML)
+
+
+@app.get("/login", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/auth/login", response_class=HTMLResponse, include_in_schema=False)
+def login_get_view():
+    """Serve User Management web portal when accessed via browser GET."""
+    return HTMLResponse(content=user_management_web.USER_MANAGEMENT_HTML)
+
+
+@app.post("/login", response_model=auth.TokenOut, tags=["Auth"], include_in_schema=False)
+def login_alias(data: auth.UserLogin, db: Session = Depends(get_db)):
+    """Allow direct POST /login in addition to /auth/login."""
+    from app.services import user_service as svc
+    return svc.login_user(db, data.email, data.password)
 
 
 # ── Health check ──────────────────────────────────────────────────────────────
