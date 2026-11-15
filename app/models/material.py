@@ -1,7 +1,6 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, func, select
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, func, select, table, column
 from sqlalchemy.orm import relationship, column_property
 from app.db.base import Base
-from app.models.content.announcement import Announcement
 
 
 class Material(Base):
@@ -48,9 +47,10 @@ Material.student_count = column_property(
     .scalar_subquery()
 )
 
+_ann_tbl = table("announcements", column("announcement_id"), column("target_course_id"))
 Material.content_count = column_property(
-    select(func.count(Announcement.announcement_id))
-    .where(Announcement.target_course_id == Material.material_id)
-    .correlate_except(Announcement)
+    select(func.count(_ann_tbl.c.announcement_id))
+    .where(_ann_tbl.c.target_course_id == Material.material_id)
+    .correlate_except(_ann_tbl)
     .scalar_subquery()
 )

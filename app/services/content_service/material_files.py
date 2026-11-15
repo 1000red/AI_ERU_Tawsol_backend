@@ -71,16 +71,20 @@ def create_material_file(
     file_size: int | None = None,
 ) -> MaterialFile:
     _require_staff(db, author_id)  # students cannot upload course files
-    material_file = MaterialFile(
-        **data.model_dump(),
-        author_id=author_id,
-        file_path=file_path,
-        file_size=file_size,
-    )
-    db.add(material_file)
-    db.commit()
-    db.refresh(material_file)
-    return material_file
+    try:
+        material_file = MaterialFile(
+            **data.model_dump(),
+            author_id=author_id,
+            file_path=file_path,
+            file_size=file_size,
+        )
+        db.add(material_file)
+        db.commit()
+        db.refresh(material_file)
+        return material_file
+    except Exception as e:
+        db.rollback()
+        raise e
 
 
 def update_material_file(

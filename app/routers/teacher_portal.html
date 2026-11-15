@@ -119,7 +119,7 @@
   <!-- ========================================================================= -->
   <!-- TEACHER LOGIN CREDENTIALS DRAWER / BANNER (QUICK 1-CLICK ACCESS)          -->
   <!-- ========================================================================= -->
-  <section id="credentials-drawer" class="bg-gradient-to-b from-purple-50/90 to-indigo-50/50 dark:from-slate-900/90 dark:to-slate-950/90 border-b border-purple-200 dark:border-purple-900/50 p-4 transition-all duration-300 shadow-inner">
+  <section id="credentials-drawer" class="hidden bg-gradient-to-b from-purple-50/90 to-indigo-50/50 dark:from-slate-900/90 dark:to-slate-950/90 border-b border-purple-200 dark:border-purple-900/50 p-4 transition-all duration-300 shadow-inner">
     <div class="max-w-7xl mx-auto space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -153,25 +153,37 @@
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
     <!-- UNAUTHENTICATED BANNER (shown when teacher not logged in) -->
-    <div id="unauth-banner" class="rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-brand-500/10 border border-purple-300 dark:border-purple-800 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-3.5">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-800 to-indigo-600 text-white flex items-center justify-center text-xl shrink-0 shadow-md shadow-brand-500/20">
-          <i class="fa-solid fa-user-lock"></i>
+    <div id="unauth-banner" class="rounded-2xl bg-gradient-to-br from-white/95 via-purple-50/40 to-indigo-50/30 dark:from-slate-900/95 dark:via-slate-900/90 dark:to-slate-950 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xl">
+      <div class="flex flex-col lg:flex-row items-center justify-between gap-6">
+        <div class="flex items-start gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-800 to-indigo-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-brand-500/25">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div class="space-y-1.5">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>بوابة التدريس المعتمدة — WE School Suez</span>
+            </div>
+            <h3 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white">
+              مرحباً بكم في منصة المعلم والمهندس — مدرسة WE بالسويس
+            </h3>
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
+              منصة متكاملة ومخصصة للمحاضرين والمعلمين والمهندسين لإدارة المحاضرات الدراسية، رفع المواد العلمية، إنشاء التكليفات والواجبات، تسجيل الحضور الذكي، وتوليد بنوك الأسئلة التفاعلية (AI Quiz) بدون الحاجة لجهاز أندرويد.
+            </p>
+          </div>
         </div>
-        <div>
-          <h4 class="font-bold text-base text-slate-900 dark:text-white">
-            مرحباً بك في بوابة المعلم والمهندس — مدرسة WE بالسويس
-          </h4>
-          <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-1">
-            هذه البوابة مصممة خصيصاً لأجهزة الكمبيوتر والمحمول (Windows / Mac / iPhone / iPad / Browsers) دون الحاجة لجهاز أندرويد.
-            يرجى تسجيل الدخول بحسابك أو اختيار حسابك من القائمة أعلاه.
-          </p>
+
+        <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto shrink-0">
+          <button onclick="openLoginModal()" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-brand-700 to-indigo-600 text-white font-bold text-sm shadow-lg shadow-brand-500/25 hover:opacity-95 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>تسجيل دخول المعلم</span>
+          </button>
+          <button type="button" onclick="toggleCredentialsDrawer()" class="w-full sm:w-auto px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs transition flex items-center justify-center gap-2" title="عرض حسابات المعلمين للدخول التجريبي السريع">
+            <i class="fa-solid fa-id-badge text-amber-500"></i>
+            <span>حسابات التجربة السريعة</span>
+          </button>
         </div>
       </div>
-      <button onclick="openLoginModal()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-700 to-indigo-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-brand-500/20 hover:opacity-95 transition shrink-0 flex items-center gap-2">
-        <i class="fa-solid fa-right-to-bracket"></i>
-        <span>تسجيل دخول المعلم</span>
-      </button>
     </div>
 
     <!-- TEACHER WELCOME PROFILE BANNER (shown when authenticated) -->
@@ -807,14 +819,18 @@
       if (typeof errData.detail === 'string') return errData.detail;
       if (Array.isArray(errData.detail)) {
         return errData.detail.map(d => {
+          if (!d) return '';
+          if (typeof d === 'string') return d;
           const loc = Array.isArray(d.loc) ? d.loc.filter(x => x !== 'body').join('.') : '';
-          return (loc ? loc + ': ' : '') + (d.msg || JSON.stringify(d));
-        }).join(' | ');
-      }
-      if (errData.detail && typeof errData.detail === 'object') {
-        return JSON.stringify(errData.detail);
+          return (loc ? loc + ': ' : '') + (d.msg || d.message || JSON.stringify(d));
+        }).filter(Boolean).join(' | ');
       }
       if (typeof errData.message === 'string') return errData.message;
+      if (typeof errData.error === 'string') return errData.error;
+      if (typeof errData.msg === 'string') return errData.msg;
+      if (errData.detail && typeof errData.detail === 'object') {
+        try { return JSON.stringify(errData.detail); } catch (_) {}
+      }
       return fallbackMsg;
     }
 
@@ -1309,7 +1325,7 @@
                   <span>فتح الرابط</span>
                 </a>
               ` : `
-                <a href="${f.file_path || `${API_BASE}/files/download/${f.file_id}`}" target="_blank" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5">
+                <a href="${(f.file_path && f.file_path.startsWith('http')) ? f.file_path : `${API_BASE}/files/download/${f.file_id}`}" target="_blank" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5" title="تحميل أو استعراض الملف">
                   <i class="fa-solid fa-download text-[10px]"></i>
                   <span>تحميل / استعراض</span>
                 </a>
@@ -1326,33 +1342,46 @@
     }
 
     // ── EASY DRAG & DROP FILE UPLOAD HANDLERS ─────────────────────────────────
+    let selectedUploadFile = null;
+
     function handleDragOver(e) {
       e.preventDefault();
       e.stopPropagation();
-      document.getElementById('file-dropzone').classList.add('border-brand-600', 'bg-brand-100/40');
+      const dropzone = document.getElementById('file-dropzone');
+      if (dropzone) dropzone.classList.add('border-brand-600', 'bg-brand-100/40');
     }
 
     function handleDragLeave(e) {
       e.preventDefault();
       e.stopPropagation();
-      document.getElementById('file-dropzone').classList.remove('border-brand-600', 'bg-brand-100/40');
+      const dropzone = document.getElementById('file-dropzone');
+      if (dropzone) dropzone.classList.remove('border-brand-600', 'bg-brand-100/40');
     }
 
     function handleFileDrop(e) {
       e.preventDefault();
       e.stopPropagation();
-      document.getElementById('file-dropzone').classList.remove('border-brand-600', 'bg-brand-100/40');
+      const dropzone = document.getElementById('file-dropzone');
+      if (dropzone) dropzone.classList.remove('border-brand-600', 'bg-brand-100/40');
       if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        selectedUploadFile = e.dataTransfer.files[0];
         const fileInput = document.getElementById('file-modal-upload');
-        fileInput.files = e.dataTransfer.files;
-        handleFileSelected({ target: fileInput });
+        try {
+          fileInput.files = e.dataTransfer.files;
+        } catch (_) {}
+        processSelectedFile(selectedUploadFile);
       }
     }
 
     function handleFileSelected(e) {
       const input = e.target;
       if (!input.files || input.files.length === 0) return;
-      const file = input.files[0];
+      selectedUploadFile = input.files[0];
+      processSelectedFile(selectedUploadFile);
+    }
+
+    function processSelectedFile(file) {
+      if (!file) return;
 
       // Format size
       const bytes = file.size;
@@ -1361,7 +1390,7 @@
         : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 
       // Determine type & icon
-      const ext = file.name.split('.').pop().toLowerCase();
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
       let fileType = 'file';
       let iconClass = 'fa-file-lines';
       let iconColor = 'text-purple-600 bg-purple-100 dark:bg-purple-950 dark:text-purple-300';
@@ -1372,60 +1401,97 @@
         fileType = 'ppt'; iconClass = 'fa-file-powerpoint'; iconColor = 'text-amber-600 bg-amber-100 dark:bg-amber-950 dark:text-amber-300';
       } else if (['doc', 'docx'].includes(ext)) {
         fileType = 'word'; iconClass = 'fa-file-word'; iconColor = 'text-blue-600 bg-blue-100 dark:bg-blue-950 dark:text-blue-300';
-      } else if (['png', 'jpg', 'jpeg', 'webp'].includes(ext)) {
+      } else if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) {
         fileType = 'image'; iconClass = 'fa-file-image'; iconColor = 'text-emerald-600 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300';
       } else if (['mp4', 'mov', 'webm'].includes(ext)) {
         fileType = 'video'; iconClass = 'fa-file-video'; iconColor = 'text-violet-600 bg-violet-100 dark:bg-violet-950 dark:text-violet-300';
-      } else if (['zip', 'rar'].includes(ext)) {
+      } else if (['zip', 'rar', '7z'].includes(ext)) {
         fileType = 'zip'; iconClass = 'fa-file-zipper'; iconColor = 'text-amber-700 bg-amber-100 dark:bg-amber-950 dark:text-amber-300';
       }
 
-      document.getElementById('file-modal-type').value = fileType;
+      const typeInput = document.getElementById('file-modal-type');
+      if (typeInput) typeInput.value = fileType;
 
       // Update preview card
-      document.getElementById('file-preview-name').innerText = file.name;
-      document.getElementById('file-preview-size').innerText = `${sizeStr} • صيغة ${ext.toUpperCase()}`;
+      const nameEl = document.getElementById('file-preview-name');
+      const sizeEl = document.getElementById('file-preview-size');
       const iconEl = document.getElementById('file-preview-icon');
-      iconEl.className = `w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shrink-0 ${iconColor}`;
-      iconEl.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
-      document.getElementById('file-selected-preview').classList.remove('hidden');
-      document.getElementById('file-selected-preview').classList.add('flex');
+      const previewCard = document.getElementById('file-selected-preview');
+
+      if (nameEl) nameEl.innerText = file.name;
+      if (sizeEl) sizeEl.innerText = `${sizeStr} • صيغة ${ext.toUpperCase()}`;
+      if (iconEl) {
+        iconEl.className = `w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shrink-0 ${iconColor}`;
+        iconEl.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
+      }
+      if (previewCard) {
+        previewCard.classList.remove('hidden');
+        previewCard.classList.add('flex');
+      }
 
       // Auto-fill title if empty
       const titleInput = document.getElementById('file-modal-title');
-      if (!titleInput.value.trim()) {
+      if (titleInput && !titleInput.value.trim()) {
         const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
         titleInput.value = cleanName;
       }
     }
 
     function clearSelectedUploadFile() {
+      selectedUploadFile = null;
       const input = document.getElementById('file-modal-upload');
-      input.value = '';
-      document.getElementById('file-selected-preview').classList.add('hidden');
-      document.getElementById('file-selected-preview').classList.remove('flex');
-      document.getElementById('file-modal-type').value = 'file';
+      if (input) input.value = '';
+      const previewCard = document.getElementById('file-selected-preview');
+      if (previewCard) {
+        previewCard.classList.add('hidden');
+        previewCard.classList.remove('flex');
+      }
+      const typeInput = document.getElementById('file-modal-type');
+      if (typeInput) typeInput.value = 'file';
     }
 
     async function handleCreateFile(e) {
       e.preventDefault();
-      const material_id = document.getElementById('file-modal-course').value;
-      const title = document.getElementById('file-modal-title').value.trim();
-      const description = document.getElementById('file-modal-desc').value.trim();
-      const file_type = document.getElementById('file-modal-type').value || 'file';
-      const fileInput = document.getElementById('file-modal-upload');
 
-      if (!fileInput.files || fileInput.files.length === 0) {
+      if (!currentTeacher || !getTeacherToken()) {
+        showToast('انتهت جلسة تسجيل الدخول، يرجى تسجيل الدخول مجدداً', 'error');
+        openLoginModal();
+        return;
+      }
+
+      const courseSelect = document.getElementById('file-modal-course');
+      const material_id = courseSelect ? courseSelect.value.trim() : '';
+      if (!material_id) {
+        showToast('يرجى اختيار المقرر الدراسي أو التأكد من ارتباط مواد بحسابك', 'warning');
+        return;
+      }
+
+      const titleInput = document.getElementById('file-modal-title');
+      const title = titleInput ? titleInput.value.trim() : '';
+      if (!title) {
+        showToast('يرجى إدخال عنوان للمحاضرة أو الملف', 'warning');
+        return;
+      }
+
+      const fileInput = document.getElementById('file-modal-upload');
+      const fileToUpload = selectedUploadFile || (fileInput && fileInput.files && fileInput.files[0]);
+
+      if (!fileToUpload) {
         showToast('يرجى اختيار ملف المحاضرة من جهازك لرفعه للطلاب', 'warning');
         return;
       }
+
+      const descInput = document.getElementById('file-modal-desc');
+      const description = descInput ? descInput.value.trim() : '';
+      const typeInput = document.getElementById('file-modal-type');
+      const file_type = (typeInput && typeInput.value) ? typeInput.value : 'file';
 
       const formData = new FormData();
       formData.append('material_id', material_id);
       formData.append('title', title);
       formData.append('file_type', file_type);
       if (description) formData.append('description', description);
-      formData.append('file', fileInput.files[0]);
+      formData.append('file', fileToUpload);
 
       const btn = document.getElementById('btn-submit-file');
       btn.disabled = true;
@@ -1437,18 +1503,27 @@
           headers: getAuthHeaders(false),
           body: formData
         });
+
         if (!res.ok) {
-          const errData = await res.json().catch(() => null);
-          throw new Error(formatApiError(errData, 'فشل رفع ونشر الملف'));
+          let errMsg = 'فشل رفع ونشر الملف';
+          try {
+            const errData = await res.json();
+            errMsg = formatApiError(errData, errMsg);
+          } catch (_) {
+            const rawText = await res.text().catch(() => '');
+            if (rawText) errMsg = rawText;
+          }
+          throw new Error(errMsg);
         }
+
         const createdFile = await res.json();
 
         showToast('تم رفع المحاضرة ونشرها بنجاح للطلاب! 🎉', 'success');
         closeModal('modal-add-file');
         
         // Clear modal form
-        document.getElementById('file-modal-title').value = '';
-        document.getElementById('file-modal-desc').value = '';
+        if (titleInput) titleInput.value = '';
+        if (descInput) descInput.value = '';
         clearSelectedUploadFile();
 
         loadCourseFiles(material_id);
@@ -1458,7 +1533,7 @@
           if (confirm(`هل ترغب في توليد بنك أسئلة وتدريبات تفاعلية ذكية (AI Quiz) الآن على محاضرة "${title}"؟`)) {
             openAiQuizForFile(createdFile.id || createdFile.file_id, title, file_type);
           }
-        }, 600);
+        }, 500);
 
       } catch (err) {
         showToast(err.message, 'error');
@@ -2284,6 +2359,13 @@
     }
 
     function showToast(message, type = 'info') {
+      if (typeof message === 'object') {
+        message = formatApiError(message);
+      }
+      if (!message || message === '[object Object]') {
+        message = 'حدث خطأ أثناء تنفيذ العملية، يرجى المحاولة لاحقاً';
+      }
+
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
       const bg = type === 'success' ? 'bg-emerald-600 text-white' :

@@ -118,10 +118,23 @@ def create_file(
     user_id: int  = Depends(get_current_user_id),
     db: Session   = Depends(get_db),
 ):
+    # Sanitize material_id: treat empty string / "null" / "undefined" as None to prevent Postgres FK violation
+    clean_material_id = None
+    if material_id:
+        m_str = str(material_id).strip()
+        if m_str and m_str.lower() not in ("null", "undefined", "none", ""):
+            clean_material_id = m_str
+
     file_path, file_size = save_file(file)
 
-    # Auto-detect or fallback file_type if not provided
-    if not file_type or not str(file_type).strip():
+    # Auto-detect or normalize file_type if not provided or unknown
+    valid_content_types = {
+        "text", "image", "voice", "video", "pdf", "word", "ppt", "python", "jupyter",
+        "c", "cpp", "java", "javascript", "typescript", "html", "css", "sql", "r", "matlab",
+        "zip", "rar", "7z", "link", "file"
+    }
+    clean_file_type = file_type.strip().lower() if file_type and str(file_type).strip() else None
+    if not clean_file_type or clean_file_type not in valid_content_types:
         if file and getattr(file, "filename", None) and file.filename.strip():
             ext = os.path.splitext(file.filename)[1].lower().lstrip(".")
             ext_map = {
@@ -130,19 +143,19 @@ def create_file(
                 "png": "image", "jpg": "image", "jpeg": "image", "webp": "image",
                 "mp4": "video", "mov": "video", "zip": "zip", "rar": "rar", "7z": "7z"
             }
-            file_type = ext_map.get(ext, "file")
+            clean_file_type = ext_map.get(ext, "file")
         elif link_url and str(link_url).strip():
-            file_type = "link"
+            clean_file_type = "link"
         else:
-            file_type = "file"
+            clean_file_type = "file"
 
     data = MaterialFileCreate(
-        material_id=material_id,
-        title=title,
-        description=description,
-        file_type=file_type,
-        link_url=link_url,
-        text_content=text_content,
+        material_id=clean_material_id,
+        title=title.strip(),
+        description=description.strip() if description else None,
+        file_type=clean_file_type,
+        link_url=link_url.strip() if link_url else None,
+        text_content=text_content.strip() if text_content else None,
         announcement_id=announcement_id,
     )
     return svc.create_material_file(db, data, user_id, file_path, file_size)
