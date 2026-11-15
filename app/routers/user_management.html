@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>بوابة إدارة المستخدمين | مدرسة WE للتكنولوجيا التطبيقية بالسويس</title>
+  <title>لوحة التحكم والمراقبة المركزية | مدرسة WE للتكنولوجيا التطبيقية بالسويس</title>
   
   <!-- Google Fonts: Cairo & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -89,7 +89,7 @@
           <div>
             <div class="flex items-center gap-2">
               <span class="text-base sm:text-lg font-extrabold bg-gradient-to-r from-brand-800 via-brand-600 to-indigo-600 dark:from-purple-300 dark:to-indigo-300 bg-clip-text text-transparent">
-                بوابة إدارة المستخدمين
+                لوحة الإدارة والمراقبة الشاملة (Admin Command Center)
               </span>
               <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                 WE Suez
@@ -156,6 +156,39 @@
         <span>تسجيل دخول مسؤول</span>
       </button>
     </div>
+
+    <!-- ======================================================================= -->
+    <!-- MAIN NAVIGATION TABS (USERS, CHATS MONITOR, AI QUIZZES, PLATFORM USAGE)  -->
+    <!-- ======================================================================= -->
+    <nav class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto text-xs sm:text-sm font-bold no-scrollbar">
+      <button onclick="switchAdminTab('users')" id="btn-tab-users" class="admin-tab-btn px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-700 to-indigo-600 text-white shadow-md shadow-brand-500/20 flex items-center gap-2 transition shrink-0">
+        <i class="fa-solid fa-users"></i>
+        <span>المستخدمون وهيئة التدريس</span>
+        <span id="badge-users-count" class="px-2 py-0.5 rounded-full text-[10px] bg-white/20 text-white font-mono">0</span>
+      </button>
+
+      <button onclick="switchAdminTab('chats')" id="btn-tab-chats" class="admin-tab-btn px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center gap-2 transition shrink-0">
+        <i class="fa-solid fa-comments text-brand-600 dark:text-brand-400"></i>
+        <span>مراقبة المحادثات والرسائل</span>
+        <span id="badge-chats-count" class="px-2 py-0.5 rounded-full text-[10px] bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 font-mono">0</span>
+      </button>
+
+      <button onclick="switchAdminTab('quizzes')" id="btn-tab-quizzes" class="admin-tab-btn px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center gap-2 transition shrink-0">
+        <i class="fa-solid fa-wand-magic-sparkles text-purple-600 dark:text-purple-400"></i>
+        <span>استخدام الاختبارات الذكية (AI Quiz)</span>
+        <span id="badge-quizzes-count" class="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-mono">0</span>
+      </button>
+
+      <button onclick="switchAdminTab('platform')" id="btn-tab-platform" class="admin-tab-btn px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center gap-2 transition shrink-0">
+        <i class="fa-solid fa-chart-pie text-emerald-600 dark:text-emerald-400"></i>
+        <span>إحصائيات المنصة والمحتوى</span>
+      </button>
+    </nav>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 1: USERS MANAGEMENT                                                 -->
+    <!-- ======================================================================= -->
+    <section id="section-tab-users" class="space-y-6">
 
     <!-- ======================================================================= -->
     <!-- METRICS & STATISTICS CARDS                                              -->
@@ -359,6 +392,383 @@
       </div>
 
     </div>
+    </section>
+    <!-- END OF TAB 1: USERS -->
+
+    <!-- ======================================================================= -->
+    <!-- TAB 2: CHATS & MESSAGES MONITORING                                      -->
+    <!-- ======================================================================= -->
+    <section id="section-tab-chats" class="hidden space-y-6">
+      <!-- Chat Metric Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">إجمالي الرسائل</p>
+            <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-950/80 dark:text-purple-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-comments"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 id="stat-chat-total" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
+            <span class="text-xs font-bold text-brand-600 dark:text-brand-400">رسالة</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">عبر جميع المحادثات المسجلة</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">المحادثات النشطة</p>
+            <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950/80 dark:text-blue-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-address-book"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 id="stat-chat-threads" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
+            <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">محادثة</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">بين الطلاب والمعلمين والإدارة</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">الوسائط والملفات</p>
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-photo-film"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 id="stat-chat-media" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
+            <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">ملف وصورة</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">صور، تسجيلات صوتية، مستندات</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">رسائل اليوم</p>
+            <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-950/80 dark:text-amber-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 id="stat-chat-today" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
+            <span class="text-xs font-semibold text-amber-600 dark:text-amber-400">اليوم</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">نشاط اليوم المباشر</p>
+        </div>
+      </div>
+
+      <!-- Chats Split Layout: Threads List + Transcript Viewer -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        <!-- Left: Conversations Threads List (5 cols) -->
+        <div class="lg:col-span-5 glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[650px] overflow-hidden">
+          
+          <!-- Threads Header & Search -->
+          <div class="p-4 border-b border-slate-100 dark:border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-inbox text-brand-600 dark:text-brand-400"></i>
+                <span>قائمة المحادثات النشطة</span>
+              </h4>
+              <button onclick="loadChatsMonitoring()" class="text-xs text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 font-semibold">
+                <i class="fa-solid fa-arrows-rotate"></i> تحديث
+              </button>
+            </div>
+            
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input 
+                type="text" 
+                id="chats-search-input"
+                oninput="handleChatsSearch()"
+                placeholder="ابحث باسم الطالب أو المعلم في المحادثات..."
+                class="w-full pr-8 pl-3 py-2 text-xs rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500"
+              >
+            </div>
+          </div>
+
+          <!-- Threads Scroll Container -->
+          <div id="chats-threads-container" class="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 p-2 space-y-1">
+            <div class="py-12 text-center text-slate-400 text-xs">
+              <i class="fa-solid fa-circle-notch fa-spin text-xl text-brand-600 mb-2"></i>
+              <p>جاري جلب المحادثات...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Chat Transcript Viewer (7 cols) -->
+        <div class="lg:col-span-7 glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-[650px] overflow-hidden">
+          
+          <!-- Transcript Header -->
+          <div id="chat-thread-header" class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/60">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 to-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+                <i class="fa-solid fa-comments"></i>
+              </div>
+              <div>
+                <h4 id="chat-thread-title" class="font-bold text-sm text-slate-900 dark:text-white">اختر محادثة لعرض تفاصيلها</h4>
+                <p id="chat-thread-subtitle" class="text-xs text-slate-400">انقر على أي محادثة من القائمة لاستعراض نصوص ورسائل ووسائط الطرفين بالكامل</p>
+              </div>
+            </div>
+            <div id="chat-thread-actions" class="hidden items-center gap-2">
+              <button onclick="refreshActiveChatThread()" class="p-2 rounded-lg text-slate-400 hover:text-brand-600 transition" title="تحديث المحادثة">
+                <i class="fa-solid fa-arrows-rotate text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Transcript Stream -->
+          <div id="chat-thread-messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-100/40 dark:bg-slate-950/40">
+            <div class="h-full flex flex-col items-center justify-center text-center text-slate-400">
+              <div class="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center text-2xl mb-2">
+                <i class="fa-solid fa-message"></i>
+              </div>
+              <h5 class="font-bold text-sm text-slate-700 dark:text-slate-300">مستعرض سجل الرسائل المباشر</h5>
+              <p class="text-xs text-slate-400 max-w-sm mt-1">يمكنك مراقبة جميع المحادثات بين الطلاب والمعلمين، فحص الصور والملفات الصوتية والمستندات بدقة متناهية</p>
+            </div>
+          </div>
+
+          <!-- Transcript Footer Status -->
+          <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-900/70 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+            <span id="chat-thread-status"><i class="fa-solid fa-shield-halved text-emerald-500"></i> وضع المراقبة الأكاديمية مشفر وآمن</span>
+            <span id="chat-thread-count">0 رسالة</span>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+    <!-- END OF TAB 2: CHATS -->
+
+    <!-- ======================================================================= -->
+    <!-- TAB 3: AI QUIZ USAGE & ANALYTICS                                        -->
+    <!-- ======================================================================= -->
+    <section id="section-tab-quizzes" class="hidden space-y-6">
+      <!-- Quiz Metric Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">إجمالي الاختبارات</p>
+            <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-950/80 dark:text-purple-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 id="stat-quiz-total" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
+            <span class="text-xs font-bold text-purple-600 dark:text-purple-400">اختبار AI</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">تم توليدها بنموذج Gemini 2.5</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">إجمالي الأسئلة</p>
+            <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950/80 dark:text-blue-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-clipboard-question"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 id="stat-quiz-questions" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
+            <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">سؤال تدريبي</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">أسئلة اختيار من متعدد مع الإجابات والشروحات</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">توزيع الصعوبة</p>
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-gauge-high"></i>
+            </div>
+          </div>
+          <div class="mt-2 space-y-1 text-[11px]">
+            <div class="flex justify-between font-bold">
+              <span class="text-emerald-600 dark:text-emerald-400">سهل: <span id="quiz-diff-easy">0</span></span>
+              <span class="text-amber-600 dark:text-amber-400">متوسط: <span id="quiz-diff-medium">0</span></span>
+              <span class="text-rose-600 dark:text-rose-400">صعب: <span id="quiz-diff-hard">0</span></span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex">
+              <div id="bar-diff-easy" class="bg-emerald-500 h-full" style="width: 33%"></div>
+              <div id="bar-diff-medium" class="bg-amber-500 h-full" style="width: 34%"></div>
+              <div id="bar-diff-hard" class="bg-rose-500 h-full" style="width: 33%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">أكثر المقررات استخداماً</p>
+            <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-950/80 dark:text-amber-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 id="stat-quiz-top-course" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white truncate">--</h3>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">توليد اختبارات ومحاضرات</p>
+        </div>
+      </div>
+
+      <!-- Quizzes Logs Table Card -->
+      <div class="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-4 p-5">
+        
+        <!-- Filter and Search -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="relative flex-1 w-full sm:w-auto">
+            <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input 
+              type="text" 
+              id="quizzes-search-input"
+              oninput="handleQuizzesFilter()"
+              placeholder="ابحث بموضوع الاختبار أو اسم الطالب/المعلم..."
+              class="w-full pr-8 pl-3 py-2 text-xs rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500"
+            >
+          </div>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <select id="quizzes-diff-filter" onchange="handleQuizzesFilter()" class="px-3 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none font-semibold">
+              <option value="">جميع المستويات</option>
+              <option value="easy">سهل (Easy)</option>
+              <option value="medium">متوسط (Medium)</option>
+              <option value="hard">صعب (Hard)</option>
+            </select>
+            <button onclick="loadQuizzesMonitoring()" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition" title="تحديث">
+              <i class="fa-solid fa-arrows-rotate text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto min-h-[300px]">
+          <table class="w-full text-right text-xs sm:text-sm">
+            <thead class="bg-slate-100/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
+              <tr>
+                <th scope="col" class="py-3 px-4"># الجلسة</th>
+                <th scope="col" class="py-3 px-4">منشئ الاختبار</th>
+                <th scope="col" class="py-3 px-4">المقرر والموضوع</th>
+                <th scope="col" class="py-3 px-4">الصعوبة</th>
+                <th scope="col" class="py-3 px-4">عدد الأسئلة</th>
+                <th scope="col" class="py-3 px-4">التاريخ والوقت</th>
+                <th scope="col" class="py-3 px-4 text-center">استعراض الاختبار</th>
+              </tr>
+            </thead>
+            <tbody id="quizzes-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tr>
+                <td colspan="7" class="py-12 text-center text-slate-400">
+                  <i class="fa-solid fa-circle-notch fa-spin text-2xl text-purple-600 mb-2"></i>
+                  <p>جاري تحميل سجلات الاختبارات الذكية...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
+    <!-- END OF TAB 3: QUIZZES -->
+
+    <!-- ======================================================================= -->
+    <!-- TAB 4: PLATFORM USAGE & CONTENT ANALYTICS                               -->
+    <!-- ======================================================================= -->
+    <section id="section-tab-platform" class="hidden space-y-6">
+      
+      <!-- Platform Summary Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">الملفات والمحاضرات</p>
+            <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-950/80 dark:text-indigo-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-folder-open"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 id="stat-platform-files" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
+            <span class="text-xs font-semibold text-indigo-600 dark:text-indigo-400">ملف دراسي</span>
+          </div>
+          <p id="stat-platform-size" class="text-[11px] text-slate-400 mt-1">حجم التخزين: -- MB</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">جلسات الحضور</p>
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-user-clock"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 id="stat-platform-sessions" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
+            <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">جلسة</span>
+          </div>
+          <p id="stat-platform-active-sessions" class="text-[11px] text-emerald-600 font-semibold mt-1">-- جلسة مفتوحة حالياً</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">المقررات المفعلة</p>
+            <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-950/80 dark:text-purple-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-book-open"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">8</h3>
+            <span class="text-xs font-semibold text-purple-600 dark:text-purple-400">مقررات C1..C8</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">البرمجة والشبكات والاتصالات</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">كفاءة النظام</p>
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-server"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-emerald-600">99.9%</h3>
+            <span class="text-xs font-bold text-emerald-600">Uptime</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">خوادم Vercel و Neon S3 سحابية</p>
+        </div>
+      </div>
+
+      <!-- Attendance Sessions Log -->
+      <div class="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h4 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-clipboard-user text-emerald-600 dark:text-emerald-400"></i>
+            <span>سجل جلسات الحضور الذكي المنعقدة</span>
+          </h4>
+          <button onclick="loadPlatformAnalytics()" class="text-xs text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 font-semibold">
+            <i class="fa-solid fa-arrows-rotate"></i> تحديث
+          </button>
+        </div>
+
+        <div class="overflow-x-auto min-h-[250px]">
+          <table class="w-full text-right text-xs sm:text-sm">
+            <thead class="bg-slate-100/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
+              <tr>
+                <th scope="col" class="py-3 px-4">المقرر</th>
+                <th scope="col" class="py-3 px-4">عنوان الجلسة</th>
+                <th scope="col" class="py-3 px-4">المحاضر</th>
+                <th scope="col" class="py-3 px-4">المدة</th>
+                <th scope="col" class="py-3 px-4">الطلاب الحاضرين</th>
+                <th scope="col" class="py-3 px-4">التاريخ</th>
+                <th scope="col" class="py-3 px-4">الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tr>
+                <td colspan="7" class="py-8 text-center text-slate-400">
+                  <p>جاري تحميل جلسات الحضور...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <!-- END OF TAB 4: PLATFORM -->
+
 
   </main>
 
@@ -875,6 +1285,132 @@
   </div>
 
   <!-- ========================================================================= -->
+  <!-- MODAL: USER ACTIVITY MONITORING                                           -->
+  <!-- ========================================================================= -->
+  <div id="modal-user-activity" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-xl w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+          <div>
+            <h3 id="user-act-name" class="font-bold text-base text-slate-900 dark:text-white">سجل نشاط المستخدم</h3>
+            <p id="user-act-sub" class="text-xs text-slate-400">ملخص التفاعل والمشاركات في المنصة</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-user-activity')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-4 text-xs sm:text-sm">
+        <!-- User Identity Header Card -->
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div id="user-act-avatar" class="w-11 h-11 rounded-xl bg-brand-700 text-white font-bold flex items-center justify-center text-base">U</div>
+            <div>
+              <p id="user-act-fullname" class="font-bold text-slate-900 dark:text-white text-sm">--</p>
+              <p id="user-act-email" class="text-slate-400 font-mono-code text-xs">--</p>
+            </div>
+          </div>
+          <div class="text-left space-y-1">
+            <span id="user-act-role" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300">--</span>
+            <p id="user-act-dept" class="text-[11px] text-slate-500 font-semibold">--</p>
+          </div>
+        </div>
+
+        <!-- Activity Metrics Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+          <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900 text-center">
+            <p class="text-[11px] text-slate-500 font-semibold">رسائل مرسلة</p>
+            <h4 id="user-act-msgs-sent" class="text-lg font-black text-purple-700 dark:text-purple-300 mt-1">0</h4>
+          </div>
+          <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-center">
+            <p class="text-[11px] text-slate-500 font-semibold">رسائل واردة</p>
+            <h4 id="user-act-msgs-recv" class="text-lg font-black text-blue-700 dark:text-blue-300 mt-1">0</h4>
+          </div>
+          <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-center">
+            <p class="text-[11px] text-slate-500 font-semibold">اختبارات مولدة</p>
+            <h4 id="user-act-quizzes" class="text-lg font-black text-amber-700 dark:text-amber-300 mt-1">0</h4>
+          </div>
+          <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-center">
+            <p class="text-[11px] text-slate-500 font-semibold">محاضرات / حضور</p>
+            <h4 id="user-act-content" class="text-lg font-black text-emerald-700 dark:text-emerald-300 mt-1">0</h4>
+          </div>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" onclick="closeModal('modal-user-activity')" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition text-xs">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: INSPECT AI QUIZ (QUESTIONS, ANSWERS, EXPLANATIONS)                 -->
+  <!-- ========================================================================= -->
+  <div id="modal-inspect-quiz" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <h3 id="inspect-quiz-title" class="font-bold text-base text-slate-900 dark:text-white">تفاصيل الاختبار التفاعلي الذكي</h3>
+            <p id="inspect-quiz-sub" class="text-xs text-slate-400">استعراض الأسئلة والإجابات والشروحات المولدة بالذكاء الاصطناعي</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-inspect-quiz')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Quiz Metadata Bar -->
+      <div class="py-3 px-3.5 my-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-3">
+          <span>المقرر: <strong id="inspect-quiz-course" class="text-brand-700 dark:text-brand-300">--</strong></span>
+          <span>الصعوبة: <strong id="inspect-quiz-diff" class="text-amber-600">--</strong></span>
+          <span>الأسئلة: <strong id="inspect-quiz-count">0</strong></span>
+        </div>
+        <div class="text-slate-400">
+          <span>المنشئ: <strong id="inspect-quiz-author" class="text-slate-700 dark:text-slate-200">--</strong></span>
+        </div>
+      </div>
+
+      <!-- Questions List (Scrollable) -->
+      <div id="inspect-quiz-questions-list" class="flex-1 overflow-y-auto space-y-4 pr-1">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+        <span class="text-xs text-slate-400"><i class="fa-solid fa-robot text-purple-600"></i> مدعوم بنموذج Gemini 2.5 Flash</span>
+        <button type="button" onclick="closeModal('modal-inspect-quiz')" class="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold text-xs hover:bg-slate-900 transition">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: IMAGE PREVIEW                                                      -->
+  <!-- ========================================================================= -->
+  <div id="modal-inspect-media" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4" onclick="closeModal('modal-inspect-media')">
+    <div class="max-w-3xl max-h-[90vh] p-2 relative flex flex-col items-center" onclick="event.stopPropagation()">
+      <button onclick="closeModal('modal-inspect-media')" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-slate-900/80 text-white flex items-center justify-center hover:bg-slate-800 transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <img id="inspect-media-img" src="" alt="Chat Media" class="max-w-full max-h-[85vh] rounded-2xl shadow-2xl object-contain">
+      <p id="inspect-media-caption" class="text-xs text-white/80 mt-2 font-mono-code"></p>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
   <!-- TOAST NOTIFICATIONS CONTAINER                                             -->
   <!-- ========================================================================= -->
   <div id="toast" class="fixed bottom-5 left-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
@@ -1278,6 +1814,9 @@
                     <i class="fa-solid fa-chalkboard-user"></i>
                   </button>
                 ` : ''}
+                <button onclick="openUserActivityModal(${u.user_id})" class="p-2 rounded-lg text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/60 transition" title="عرض سجل نشاط ومشاركات المستخدم">
+                  <i class="fa-solid fa-chart-line"></i>
+                </button>
                 <button onclick="openEditUserModal(${u.user_id})" class="p-2 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 transition" title="تعديل المستخدم">
                   <i class="fa-solid fa-pen-to-square"></i>
                 </button>
@@ -1766,6 +2305,477 @@
         toast.classList.add('translate-y-24', 'opacity-0');
       }, 4000);
     }
+  
+    // ── MAIN TAB SWITCHING (USERS, CHATS, QUIZZES, PLATFORM) ───────────────────
+    let currentAdminTab = 'users';
+
+    function switchAdminTab(tabId) {
+      currentAdminTab = tabId;
+      const tabs = ['users', 'chats', 'quizzes', 'platform'];
+
+      tabs.forEach(t => {
+        const sec = document.getElementById(`section-tab-${t}`);
+        const btn = document.getElementById(`btn-tab-${t}`);
+        if (!sec || !btn) return;
+
+        if (t === tabId) {
+          sec.classList.remove('hidden');
+          btn.className = 'admin-tab-btn px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-700 to-indigo-600 text-white shadow-md shadow-brand-500/20 flex items-center gap-2 transition shrink-0';
+        } else {
+          sec.classList.add('hidden');
+          btn.className = 'admin-tab-btn px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center gap-2 transition shrink-0';
+        }
+      });
+
+      if (tabId === 'chats') {
+        loadChatsMonitoring();
+      } else if (tabId === 'quizzes') {
+        loadQuizzesMonitoring();
+      } else if (tabId === 'platform') {
+        loadPlatformAnalytics();
+      }
+    }
+
+    // ── CHATS & MESSAGES MONITORING ───────────────────────────────────────────
+    let allConversationsList = [];
+    let activeChatUser1 = null;
+    let activeChatUser2 = null;
+
+    async function loadChatsMonitoring() {
+      try {
+        const resStats = await fetch(`${API_BASE}/admin/api/chats/stats`, { headers: getAuthHeaders() });
+        if (resStats.ok) {
+          const stats = await resStats.json();
+          document.getElementById('stat-chat-total').innerText = stats.total_messages || 0;
+          document.getElementById('stat-chat-threads').innerText = stats.total_threads || 0;
+          document.getElementById('stat-chat-today').innerText = stats.messages_today || 0;
+          
+          const badgeChats = document.getElementById('badge-chats-count');
+          if (badgeChats) badgeChats.innerText = stats.total_messages || 0;
+
+          // Count media
+          const types = stats.content_types || {};
+          const mediaCount = (types.image || 0) + (types.voice || 0) + (types.file || 0);
+          document.getElementById('stat-chat-media').innerText = mediaCount;
+        }
+
+        const resConvs = await fetch(`${API_BASE}/admin/api/chats/conversations?limit=100`, { headers: getAuthHeaders() });
+        if (resConvs.ok) {
+          const data = await resConvs.json();
+          allConversationsList = data.conversations || [];
+          renderConversationsList(allConversationsList);
+        }
+      } catch (err) {
+        console.error('Failed to load chats monitoring:', err);
+      }
+    }
+
+    function renderConversationsList(convs) {
+      const container = document.getElementById('chats-threads-container');
+      if (!convs || convs.length === 0) {
+        container.innerHTML = `
+          <div class="py-12 text-center text-slate-400 text-xs">
+            <i class="fa-solid fa-comments text-2xl text-slate-300 dark:text-slate-700 mb-2"></i>
+            <p>لا توجد محادثات مسجلة حالياً</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = convs.map(c => {
+        const isCurrentActive = (activeChatUser1 === c.user1.user_id && activeChatUser2 === c.user2.user_id);
+        const activeClass = isCurrentActive 
+          ? 'bg-brand-50/80 dark:bg-brand-950/60 border-brand-500/50' 
+          : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-transparent';
+
+        return `
+          <div onclick="openChatThread(${c.user1.user_id}, ${c.user2.user_id})" class="p-3 rounded-xl border ${activeClass} transition cursor-pointer flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-xs text-slate-900 dark:text-white truncate max-w-[120px]">${escapeHtml(c.user1.name)}</span>
+                <span class="text-[10px] text-slate-400 font-mono">↔</span>
+                <span class="font-bold text-xs text-slate-900 dark:text-white truncate max-w-[120px]">${escapeHtml(c.user2.name)}</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-mono">
+                ${c.total_messages} رسالة
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+              <span class="truncate max-w-[200px]">${escapeHtml(c.last_message || '')}</span>
+              <span class="text-[10px] text-slate-400 font-mono">${formatChatTime(c.last_sent_at)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleChatsSearch() {
+      const q = document.getElementById('chats-search-input').value.trim().toLowerCase();
+      if (!q) {
+        renderConversationsList(allConversationsList);
+        return;
+      }
+      const filtered = allConversationsList.filter(c => 
+        (c.user1.name && c.user1.name.toLowerCase().includes(q)) ||
+        (c.user2.name && c.user2.name.toLowerCase().includes(q)) ||
+        (c.last_message && c.last_message.toLowerCase().includes(q))
+      );
+      renderConversationsList(filtered);
+    }
+
+    async function openChatThread(u1, u2) {
+      activeChatUser1 = u1;
+      activeChatUser2 = u2;
+      renderConversationsList(allConversationsList);
+
+      const headerTitle = document.getElementById('chat-thread-title');
+      const headerSub = document.getElementById('chat-thread-subtitle');
+      const stream = document.getElementById('chat-thread-messages');
+      const actions = document.getElementById('chat-thread-actions');
+
+      stream.innerHTML = `
+        <div class="h-full flex items-center justify-center text-slate-400 text-xs">
+          <i class="fa-solid fa-circle-notch fa-spin text-xl text-brand-600 mb-2"></i>
+          <p class="mr-2">جاري تحميل سجل المحادثة...</p>
+        </div>
+      `;
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/chats/thread?user1_id=${u1}&user2_id=${u2}&limit=150`, { headers: getAuthHeaders() });
+        if (!res.ok) throw new Error('فشل جلب سجل المحادثة');
+        const data = await res.json();
+
+        headerTitle.innerText = `${data.user1.name} (${data.user1.role}) ↔ ${data.user2.name} (${data.user2.role})`;
+        headerSub.innerText = `إجمالي الرسائل المتبادلة: ${data.total} رسالة`;
+        if (actions) actions.classList.remove('hidden');
+
+        document.getElementById('chat-thread-count').innerText = `${data.total} رسالة`;
+
+        if (!data.messages || data.messages.length === 0) {
+          stream.innerHTML = `<div class="h-full flex items-center justify-center text-slate-400 text-xs">لا توجد رسائل مسجلة بين هذين المستخدمين</div>`;
+          return;
+        }
+
+        stream.innerHTML = data.messages.map(m => {
+          const isFromU1 = (m.sender_id === data.user1.id);
+          const senderName = isFromU1 ? data.user1.name : data.user2.name;
+          const alignClass = isFromU1 ? 'items-start text-right' : 'items-end text-left';
+          const bubbleBg = isFromU1 
+            ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white' 
+            : 'bg-gradient-to-r from-brand-700 to-indigo-600 text-white border-transparent';
+
+          let mediaHtml = '';
+          if (m.content_type === 'image' && m.file_url) {
+            mediaHtml = `
+              <div class="mt-1.5 cursor-pointer overflow-hidden rounded-xl" onclick="openMediaPreview('${escapeHtml(m.file_url)}', '${escapeHtml(m.file_name || 'صورة')}')">
+                <img src="${escapeHtml(m.file_url)}" alt="Attachment" class="max-w-[200px] max-h-[160px] object-cover rounded-xl hover:scale-105 transition">
+              </div>
+            `;
+          } else if (m.content_type === 'voice' && m.file_url) {
+            mediaHtml = `
+              <div class="mt-1.5 flex items-center gap-2 p-2 rounded-xl bg-black/10 dark:bg-white/10">
+                <i class="fa-solid fa-microphone text-xs"></i>
+                <audio controls src="${escapeHtml(m.file_url)}" class="h-7 max-w-[200px]"></audio>
+              </div>
+            `;
+          } else if (m.file_url) {
+            mediaHtml = `
+              <div class="mt-1.5">
+                <a href="${escapeHtml(m.file_url)}" target="_blank" class="px-3 py-1.5 rounded-lg bg-black/10 dark:bg-white/10 hover:bg-black/20 font-bold text-xs flex items-center gap-1.5 transition">
+                  <i class="fa-solid fa-paperclip"></i>
+                  <span>${escapeHtml(m.file_name || 'تحميل المستند')}</span>
+                </a>
+              </div>
+            `;
+          }
+
+          return `
+            <div class="flex flex-col ${alignClass} space-y-1">
+              <span class="text-[10px] font-bold text-slate-400 px-1">${escapeHtml(senderName)} • ${formatChatTime(m.sent_at)}</span>
+              <div class="p-3 rounded-2xl border shadow-sm max-w-md ${bubbleBg}">
+                ${m.message ? `<p class="text-xs leading-relaxed break-words">${escapeHtml(m.message)}</p>` : ''}
+                ${mediaHtml}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        stream.scrollTop = stream.scrollHeight;
+      } catch (err) {
+        stream.innerHTML = `<div class="p-4 text-center text-rose-500 text-xs">${err.message}</div>`;
+      }
+    }
+
+    function refreshActiveChatThread() {
+      if (activeChatUser1 && activeChatUser2) {
+        openChatThread(activeChatUser1, activeChatUser2);
+      }
+    }
+
+    function openMediaPreview(url, caption = '') {
+      document.getElementById('inspect-media-img').src = url;
+      document.getElementById('inspect-media-caption').innerText = caption;
+      openModal('modal-inspect-media');
+    }
+
+    function formatChatTime(isoStr) {
+      if (!isoStr) return '';
+      try {
+        const d = new Date(isoStr);
+        return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) + ' ' + d.toLocaleDateString('ar-EG', { month: 'numeric', day: 'numeric' });
+      } catch (_) {
+        return isoStr;
+      }
+    }
+
+    // ── AI QUIZ USAGE & ANALYTICS ─────────────────────────────────────────────
+    let allQuizLogsList = [];
+
+    async function loadQuizzesMonitoring() {
+      try {
+        const resStats = await fetch(`${API_BASE}/admin/api/quizzes/stats`, { headers: getAuthHeaders() });
+        if (resStats.ok) {
+          const stats = await resStats.json();
+          document.getElementById('stat-quiz-total').innerText = stats.total_quizzes || 0;
+          document.getElementById('stat-quiz-questions').innerText = stats.total_questions || 0;
+          
+          const badgeQ = document.getElementById('badge-quizzes-count');
+          if (badgeQ) badgeQ.innerText = stats.total_quizzes || 0;
+
+          // Top course
+          const courses = stats.courses_breakdown || [];
+          if (courses.length > 0) {
+            document.getElementById('stat-quiz-top-course').innerText = courses[0].course_id || 'عام';
+          } else {
+            document.getElementById('stat-quiz-top-course').innerText = 'لا توجد بيانات';
+          }
+
+          // Difficulty breakdown
+          const diffs = stats.difficulty_breakdown || {};
+          const easy = diffs.easy || 0;
+          const med = diffs.medium || 0;
+          const hard = diffs.hard || 0;
+          const totalDiff = (easy + med + hard) || 1;
+
+          document.getElementById('quiz-diff-easy').innerText = easy;
+          document.getElementById('quiz-diff-medium').innerText = med;
+          document.getElementById('quiz-diff-hard').innerText = hard;
+
+          document.getElementById('bar-diff-easy').style.width = `${Math.round((easy / totalDiff) * 100)}%`;
+          document.getElementById('bar-diff-medium').style.width = `${Math.round((med / totalDiff) * 100)}%`;
+          document.getElementById('bar-diff-hard').style.width = `${Math.round((hard / totalDiff) * 100)}%`;
+        }
+
+        const resLogs = await fetch(`${API_BASE}/admin/api/quizzes/logs?limit=100`, { headers: getAuthHeaders() });
+        if (resLogs.ok) {
+          const data = await resLogs.json();
+          allQuizLogsList = data.quizzes || [];
+          renderQuizzesTable(allQuizLogsList);
+        }
+      } catch (err) {
+        console.error('Failed to load quizzes monitoring:', err);
+      }
+    }
+
+    function renderQuizzesTable(quizzes) {
+      const tbody = document.getElementById('quizzes-table-body');
+      if (!quizzes || quizzes.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-12 text-center text-slate-400">
+              <i class="fa-solid fa-wand-magic-sparkles text-2xl text-slate-300 dark:text-slate-700 mb-2"></i>
+              <p>لا توجد اختبارات مسجلة بعد</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = quizzes.map(q => {
+        const diffBadge = q.difficulty === 'easy'
+          ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">سهل</span>'
+          : q.difficulty === 'hard'
+          ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">صعب</span>'
+          : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">متوسط</span>';
+
+        const authorName = q.author ? q.author.name : 'طالب / مستخدم';
+        const authorRole = q.author ? (q.author.role === 'DR' ? 'أستاذ' : q.author.role === 'TA' ? 'مهندس' : 'طالب') : 'طالب';
+
+        return `
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+            <td class="py-3 px-4 font-mono-code text-xs text-slate-400">${q.session_id.substring(0, 8)}...</td>
+            <td class="py-3 px-4">
+              <div class="font-bold text-slate-900 dark:text-white">${escapeHtml(authorName)}</div>
+              <div class="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">${authorRole}</div>
+            </td>
+            <td class="py-3 px-4">
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800 ml-1.5">${escapeHtml(q.course_id || 'عام')}</span>
+              <span class="font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(q.topic || 'اختبار تفاعلي')}</span>
+            </td>
+            <td class="py-3 px-4">${diffBadge}</td>
+            <td class="py-3 px-4 font-bold font-mono">${q.num_questions} أسئلة</td>
+            <td class="py-3 px-4 text-slate-400 text-xs font-mono">${formatChatTime(q.created_at)}</td>
+            <td class="py-3 px-4 text-center">
+              <button onclick="inspectQuiz(${q.id})" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs hover:opacity-95 shadow-sm transition flex items-center gap-1.5 mx-auto">
+                <i class="fa-solid fa-eye text-[10px]"></i>
+                <span>استعراض</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function handleQuizzesFilter() {
+      const q = document.getElementById('quizzes-search-input').value.trim().toLowerCase();
+      const diff = document.getElementById('quizzes-diff-filter').value;
+
+      let filtered = allQuizLogsList;
+      if (diff) {
+        filtered = filtered.filter(item => item.difficulty === diff);
+      }
+      if (q) {
+        filtered = filtered.filter(item => 
+          (item.topic && item.topic.toLowerCase().includes(q)) ||
+          (item.course_id && item.course_id.toLowerCase().includes(q)) ||
+          (item.author && item.author.name && item.author.name.toLowerCase().includes(q))
+        );
+      }
+      renderQuizzesTable(filtered);
+    }
+
+    async function inspectQuiz(quizId) {
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/quizzes/logs/${quizId}`, { headers: getAuthHeaders() });
+        if (!res.ok) throw new Error('فشل جلب تفاصيل الاختبار');
+        const data = await res.json();
+
+        document.getElementById('inspect-quiz-title').innerText = data.topic || 'اختبار ذكي';
+        document.getElementById('inspect-quiz-course').innerText = data.course_id || 'عام';
+        document.getElementById('inspect-quiz-diff').innerText = data.difficulty || 'medium';
+        document.getElementById('inspect-quiz-count').innerText = `${data.num_questions} أسئلة`;
+        document.getElementById('inspect-quiz-author').innerText = `${data.author.name} (${data.author.role})`;
+
+        const container = document.getElementById('inspect-quiz-questions-list');
+        if (!data.questions || data.questions.length === 0) {
+          container.innerHTML = `<p class="py-8 text-center text-slate-400 text-xs">لا تتوفر تفاصيل الأسئلة المخزنة لهذه الجلسة</p>`;
+        } else {
+          container.innerHTML = data.questions.map((q, idx) => {
+            const opts = q.options || {};
+            const correctKey = q.correct || 'A';
+
+            return `
+              <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div class="flex items-start gap-2.5">
+                  <span class="w-6 h-6 rounded-lg bg-brand-800 text-white font-bold flex items-center justify-center text-xs shrink-0">${idx + 1}</span>
+                  <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-relaxed">${escapeHtml(q.question)}</h4>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  ${Object.entries(opts).map(([k, val]) => {
+                    const isCorrect = (k === correctKey);
+                    const optClass = isCorrect 
+                      ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 font-bold text-emerald-900 dark:text-emerald-100 ring-2 ring-emerald-500/20' 
+                      : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300';
+
+                    return `
+                      <div class="p-2.5 rounded-xl border flex items-center gap-2 ${optClass}">
+                        <span class="w-5 h-5 rounded-md ${isCorrect ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-700'} font-bold flex items-center justify-center text-[10px] shrink-0">${k}</span>
+                        <span class="flex-1">${escapeHtml(val)}</span>
+                        ${isCorrect ? '<i class="fa-solid fa-circle-check text-emerald-600 text-xs"></i>' : ''}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+
+                ${q.explanation ? `
+                  <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900 text-xs text-purple-900 dark:text-purple-200 flex items-start gap-2">
+                    <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5"></i>
+                    <div>
+                      <strong class="font-bold">تفسير الذكاء الاصطناعي:</strong>
+                      <p class="mt-0.5 leading-relaxed">${escapeHtml(q.explanation)}</p>
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('');
+        }
+
+        openModal('modal-inspect-quiz');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // ── USER DETAILED ACTIVITY MODAL ──────────────────────────────────────────
+    async function openUserActivityModal(userId) {
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/users/${userId}/activity`, { headers: getAuthHeaders() });
+        if (!res.ok) throw new Error('فشل جلب سجل نشاط المستخدم');
+        const data = await res.json();
+
+        document.getElementById('user-act-fullname').innerText = data.name || '--';
+        document.getElementById('user-act-email').innerText = data.email || '--';
+        document.getElementById('user-act-avatar').innerText = (data.name || 'U').charAt(0);
+        document.getElementById('user-act-role').innerText = data.role === 'DR' ? 'أستاذ دكتور (DR)' : data.role === 'TA' ? 'مهندس (TA)' : data.role === 'ADM' ? 'مسؤول نظام' : 'طالب (STU)';
+        document.getElementById('user-act-dept').innerText = `القسم: ${data.department || 'عام'}`;
+
+        const act = data.activity || {};
+        document.getElementById('user-act-msgs-sent').innerText = act.messages_sent || 0;
+        document.getElementById('user-act-msgs-recv').innerText = act.messages_received || 0;
+        document.getElementById('user-act-quizzes').innerText = act.quizzes_generated || 0;
+        document.getElementById('user-act-content').innerText = (act.materials_uploaded || 0) + ' ملفات / ' + (act.attendance_records || 0) + ' حضور';
+
+        openModal('modal-user-activity');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // ── PLATFORM & ATTENDANCE ANALYTICS ───────────────────────────────────────
+    async function loadPlatformAnalytics() {
+      try {
+        const resOverview = await fetch(`${API_BASE}/admin/api/overview`, { headers: getAuthHeaders() });
+        if (resOverview.ok) {
+          const ov = await resOverview.json();
+          document.getElementById('stat-platform-files').innerText = (ov.materials && ov.materials.total_files) || 0;
+          document.getElementById('stat-platform-size').innerText = `حجم التخزين: ${(ov.materials && ov.materials.size_mb) || 0} MB`;
+          document.getElementById('stat-platform-sessions').innerText = (ov.attendance && ov.attendance.total_sessions) || 0;
+          document.getElementById('stat-platform-active-sessions').innerText = `${(ov.attendance && ov.attendance.active_sessions) || 0} جلسة مفتوحة حالياً`;
+        }
+
+        const resAtt = await fetch(`${API_BASE}/admin/api/attendance/sessions?limit=50`, { headers: getAuthHeaders() });
+        if (resAtt.ok) {
+          const sessions = await resAtt.json();
+          const tbody = document.getElementById('attendance-table-body');
+          if (!sessions || sessions.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400 text-xs">لا توجد جلسات حضور مسجلة</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = sessions.map(s => `
+            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+              <td class="py-3 px-4 font-bold text-brand-700 dark:text-brand-300 font-mono">${escapeHtml(s.course_id || '--')}</td>
+              <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${escapeHtml(s.title || 'جلسة حضور')}</td>
+              <td class="py-3 px-4 text-slate-600 dark:text-slate-300">${escapeHtml(s.teacher_name || 'المعلم')}</td>
+              <td class="py-3 px-4 text-xs font-mono">${s.duration_minutes} دقيقة</td>
+              <td class="py-3 px-4 font-bold text-emerald-600">${s.attendees_count} طالب حاضر</td>
+              <td class="py-3 px-4 text-xs text-slate-400 font-mono">${formatChatTime(s.created_at)}</td>
+              <td class="py-3 px-4">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}">
+                  ${s.is_active ? 'مفتوحة الآن' : 'مغلقة'}
+                </span>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (err) {
+        console.error('Failed to load platform analytics:', err);
+      }
+    }
+
   </script>
 
 </body>

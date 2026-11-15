@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, Query, Request, HTTPException, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -181,6 +182,598 @@ def delete_course(
     """Delete a course."""
     mat_svc.delete_material(db, material_id)
     return {"message": f"Course '{material_id}' deleted successfully"}
+
+
+# ── Chat Monitoring Endpoints ────────────────────────────────────────────────
+
+@router.get("/api/chats/stats")
+def get_chats_stats(
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Analytics and metrics for chat system."""
+    from app.models.chat import ChatHistory
+    from app.models.user import User
+    from sqlalchemy import func
+    from datetime import datetime, date
+
+    today_start = datetime.combine(date.today(), datetime.min.time())
+    total_messages = db.query(func.count(ChatHistory.chat_id)).scalar() or 0
+    messages_today = db.query(func.count(ChatHistory.chat_id)).filter(ChatHistory.sent_at >= today_start).scalar() or 0
+
+    types_query = (
+        db.query(ChatHistory.content_type, func.count(ChatHistory.chat_id))
+        .group_by(ChatHistory.content_type)
+        .all()
+    )
+    content_types = {t or "text": count for t, count in types_query}
+
+    p_min = func.least(ChatHistory.sender_id, ChatHistory.receiver_id)
+    p_max = func.greatest(ChatHistory.sender_id, ChatHistory.receiver_id)
+    total_threads = (
+        db.query(p_min, p_max)
+        .distinct()
+        .count()
+    )
+
+    top_senders = (
+        db.query(
+            User.user_id,
+            User.name,
+            User.email,
+            User.type_code,
+            func.count(ChatHistory.chat_id).label("sent_count")
+        )
+        .join(ChatHistory, ChatHistory.sender_id == User.user_id)
+        .group_by(User.user_id, User.name, User.email, User.type_code)
+        .order_by(func.count(ChatHistory.chat_id).desc())
+        .limit(6)
+        .all()
+    )
+
+    return {
+        "total_messages": total_messages,
+        "messages_today": messages_today,
+        "total_threads": total_threads,
+        "content_types": content_types,
+        "top_senders": [
+            {
+                "user_id": s.user_id,
+                "name": s.name,
+                "email": s.email,
+                "role": s.type_code,
+                "sent_count": s.sent_count,
+            }
+            for s in top_senders
+        ],
+    }
+
+
+@router.get("/api/chats/conversations")
+def get_conversations(
+    search: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """List conversation threads between any two users."""
+    from app.models.chat import ChatHistory
+    from app.models.user import User
+    from sqlalchemy import func, desc
+
+    p_min = func.least(ChatHistory.sender_id, ChatHistory.receiver_id).label("u1")
+    p_max = func.greatest(ChatHistory.sender_id, ChatHistory.receiver_id).label("u2")
+
+    threads_query = (
+        db.query(
+            p_min,
+            p_max,
+            func.count(ChatHistory.chat_id).label("msg_count"),
+            func.max(ChatHistory.sent_at).label("last_sent_at"),
+            func.max(ChatHistory.chat_id).label("last_chat_id"),
+        )
+        .group_by(p_min, p_max)
+        .order_by(desc("last_sent_at"))
+    )
+
+    raw_threads = threads_query.all()
+    if not raw_threads:
+        return {"total": 0, "conversations": []}
+
+    all_uids = set()
+    for t in raw_threads:
+        all_uids.add(t.u1)
+        all_uids.add(t.u2)
+
+    users_map = {
+        u.user_id: {
+            "user_id": u.user_id,
+            "name": u.name,
+            "email": u.email,
+            "role": u.type_code,
+            "code": getattr(u, "student_code", None) or getattr(u, "code", None),
+            "department": getattr(u, "department", None),
+        }
+        for u in db.query(User).filter(User.user_id.in_(all_uids)).all()
+    }
+
+    last_ids = [t.last_chat_id for t in raw_threads if t.last_chat_id]
+    msgs_map = {
+        m.chat_id: {
+            "message": m.message,
+            "content_type": m.content_type,
+            "sender_id": m.sender_id,
+            "sent_at": m.sent_at.isoformat() if m.sent_at else None,
+        }
+        for m in db.query(ChatHistory).filter(ChatHistory.chat_id.in_(last_ids)).all()
+    }
+
+    results = []
+    for t in raw_threads:
+        u1_info = users_map.get(t.u1, {"user_id": t.u1, "name": f"User #{t.u1}", "role": "STU"})
+        u2_info = users_map.get(t.u2, {"user_id": t.u2, "name": f"User #{t.u2}", "role": "STU"})
+        last_m = msgs_map.get(t.last_chat_id, {})
+
+        if search:
+            s_low = search.strip().lower()
+            match1 = s_low in u1_info["name"].lower() or s_low in (u1_info.get("email") or "").lower()
+            match2 = s_low in u2_info["name"].lower() or s_low in (u2_info.get("email") or "").lower()
+            if not (match1 or match2):
+                continue
+
+        results.append({
+            "user1": u1_info,
+            "user2": u2_info,
+            "total_messages": t.msg_count,
+            "last_message": last_m.get("message") or f"[{last_m.get('content_type', 'ملف')}]",
+            "last_message_type": last_m.get("content_type", "text"),
+            "last_message_sender_id": last_m.get("sender_id"),
+            "last_sent_at": t.last_sent_at.isoformat() if t.last_sent_at else None,
+        })
+
+    paginated = results[offset: offset + limit]
+    return {
+        "total": len(results),
+        "conversations": paginated,
+    }
+
+
+@router.get("/api/chats/thread")
+def get_chat_thread(
+    user1_id: int,
+    user2_id: int,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Retrieve full chat transcript between two specific users."""
+    from app.models.chat import ChatHistory
+    from app.models.user import User
+    from sqlalchemy import or_, and_, asc
+
+    condition = or_(
+        and_(ChatHistory.sender_id == user1_id, ChatHistory.receiver_id == user2_id),
+        and_(ChatHistory.sender_id == user2_id, ChatHistory.receiver_id == user1_id),
+    )
+
+    total = db.query(ChatHistory).filter(condition).count()
+    msgs = (
+        db.query(ChatHistory)
+        .filter(condition)
+        .order_by(asc(ChatHistory.sent_at))
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    u1 = db.query(User).filter(User.user_id == user1_id).first()
+    u2 = db.query(User).filter(User.user_id == user2_id).first()
+
+    return {
+        "user1": {
+            "id": u1.user_id if u1 else user1_id,
+            "name": u1.name if u1 else f"User #{user1_id}",
+            "role": u1.type_code if u1 else "STU",
+            "department": getattr(u1, "department", None),
+        },
+        "user2": {
+            "id": u2.user_id if u2 else user2_id,
+            "name": u2.name if u2 else f"User #{user2_id}",
+            "role": u2.type_code if u2 else "STU",
+            "department": getattr(u2, "department", None),
+        },
+        "total": total,
+        "messages": [
+            {
+                "chat_id": m.chat_id,
+                "sender_id": m.sender_id,
+                "receiver_id": m.receiver_id,
+                "message": m.message,
+                "content_type": m.content_type,
+                "file_url": m.file_url,
+                "file_name": m.file_name,
+                "file_size_bytes": m.file_size_bytes,
+                "voice_duration_seconds": m.voice_duration_seconds,
+                "status": m.status,
+                "is_deleted": m.is_deleted,
+                "sent_at": m.sent_at.isoformat() if m.sent_at else None,
+            }
+            for m in msgs
+        ],
+    }
+
+
+@router.get("/api/chats/recent")
+def get_recent_messages(
+    content_type: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=200),
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Live global stream of recent chat messages across all users."""
+    from app.models.chat import ChatHistory
+    from app.models.user import User
+
+    q = db.query(ChatHistory).order_by(ChatHistory.sent_at.desc())
+    if content_type:
+        q = q.filter(ChatHistory.content_type == content_type)
+
+    raw_msgs = q.limit(limit).all()
+    uids = set()
+    for m in raw_msgs:
+        uids.add(m.sender_id)
+        uids.add(m.receiver_id)
+
+    users_map = {
+        u.user_id: {"name": u.name, "role": u.type_code, "email": u.email}
+        for u in db.query(User).filter(User.user_id.in_(uids)).all()
+    }
+
+    return [
+        {
+            "chat_id": m.chat_id,
+            "sender": users_map.get(m.sender_id, {"name": f"User #{m.sender_id}", "role": "STU"}),
+            "receiver": users_map.get(m.receiver_id, {"name": f"User #{m.receiver_id}", "role": "STU"}),
+            "message": m.message,
+            "content_type": m.content_type,
+            "file_url": m.file_url,
+            "file_name": m.file_name,
+            "sent_at": m.sent_at.isoformat() if m.sent_at else None,
+        }
+        for m in raw_msgs
+    ]
+
+
+# ── AI Quiz Monitoring Endpoints ─────────────────────────────────────────────
+
+@router.get("/api/quizzes/stats")
+def get_quizzes_stats(
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Comprehensive AI Quiz usage statistics."""
+    from app.models.quiz_log import QuizLog
+    from app.models.user import User
+    from sqlalchemy import func
+    from app.db.database import engine
+
+    try:
+        QuizLog.__table__.create(bind=engine, checkfirst=True)
+    except Exception:
+        pass
+
+    total_quizzes = db.query(func.count(QuizLog.id)).scalar() or 0
+    total_questions = db.query(func.sum(QuizLog.num_questions)).scalar() or 0
+
+    diff_query = (
+        db.query(QuizLog.difficulty, func.count(QuizLog.id))
+        .group_by(QuizLog.difficulty)
+        .all()
+    )
+    diff_breakdown = {d or "medium": count for d, count in diff_query}
+
+    course_query = (
+        db.query(QuizLog.course_id, func.count(QuizLog.id))
+        .filter(QuizLog.course_id != None)
+        .group_by(QuizLog.course_id)
+        .order_by(func.count(QuizLog.id).desc())
+        .limit(6)
+        .all()
+    )
+    course_breakdown = [{ "course_id": c[0], "count": c[1] } for c in course_query]
+
+    top_users_query = (
+        db.query(
+            User.user_id,
+            User.name,
+            User.type_code,
+            func.count(QuizLog.id).label("quiz_count")
+        )
+        .join(QuizLog, QuizLog.user_id == User.user_id)
+        .group_by(User.user_id, User.name, User.type_code)
+        .order_by(func.count(QuizLog.id).desc())
+        .limit(5)
+        .all()
+    )
+
+    return {
+        "total_quizzes": total_quizzes,
+        "total_questions": total_questions,
+        "difficulty_breakdown": diff_breakdown,
+        "courses_breakdown": course_breakdown,
+        "top_users": [
+            {
+                "user_id": u.user_id,
+                "name": u.name,
+                "role": u.type_code,
+                "quiz_count": u.quiz_count,
+            }
+            for u in top_users_query
+        ],
+    }
+
+
+@router.get("/api/quizzes/logs")
+def get_quiz_logs(
+    search: Optional[str] = None,
+    course_id: Optional[str] = None,
+    difficulty: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """List generated quiz logs with author, course, topic, and difficulty."""
+    from app.models.quiz_log import QuizLog
+    from app.models.user import User
+    from app.db.database import engine
+
+    try:
+        QuizLog.__table__.create(bind=engine, checkfirst=True)
+    except Exception:
+        pass
+
+    q = db.query(QuizLog, User).outerjoin(User, QuizLog.user_id == User.user_id)
+
+    if course_id:
+        q = q.filter(QuizLog.course_id == course_id)
+    if difficulty:
+        q = q.filter(QuizLog.difficulty == difficulty)
+    if search:
+        s = f"%{search.strip()}%"
+        q = q.filter((QuizLog.topic.ilike(s)) | (User.name.ilike(s)) | (QuizLog.session_id.ilike(s)))
+
+    total = q.count()
+    rows = q.order_by(QuizLog.created_at.desc()).offset(offset).limit(limit).all()
+
+    return {
+        "total": total,
+        "quizzes": [
+            {
+                "id": log.id,
+                "session_id": log.session_id,
+                "topic": log.topic or "اختبار تفاعلي",
+                "course_id": log.course_id or "General",
+                "file_id": log.file_id,
+                "difficulty": log.difficulty,
+                "num_questions": log.num_questions,
+                "score": log.score,
+                "attempts_count": log.attempts_count,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+                "author": {
+                    "id": user.user_id,
+                    "name": user.name,
+                    "role": user.type_code,
+                    "email": user.email,
+                } if user else None,
+            }
+            for log, user in rows
+        ],
+    }
+
+
+@router.get("/api/quizzes/logs/{quiz_id}")
+def get_quiz_details(
+    quiz_id: int,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Inspect full questions, choices, answers, and explanations of a specific quiz."""
+    from app.models.quiz_log import QuizLog
+    from app.models.user import User
+    import json
+
+    row = db.query(QuizLog).filter(QuizLog.id == quiz_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Quiz log not found")
+
+    author = db.query(User).filter(User.user_id == row.user_id).first() if row.user_id else None
+
+    questions = []
+    if row.questions_json:
+        try:
+            questions = json.loads(row.questions_json)
+        except Exception:
+            questions = []
+
+    return {
+        "id": row.id,
+        "session_id": row.session_id,
+        "topic": row.topic,
+        "course_id": row.course_id,
+        "file_id": row.file_id,
+        "difficulty": row.difficulty,
+        "num_questions": row.num_questions,
+        "score": row.score,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+        "author": {
+            "name": author.name if author else "غير مسجل",
+            "role": author.type_code if author else "STU",
+            "email": author.email if author else "",
+        },
+        "questions": questions,
+    }
+
+
+# ── User Detailed Activity Monitoring ────────────────────────────────────────
+
+@router.get("/api/users/{user_id}/activity")
+def get_user_activity(
+    user_id: int,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Detailed activity breakdown for a specific user."""
+    from app.models.user import User
+    from app.models.chat import ChatHistory
+    from app.models.quiz_log import QuizLog
+    from app.models.content import MaterialFile
+    from app.models.attendance import AttendanceRecord
+    from sqlalchemy import func
+
+    user = user_svc.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    messages_sent = db.query(func.count(ChatHistory.chat_id)).filter(ChatHistory.sender_id == user_id).scalar() or 0
+    messages_received = db.query(func.count(ChatHistory.chat_id)).filter(ChatHistory.receiver_id == user_id).scalar() or 0
+    
+    quizzes_count = 0
+    try:
+        quizzes_count = db.query(func.count(QuizLog.id)).filter(QuizLog.user_id == user_id).scalar() or 0
+    except Exception:
+        pass
+
+    materials_uploaded = db.query(func.count(MaterialFile.file_id)).filter(MaterialFile.author_id == user_id).scalar() or 0
+    attendance_records = db.query(func.count(AttendanceRecord.record_id)).filter(AttendanceRecord.student_id == user_id).scalar() or 0
+
+    return {
+        "user_id": user.user_id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.type_code,
+        "department": getattr(user, "department", None),
+        "student_code": getattr(user, "student_code", None) or getattr(user, "code", None),
+        "created_at": user.created_at.isoformat() if getattr(user, "created_at", None) else None,
+        "activity": {
+            "messages_sent": messages_sent,
+            "messages_received": messages_received,
+            "quizzes_generated": quizzes_count,
+            "materials_uploaded": materials_uploaded,
+            "attendance_records": attendance_records,
+        }
+    }
+
+
+# ── Platform Analytics & Content Usage ("etc") ───────────────────────────────
+
+@router.get("/api/overview")
+def get_admin_overview(
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Unified command center metrics."""
+    from app.models.user import User
+    from app.models.chat import ChatHistory
+    from app.models.quiz_log import QuizLog
+    from app.models.content import MaterialFile
+    from app.models.attendance import AttendanceSession
+    from sqlalchemy import func
+    from datetime import datetime, date
+
+    today_start = datetime.combine(date.today(), datetime.min.time())
+
+    total_users = db.query(func.count(User.user_id)).scalar() or 0
+    students_count = db.query(func.count(User.user_id)).filter(User.type_code == "STU").scalar() or 0
+    teachers_count = db.query(func.count(User.user_id)).filter(User.type_code.in_(("DR", "TA"))).scalar() or 0
+    admins_count = db.query(func.count(User.user_id)).filter(User.type_code == "ADM").scalar() or 0
+
+    total_messages = db.query(func.count(ChatHistory.chat_id)).scalar() or 0
+    messages_today = db.query(func.count(ChatHistory.chat_id)).filter(ChatHistory.sent_at >= today_start).scalar() or 0
+
+    total_quizzes = 0
+    total_questions = 0
+    try:
+        from app.db.database import engine
+        QuizLog.__table__.create(bind=engine, checkfirst=True)
+        total_quizzes = db.query(func.count(QuizLog.id)).scalar() or 0
+        total_questions = db.query(func.sum(QuizLog.num_questions)).scalar() or 0
+    except Exception:
+        pass
+
+    total_files = db.query(func.count(MaterialFile.file_id)).scalar() or 0
+    total_bytes = db.query(func.sum(MaterialFile.file_size)).scalar() or 0
+    size_mb = round(total_bytes / (1024 * 1024), 2) if total_bytes else 0
+
+    total_sessions = db.query(func.count(AttendanceSession.session_id)).scalar() or 0
+    active_sessions = db.query(func.count(AttendanceSession.session_id)).filter(AttendanceSession.is_active == True).scalar() or 0
+
+    return {
+        "users": {
+            "total": total_users,
+            "students": students_count,
+            "teachers": teachers_count,
+            "admins": admins_count,
+        },
+        "chats": {
+            "total_messages": total_messages,
+            "messages_today": messages_today,
+        },
+        "quizzes": {
+            "total_quizzes": total_quizzes,
+            "total_questions": total_questions,
+        },
+        "materials": {
+            "total_files": total_files,
+            "size_mb": size_mb,
+        },
+        "attendance": {
+            "total_sessions": total_sessions,
+            "active_sessions": active_sessions,
+        }
+    }
+
+
+@router.get("/api/attendance/sessions")
+def get_attendance_sessions_admin(
+    limit: int = Query(50, ge=1, le=100),
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """List attendance sessions with attendees count for admin monitoring."""
+    from app.models.attendance import AttendanceSession, AttendanceRecord
+    from app.models.user import User
+    from sqlalchemy import func
+
+    sessions = (
+        db.query(
+            AttendanceSession,
+            User.name.label("teacher_name"),
+            func.count(AttendanceRecord.record_id).label("attendees_count")
+        )
+        .outerjoin(User, AttendanceSession.created_by == User.user_id)
+        .outerjoin(AttendanceRecord, AttendanceRecord.session_id == AttendanceSession.session_id)
+        .group_by(AttendanceSession.session_id, User.name)
+        .order_by(AttendanceSession.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        {
+            "session_id": s.AttendanceSession.session_id,
+            "course_id": s.AttendanceSession.material_id,
+            "title": s.AttendanceSession.title,
+            "teacher_name": s.teacher_name or "المعلم",
+            "is_active": s.AttendanceSession.is_active,
+            "duration_minutes": s.AttendanceSession.duration_minutes,
+            "created_at": s.AttendanceSession.created_at.isoformat() if s.AttendanceSession.created_at else None,
+            "attendees_count": s.attendees_count,
+        }
+        for s in sessions
+    ]
 
 
 # ── Web Page UI ───────────────────────────────────────────────────────────────
@@ -1271,8 +1864,13 @@ ${JSON.stringify(data, null, 2)}`;
 </html>"""
 
 
+_UM_HTML_FILE = os.path.join(os.path.dirname(__file__), "user_management.html")
+
 @router.get("", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
 def get_dashboard_html():
     """Serve the interactive web admin dashboard."""
+    if os.path.exists(_UM_HTML_FILE):
+        with open(_UM_HTML_FILE, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
     return HTMLResponse(content=DASHBOARD_HTML)

@@ -115,6 +115,44 @@ async def generate_quiz_endpoint(
     # ── Create session (server stores correct answers) ─────────────────────
     session_id = create_session(target_file_id, stored_questions)
 
+    # ── Log quiz generation in DB for Admin Monitoring ────────────────────
+    try:
+        from app.models.quiz_log import QuizLog
+        import json
+        q_data = [
+            {
+                "id": q.id,
+                "question": q.question,
+                "options": q.options,
+                "correct": q.correct,
+                "explanation": q.explanation
+            }
+            for q in stored_questions
+        ]
+        topic_title = getattr(payload, "title", None)
+        if not topic_title:
+            if target_file_id and target_file_id > 0:
+                topic_title = f"محاضرة #{target_file_id}"
+            elif payload.text_content:
+                topic_title = payload.text_content[:60].strip() + "..."
+            else:
+                topic_title = "اختبار ذكي تفاعلي"
+
+        log_entry = QuizLog(
+            session_id=session_id,
+            user_id=caller.user_id if caller else None,
+            course_id=material_id,
+            file_id=target_file_id if (target_file_id and target_file_id > 0) else None,
+            topic=topic_title,
+            difficulty="medium",
+            num_questions=len(stored_questions),
+            questions_json=json.dumps(q_data, ensure_ascii=False),
+        )
+        db.add(log_entry)
+        db.commit()
+    except Exception:
+        db.rollback()
+
     # ── Return questions WITHOUT correct answers ────────────────────────────
     public_questions = [
         QuizQuestion(
