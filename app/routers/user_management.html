@@ -545,26 +545,31 @@
     <!-- TAB 3: AI QUIZ USAGE & ANALYTICS                                        -->
     <!-- ======================================================================= -->
     <section id="section-tab-quizzes" class="hidden space-y-6">
-      <!-- Quiz Metric Cards -->
+      <!-- Gemini & Quiz Metric Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <!-- Card 1: Gemini Quizzes Count -->
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-purple-500/40 transition">
           <div class="flex items-center justify-between">
-            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">إجمالي الاختبارات</p>
-            <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-950/80 dark:text-purple-400 flex items-center justify-center text-sm">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">إجمالي اختبارات Gemini</p>
+            <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-950/80 dark:text-purple-400 flex items-center justify-center text-sm shadow-sm">
               <i class="fa-solid fa-wand-magic-sparkles"></i>
             </div>
           </div>
           <div class="mt-3 flex items-baseline gap-2">
             <h3 id="stat-quiz-total" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
-            <span class="text-xs font-bold text-purple-600 dark:text-purple-400">اختبار AI</span>
+            <span class="text-xs font-bold text-purple-600 dark:text-purple-400">اختبار ذكي</span>
           </div>
-          <p class="text-[11px] text-slate-400 mt-1">تم توليدها بنموذج Gemini 2.5</p>
+          <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
+            <span>اليوم: <strong id="stat-quiz-today" class="text-purple-600 dark:text-purple-400 font-mono">0</strong> جديد</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-semibold">Gemini 2.5 Flash</span>
+          </div>
         </div>
 
-        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <!-- Card 2: Total Questions Generated -->
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-blue-500/40 transition">
           <div class="flex items-center justify-between">
-            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">إجمالي الأسئلة</p>
-            <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950/80 dark:text-blue-400 flex items-center justify-center text-sm">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">إجمالي بنك الأسئلة</p>
+            <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950/80 dark:text-blue-400 flex items-center justify-center text-sm shadow-sm">
               <i class="fa-solid fa-clipboard-question"></i>
             </div>
           </div>
@@ -572,46 +577,154 @@
             <h3 id="stat-quiz-questions" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
             <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">سؤال تدريبي</span>
           </div>
-          <p class="text-[11px] text-slate-400 mt-1">أسئلة اختيار من متعدد مع الإجابات والشروحات</p>
+          <p class="text-[11px] text-slate-400 mt-1">
+            طلاب: <strong id="stat-quiz-stu-count" class="text-blue-600 font-mono">0</strong> • معلمون: <strong id="stat-quiz-teach-count" class="font-mono">0</strong>
+          </p>
         </div>
 
-        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <!-- Card 3: Student Average Score & Pass Rate -->
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-emerald-500/40 transition">
           <div class="flex items-center justify-between">
-            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">توزيع الصعوبة</p>
-            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center text-sm">
-              <i class="fa-solid fa-gauge-high"></i>
-            </div>
-          </div>
-          <div class="mt-2 space-y-1 text-[11px]">
-            <div class="flex justify-between font-bold">
-              <span class="text-emerald-600 dark:text-emerald-400">سهل: <span id="quiz-diff-easy">0</span></span>
-              <span class="text-amber-600 dark:text-amber-400">متوسط: <span id="quiz-diff-medium">0</span></span>
-              <span class="text-rose-600 dark:text-rose-400">صعب: <span id="quiz-diff-hard">0</span></span>
-            </div>
-            <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex">
-              <div id="bar-diff-easy" class="bg-emerald-500 h-full" style="width: 33%"></div>
-              <div id="bar-diff-medium" class="bg-amber-500 h-full" style="width: 34%"></div>
-              <div id="bar-diff-hard" class="bg-rose-500 h-full" style="width: 33%"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
-          <div class="flex items-center justify-between">
-            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">أكثر المقررات استخداماً</p>
-            <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-950/80 dark:text-amber-400 flex items-center justify-center text-sm">
-              <i class="fa-solid fa-graduation-cap"></i>
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">متوسط درجات الطلاب</p>
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center text-sm shadow-sm">
+              <i class="fa-solid fa-award"></i>
             </div>
           </div>
           <div class="mt-3 flex items-baseline gap-2">
-            <h3 id="stat-quiz-top-course" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white truncate">--</h3>
+            <h3 id="stat-quiz-avg-score" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--%</h3>
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">متوسط التقييم</span>
           </div>
-          <p class="text-[11px] text-slate-400 mt-1">توليد اختبارات ومحاضرات</p>
+          <p class="text-[11px] text-slate-400 mt-1">
+            نسبة الاجتياز: <strong id="stat-quiz-pass-rate" class="text-emerald-600 dark:text-emerald-400 font-mono">--%</strong>
+          </p>
+        </div>
+
+        <!-- Card 4: Tested Students -->
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-amber-500/40 transition">
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">الطلاب المشاركون</p>
+            <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-950/80 dark:text-amber-400 flex items-center justify-center text-sm shadow-sm">
+              <i class="fa-solid fa-user-graduate"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <h3 id="stat-quiz-active-students" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
+            <span class="text-xs font-bold text-amber-600 dark:text-amber-400">طالب خاض اختبارات</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">
+            إجمالي التقييمات: <strong id="stat-quiz-total-evals" class="text-slate-600 dark:text-slate-300 font-mono">0</strong>
+          </p>
         </div>
       </div>
 
-      <!-- Quizzes Logs Table Card -->
-      <div class="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-4 p-5">
+      <!-- Difficulty & Course Breakdown Ribbon -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex-1 w-full space-y-1.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-gauge-high text-purple-600"></i> توزيع مستويات صعوبة الأسئلة
+            </span>
+            <div class="flex items-center gap-3 font-semibold text-[11px]">
+              <span class="text-emerald-600 dark:text-emerald-400">سهل: <strong id="quiz-diff-easy">0</strong></span>
+              <span class="text-amber-600 dark:text-amber-400">متوسط: <strong id="quiz-diff-medium">0</strong></span>
+              <span class="text-rose-600 dark:text-rose-400">صعب: <strong id="quiz-diff-hard">0</strong></span>
+            </div>
+          </div>
+          <div class="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex">
+            <div id="bar-diff-easy" class="bg-emerald-500 h-full transition-all duration-500" style="width: 33%"></div>
+            <div id="bar-diff-medium" class="bg-amber-500 h-full transition-all duration-500" style="width: 34%"></div>
+            <div id="bar-diff-hard" class="bg-rose-500 h-full transition-all duration-500" style="width: 33%"></div>
+          </div>
+        </div>
+        <div class="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden md:block"></div>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="text-slate-500 dark:text-slate-400 font-semibold">أكثر المقررات استخداماً:</span>
+          <span id="stat-quiz-top-course" class="px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800">--</span>
+        </div>
+      </div>
+
+      <!-- Sub-Navigation Pills (Students Analysis vs All Gemini Quizzes Log) -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
+          <button 
+            id="btn-subview-students" 
+            onclick="switchQuizSubView('students')" 
+            class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/20 flex items-center gap-2 transition shrink-0"
+          >
+            <i class="fa-solid fa-user-graduate"></i>
+            <span>تحليل أداء ونتائج الطلاب</span>
+            <span id="badge-students-tested-count" class="px-2 py-0.5 rounded-full text-[10px] bg-white/20 font-mono">0</span>
+          </button>
+          <button 
+            id="btn-subview-logs" 
+            onclick="switchQuizSubView('logs')" 
+            class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center gap-2 transition shrink-0"
+          >
+            <i class="fa-solid fa-list-check"></i>
+            <span>سجل كافة اختبارات Gemini المولدة</span>
+            <span id="badge-all-quizzes-count" class="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 text-purple-700 dark:bg-purple-950 font-mono">0</span>
+          </button>
+        </div>
+        <button onclick="loadQuizzesMonitoring()" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition self-end sm:self-auto" title="تحديث البيانات">
+          <i class="fa-solid fa-arrows-rotate text-xs"></i>
+        </button>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- SUB-VIEW 1: STUDENTS QUIZ PERFORMANCE ANALYSIS                        -->
+      <!-- ===================================================================== -->
+      <div id="subview-quiz-students" class="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-4 p-5">
+        
+        <!-- Filter & Search for Students -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="relative flex-1 w-full sm:w-auto">
+            <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input 
+              type="text" 
+              id="students-quiz-search-input"
+              oninput="handleStudentsQuizFilter()"
+              placeholder="ابحث باسم الطالب أو البريد أو الكود الأكاديمي..."
+              class="w-full pr-8 pl-3 py-2 text-xs rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500"
+            >
+          </div>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <select id="students-quiz-dept-filter" onchange="handleStudentsQuizFilter()" class="px-3 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none font-semibold">
+              <option value="">جميع الأقسام والتخصصات</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Students Performance Table -->
+        <div class="overflow-x-auto min-h-[300px]">
+          <table class="w-full text-right text-xs sm:text-sm">
+            <thead class="bg-slate-100/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
+              <tr>
+                <th scope="col" class="py-3 px-4">الطالب</th>
+                <th scope="col" class="py-3 px-4">القسم / التخصص</th>
+                <th scope="col" class="py-3 px-4 text-center">الاختبارات المنجزة</th>
+                <th scope="col" class="py-3 px-4">متوسط الدرجات</th>
+                <th scope="col" class="py-3 px-4 text-center">أعلى درجة</th>
+                <th scope="col" class="py-3 px-4 text-center">تقييم الأداء</th>
+                <th scope="col" class="py-3 px-4">آخر نشاط</th>
+                <th scope="col" class="py-3 px-4 text-center">تقرير تفصيلي</th>
+              </tr>
+            </thead>
+            <tbody id="students-quiz-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tr>
+                <td colspan="8" class="py-12 text-center text-slate-400">
+                  <i class="fa-solid fa-circle-notch fa-spin text-2xl text-purple-600 mb-2"></i>
+                  <p>جاري تحميل تحليلات أداء الطلاب في الاختبارات...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- SUB-VIEW 2: ALL GEMINI QUIZZES LOG                                    -->
+      <!-- ===================================================================== -->
+      <div id="subview-quiz-logs" class="hidden glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-4 p-5">
         
         <!-- Filter and Search -->
         <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -621,7 +734,7 @@
               type="text" 
               id="quizzes-search-input"
               oninput="handleQuizzesFilter()"
-              placeholder="ابحث بموضوع الاختبار أو اسم الطالب/المعلم..."
+              placeholder="ابحث بموضوع الاختبار أو اسم الطالب/المعلم أو معرف الجلسة..."
               class="w-full pr-8 pl-3 py-2 text-xs rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500"
             >
           </div>
@@ -632,9 +745,6 @@
               <option value="medium">متوسط (Medium)</option>
               <option value="hard">صعب (Hard)</option>
             </select>
-            <button onclick="loadQuizzesMonitoring()" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition" title="تحديث">
-              <i class="fa-solid fa-arrows-rotate text-xs"></i>
-            </button>
           </div>
         </div>
 
@@ -648,13 +758,14 @@
                 <th scope="col" class="py-3 px-4">المقرر والموضوع</th>
                 <th scope="col" class="py-3 px-4">الصعوبة</th>
                 <th scope="col" class="py-3 px-4">عدد الأسئلة</th>
+                <th scope="col" class="py-3 px-4">الدرجة</th>
                 <th scope="col" class="py-3 px-4">التاريخ والوقت</th>
                 <th scope="col" class="py-3 px-4 text-center">استعراض الاختبار</th>
               </tr>
             </thead>
             <tbody id="quizzes-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60">
               <tr>
-                <td colspan="7" class="py-12 text-center text-slate-400">
+                <td colspan="8" class="py-12 text-center text-slate-400">
                   <i class="fa-solid fa-circle-notch fa-spin text-2xl text-purple-600 mb-2"></i>
                   <p>جاري تحميل سجلات الاختبارات الذكية...</p>
                 </td>
@@ -662,7 +773,6 @@
             </tbody>
           </table>
         </div>
-
       </div>
     </section>
     <!-- END OF TAB 3: QUIZZES -->
@@ -1395,6 +1505,66 @@
       </div>
     </div>
   </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: STUDENT QUIZ PERFORMANCE DETAILS & AUDIT                           -->
+  <!-- ========================================================================= -->
+  <div id="modal-student-quiz-details" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div>
+            <h3 id="sq-modal-name" class="font-bold text-base text-slate-900 dark:text-white">تقرير اختبارات الطالب</h3>
+            <p id="sq-modal-sub" class="text-xs text-slate-400">كشف درجات الاختبارات التفاعلية وسجل المحاولات</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-student-quiz-details')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Student Info Badges Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-3 shrink-0">
+        <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900 text-center">
+          <p class="text-[11px] text-slate-500 font-semibold">الاختبارات المنجزة</p>
+          <h4 id="sq-stat-quizzes-count" class="text-lg font-black text-purple-700 dark:text-purple-300 mt-0.5">0</h4>
+        </div>
+        <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-center">
+          <p class="text-[11px] text-slate-500 font-semibold">متوسط الدرجات</p>
+          <h4 id="sq-stat-avg-score" class="text-lg font-black text-emerald-700 dark:text-emerald-300 mt-0.5">--%</h4>
+        </div>
+        <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 text-center">
+          <p class="text-[11px] text-slate-500 font-semibold">أعلى درجة</p>
+          <h4 id="sq-stat-highest-score" class="text-lg font-black text-blue-700 dark:text-blue-300 mt-0.5">--%</h4>
+        </div>
+        <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-center">
+          <p class="text-[11px] text-slate-500 font-semibold">القسم الأكاديمي</p>
+          <h4 id="sq-stat-dept" class="text-xs font-bold text-amber-700 dark:text-amber-300 mt-1 truncate">عام</h4>
+        </div>
+      </div>
+
+      <!-- Quizzes List (Scrollable) -->
+      <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+        <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+          <i class="fa-solid fa-list-check text-purple-600"></i> سجل الاختبارات التفصيلي:
+        </h4>
+        <div id="sq-quizzes-list-container" class="space-y-2.5">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+        <span class="text-xs text-slate-400 font-mono" id="sq-modal-email">--</span>
+        <button type="button" onclick="closeModal('modal-student-quiz-details')" class="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold text-xs hover:bg-slate-900 transition">
+          إغلاق
+        </button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- ========================================================================= -->
   <!-- MODAL: IMAGE PREVIEW                                                      -->
@@ -2529,19 +2699,47 @@
       }
     }
 
-    // ── AI QUIZ USAGE & ANALYTICS ─────────────────────────────────────────────
+        // ── AI QUIZ USAGE & ANALYTICS ─────────────────────────────────────────────
     let allQuizLogsList = [];
+    let allStudentsQuizList = [];
+    let currentQuizSubView = 'students';
+
+    function switchQuizSubView(view) {
+      currentQuizSubView = view;
+      const btnStudents = document.getElementById('btn-subview-students');
+      const btnLogs = document.getElementById('btn-subview-logs');
+      const viewStudents = document.getElementById('subview-quiz-students');
+      const viewLogs = document.getElementById('subview-quiz-logs');
+
+      if (view === 'students') {
+        viewStudents.classList.remove('hidden');
+        viewLogs.classList.add('hidden');
+        btnStudents.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/20 flex items-center gap-2 transition shrink-0';
+        btnLogs.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center gap-2 transition shrink-0';
+      } else {
+        viewStudents.classList.add('hidden');
+        viewLogs.classList.remove('hidden');
+        btnLogs.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/20 flex items-center gap-2 transition shrink-0';
+        btnStudents.className = 'px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center gap-2 transition shrink-0';
+      }
+    }
 
     async function loadQuizzesMonitoring() {
       try {
+        // 1. Fetch Stats & Counters
         const resStats = await fetch(`${API_BASE}/admin/api/quizzes/stats`, { headers: getAuthHeaders() });
         if (resStats.ok) {
           const stats = await resStats.json();
           document.getElementById('stat-quiz-total').innerText = stats.total_quizzes || 0;
+          document.getElementById('stat-quiz-today').innerText = stats.today_quizzes || 0;
           document.getElementById('stat-quiz-questions').innerText = stats.total_questions || 0;
-          
+          document.getElementById('stat-quiz-stu-count').innerText = stats.students_quizzes_count || 0;
+          document.getElementById('stat-quiz-teach-count').innerText = stats.teachers_quizzes_count || 0;
+
           const badgeQ = document.getElementById('badge-quizzes-count');
           if (badgeQ) badgeQ.innerText = stats.total_quizzes || 0;
+          const badgeAllQ = document.getElementById('badge-all-quizzes-count');
+          if (badgeAllQ) badgeAllQ.innerText = stats.total_quizzes || 0;
 
           // Top course
           const courses = stats.courses_breakdown || [];
@@ -2567,6 +2765,35 @@
           document.getElementById('bar-diff-hard').style.width = `${Math.round((hard / totalDiff) * 100)}%`;
         }
 
+        // 2. Fetch Students Quiz Analysis
+        const resStu = await fetch(`${API_BASE}/admin/api/quizzes/students-analysis`, { headers: getAuthHeaders() });
+        if (resStu.ok) {
+          const stuData = await resStu.json();
+          const summary = stuData.summary || {};
+          allStudentsQuizList = stuData.students || [];
+
+          document.getElementById('stat-quiz-avg-score').innerText = summary.overall_avg_score ? `${summary.overall_avg_score}%` : '0%';
+          document.getElementById('stat-quiz-pass-rate').innerText = summary.pass_rate ? `${summary.pass_rate}%` : '0%';
+          document.getElementById('stat-quiz-active-students').innerText = summary.total_students_active || 0;
+          document.getElementById('stat-quiz-total-evals').innerText = summary.total_evaluations || 0;
+
+          const badgeStu = document.getElementById('badge-students-tested-count');
+          if (badgeStu) badgeStu.innerText = summary.total_students_active || 0;
+
+          // Populate department filter options
+          const depts = [...new Set(allStudentsQuizList.map(s => s.department).filter(Boolean))];
+          const deptSelect = document.getElementById('students-quiz-dept-filter');
+          if (deptSelect) {
+            const currentVal = deptSelect.value;
+            deptSelect.innerHTML = '<option value="">جميع الأقسام والتخصصات</option>' + 
+              depts.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+            deptSelect.value = currentVal;
+          }
+
+          renderStudentsQuizTable(allStudentsQuizList);
+        }
+
+        // 3. Fetch All Quizzes Logs
         const resLogs = await fetch(`${API_BASE}/admin/api/quizzes/logs?limit=100`, { headers: getAuthHeaders() });
         if (resLogs.ok) {
           const data = await resLogs.json();
@@ -2578,12 +2805,196 @@
       }
     }
 
+    function renderStudentsQuizTable(students) {
+      const tbody = document.getElementById('students-quiz-table-body');
+      if (!tbody) return;
+
+      if (!students || students.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="py-12 text-center text-slate-400">
+              <i class="fa-solid fa-user-graduate text-2xl text-slate-300 dark:text-slate-700 mb-2"></i>
+              <p>لا توجد بيانات اختبارات للطلاب حالياً</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = students.map(s => {
+        const scoreVal = s.avg_score !== null && s.avg_score !== undefined ? s.avg_score : null;
+        let scoreBarColor = 'bg-emerald-500';
+        let scoreTextColor = 'text-emerald-600 dark:text-emerald-400';
+        let statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">لم يختبر بعد</span>';
+
+        if (scoreVal !== null) {
+          if (scoreVal >= 85) {
+            scoreBarColor = 'bg-emerald-500';
+            scoreTextColor = 'text-emerald-600 dark:text-emerald-400';
+            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">🌟 متميز (ممتاز)</span>';
+          } else if (scoreVal >= 60) {
+            scoreBarColor = 'bg-blue-500';
+            scoreTextColor = 'text-blue-600 dark:text-blue-400';
+            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">✅ ناجح</span>';
+          } else {
+            scoreBarColor = 'bg-rose-500';
+            scoreTextColor = 'text-rose-600 dark:text-rose-400';
+            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">⚠️ يحتاج متابعة</span>';
+          }
+        }
+
+        const initial = s.name ? s.name.charAt(0).toUpperCase() : 'S';
+
+        return `
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-700 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-sm">
+                  ${initial}
+                </div>
+                <div>
+                  <div class="font-bold text-slate-900 dark:text-white">${escapeHtml(s.name)}</div>
+                  <div class="text-[10px] text-slate-400 font-mono-code">${escapeHtml(s.email)}</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 px-4">
+              <span class="px-2 py-0.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                ${escapeHtml(s.department || 'عام')}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-center font-bold font-mono text-purple-700 dark:text-purple-300">
+              ${s.quizzes_count}
+            </td>
+            <td class="py-3 px-4">
+              <div class="space-y-1 w-32">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="font-extrabold ${scoreTextColor} font-mono">${scoreVal !== null ? `${scoreVal}%` : '--'}</span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                  <div class="${scoreBarColor} h-full transition-all duration-300" style="width: ${scoreVal || 0}%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-center font-bold font-mono text-xs text-slate-800 dark:text-slate-200">
+              ${s.highest_score !== null && s.highest_score !== undefined ? `${s.highest_score}%` : '--'}
+            </td>
+            <td class="py-3 px-4 text-center">${statusBadge}</td>
+            <td class="py-3 px-4 text-slate-400 text-xs font-mono">${formatChatTime(s.last_active)}</td>
+            <td class="py-3 px-4 text-center">
+              <button onclick="openStudentQuizDetails(${s.student_id})" class="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-950 dark:text-purple-300 dark:hover:bg-purple-900 font-bold text-xs transition flex items-center gap-1.5 mx-auto border border-purple-200 dark:border-purple-800 shadow-sm">
+                <i class="fa-solid fa-chart-pie text-[11px]"></i>
+                <span>تقرير الاختبارات</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function handleStudentsQuizFilter() {
+      const q = (document.getElementById('students-quiz-search-input').value || '').trim().toLowerCase();
+      const dept = (document.getElementById('students-quiz-dept-filter').value || '').trim();
+
+      let filtered = allStudentsQuizList;
+      if (dept) {
+        filtered = filtered.filter(s => s.department === dept);
+      }
+      if (q) {
+        filtered = filtered.filter(s => 
+          (s.name && s.name.toLowerCase().includes(q)) ||
+          (s.email && s.email.toLowerCase().includes(q))
+        );
+      }
+      renderStudentsQuizTable(filtered);
+    }
+
+    async function openStudentQuizDetails(studentId) {
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/quizzes/students/${studentId}`, { headers: getAuthHeaders() });
+        if (!res.ok) throw new Error('فشل جلب تفاصيل اختبارات الطالب');
+        const data = await res.json();
+
+        const st = data.student || {};
+        const quizzes = data.quizzes || [];
+        const attempts = data.attempts || [];
+
+        document.getElementById('sq-modal-name').innerText = `تقرير اختبارات: ${st.name || 'طالب'}`;
+        document.getElementById('sq-modal-sub').innerText = `القسم: ${st.department || 'عام'} • الدور: ${st.role || 'طالب'}`;
+        document.getElementById('sq-modal-email').innerText = st.email || '--';
+
+        document.getElementById('sq-stat-quizzes-count').innerText = quizzes.length;
+        document.getElementById('sq-stat-dept').innerText = st.department || 'عام';
+
+        // Calculate scores
+        const scoredQuizzes = quizzes.filter(q => q.score !== null && q.score !== undefined);
+        if (scoredQuizzes.length > 0) {
+          const rawAvg = scoredQuizzes.reduce((acc, q) => acc + q.score, 0) / scoredQuizzes.length;
+          const avg = Math.round(rawAvg * 10) / 10;
+          const max = Math.max(...scoredQuizzes.map(q => q.score));
+          document.getElementById('sq-stat-avg-score').innerText = `${avg}%`;
+          document.getElementById('sq-stat-highest-score').innerText = `${max}%`;
+        } else {
+          document.getElementById('sq-stat-avg-score').innerText = '--';
+          document.getElementById('sq-stat-highest-score').innerText = '--';
+        }
+
+        const container = document.getElementById('sq-quizzes-list-container');
+        if (quizzes.length === 0) {
+          container.innerHTML = `
+            <div class="py-8 text-center text-slate-400 text-xs">
+              <i class="fa-solid fa-clipboard-question text-2xl text-slate-300 dark:text-slate-700 mb-1.5"></i>
+              <p>لم يقم هذا الطالب بإجراء أو توليد أي اختبارات بعد</p>
+            </div>
+          `;
+        } else {
+          container.innerHTML = quizzes.map(q => {
+            const sc = q.score;
+            let scoreBadge = '<span class="text-xs text-slate-400 font-mono">قيد المحاولة</span>';
+            if (sc !== null && sc !== undefined) {
+              const color = sc >= 80 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : (sc >= 50 ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300');
+              scoreBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-black ${color} font-mono">${sc}%</span>`;
+            }
+
+            return `
+              <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 hover:border-purple-300 dark:hover:border-purple-800 transition">
+                <div class="space-y-1 min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">${escapeHtml(q.course_id || 'عام')}</span>
+                    <strong class="text-xs text-slate-900 dark:text-white truncate block">${escapeHtml(q.topic || 'اختبار تفاعلي')}</strong>
+                  </div>
+                  <div class="flex items-center gap-3 text-[11px] text-slate-400">
+                    <span>${q.num_questions} أسئلة</span>
+                    <span>•</span>
+                    <span>الصعوبة: ${q.difficulty}</span>
+                    <span>•</span>
+                    <span class="font-mono">${formatChatTime(q.created_at)}</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  ${scoreBadge}
+                  <button onclick="inspectQuiz(${q.id})" class="p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm" title="فحص محتوى الاختبار">
+                    <i class="fa-solid fa-eye text-[11px]"></i>
+                    <span class="hidden sm:inline">فحص</span>
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+
+        openModal('modal-student-quiz-details');
+      } catch (err) {
+        showToast(err.message || 'فشل جلب تفاصيل الطالب', 'error');
+      }
+    }
+
     function renderQuizzesTable(quizzes) {
       const tbody = document.getElementById('quizzes-table-body');
       if (!quizzes || quizzes.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="7" class="py-12 text-center text-slate-400">
+            <td colspan="8" class="py-12 text-center text-slate-400">
               <i class="fa-solid fa-wand-magic-sparkles text-2xl text-slate-300 dark:text-slate-700 mb-2"></i>
               <p>لا توجد اختبارات مسجلة بعد</p>
             </td>
@@ -2602,6 +3013,10 @@
         const authorName = q.author ? q.author.name : 'طالب / مستخدم';
         const authorRole = q.author ? (q.author.role === 'DR' ? 'أستاذ' : q.author.role === 'TA' ? 'مهندس' : 'طالب') : 'طالب';
 
+        const scoreBadge = q.score !== null && q.score !== undefined
+          ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${q.score >= 50 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'} font-mono">${q.score}%</span>`
+          : '<span class="text-slate-400 text-xs font-mono">--</span>';
+
         return `
           <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
             <td class="py-3 px-4 font-mono-code text-xs text-slate-400">${q.session_id.substring(0, 8)}...</td>
@@ -2615,6 +3030,7 @@
             </td>
             <td class="py-3 px-4">${diffBadge}</td>
             <td class="py-3 px-4 font-bold font-mono">${q.num_questions} أسئلة</td>
+            <td class="py-3 px-4 text-center">${scoreBadge}</td>
             <td class="py-3 px-4 text-slate-400 text-xs font-mono">${formatChatTime(q.created_at)}</td>
             <td class="py-3 px-4 text-center">
               <button onclick="inspectQuiz(${q.id})" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs hover:opacity-95 shadow-sm transition flex items-center gap-1.5 mx-auto">
@@ -2639,13 +3055,15 @@
         filtered = filtered.filter(item => 
           (item.topic && item.topic.toLowerCase().includes(q)) ||
           (item.course_id && item.course_id.toLowerCase().includes(q)) ||
+          (item.session_id && item.session_id.toLowerCase().includes(q)) ||
           (item.author && item.author.name && item.author.name.toLowerCase().includes(q))
         );
       }
       renderQuizzesTable(filtered);
     }
 
-    async function inspectQuiz(quizId) {
+
+async function inspectQuiz(quizId) {
       try {
         const res = await fetch(`${API_BASE}/admin/api/quizzes/logs/${quizId}`, { headers: getAuthHeaders() });
         if (!res.ok) throw new Error('فشل جلب تفاصيل الاختبار');

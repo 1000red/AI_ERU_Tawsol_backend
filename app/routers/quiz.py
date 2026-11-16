@@ -12,6 +12,8 @@ from app.schemas.quiz import (
     QuizGenerateResponse,
     QuizEvaluateRequest,
     QuizEvaluateResponse,
+    QuizSubmitRequest,
+    QuizSubmitResponse,
     QuizQuestion,
     QuizOption,
 )
@@ -47,13 +49,14 @@ async def generate_quiz_endpoint(
 
     target_file_id = body.file_id or 0
     text_to_process = ""
+    material_file: MaterialFile | None = None
 
     # Support generating directly from text_content
     if body.text_content and len(body.text_content.strip()) >= 50:
         text_to_process = body.text_content.strip()
     elif body.file_id:
         # ── Load the file ──────────────────────────────────────────────────────
-        material_file: MaterialFile | None = (
+        material_file = (
             db.query(MaterialFile)
             .filter(MaterialFile.file_id == body.file_id)
             .first()
@@ -115,7 +118,7 @@ async def generate_quiz_endpoint(
     # ── Create session (server stores correct answers) ─────────────────────
     session_id = create_session(target_file_id, stored_questions)
 
-    # ── Log quiz generation in DB for Admin Monitoring ────────────────────
+    # ── Log quiz generation in DB for Admin Monitoring & Gemini Accounting ─
     try:
         from app.models.quiz_log import QuizLog
         import json
@@ -129,28 +132,38 @@ async def generate_quiz_endpoint(
             }
             for q in stored_questions
         ]
-        topic_title = getattr(payload, "title", None)
+        topic_title = getattr(body, "topic", None)
         if not topic_title:
-            if target_file_id and target_file_id > 0:
+            if material_file and getattr(material_file, "title", None):
+                topic_title = material_file.title
+            elif target_file_id and target_file_id > 0:
                 topic_title = f"محاضرة #{target_file_id}"
-            elif payload.text_content:
-                topic_title = payload.text_content[:60].strip() + "..."
+            elif body.text_content:
+                topic_title = body.text_content[:60].strip() + "..."
             else:
                 topic_title = "اختبار ذكي تفاعلي"
+
+        course_val = None
+        if material_file and getattr(material_file, "material_id", None):
+            course_val = material_file.material_id
+
+        diff_val = getattr(body, "difficulty", None) or "medium"
 
         log_entry = QuizLog(
             session_id=session_id,
             user_id=caller.user_id if caller else None,
-            course_id=material_id,
+            course_id=course_val,
             file_id=target_file_id if (target_file_id and target_file_id > 0) else None,
             topic=topic_title,
-            difficulty="medium",
+            difficulty=diff_val,
             num_questions=len(stored_questions),
             questions_json=json.dumps(q_data, ensure_ascii=False),
         )
         db.add(log_entry)
         db.commit()
-    except Exception:
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").error(f"Failed to log quiz in DB: {e}")
         db.rollback()
 
     # ── Return questions WITHOUT correct answers ────────────────────────────
@@ -173,6 +186,7 @@ async def generate_quiz_endpoint(
 @router.post("/evaluate", response_model=QuizEvaluateResponse)
 def evaluate_answer(
     body: QuizEvaluateRequest,
+    db: Session = Depends(get_db),
 ):
     question = get_question(body.session_id, body.question_id)
     if question is None:
@@ -183,11 +197,122 @@ def evaluate_answer(
 
     is_correct = (body.selected.strip().upper() == question.correct) if (body.selected and body.selected.strip()) else False
 
+    # Increment attempt count on QuizLog
+    try:
+        from app.models.quiz_log import QuizLog
+        log_entry = db.query(QuizLog).filter(QuizLog.session_id == body.session_id).first()
+        if log_entry:
+            log_entry.attempts_count = (log_entry.attempts_count or 0) + 1
+            db.commit()
+    except Exception:
+        db.rollback()
+
     return QuizEvaluateResponse(
         correct=is_correct,
         correct_answer=question.correct,
         explanation=question.explanation,
     )
+
+
+@router.post("/submit", response_model=QuizSubmitResponse)
+def submit_quiz_endpoint(
+    body: QuizSubmitRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Submits student answers for a complete quiz session, grades the answers,
+    updates quiz log score & attempts, and logs the attempt into quiz_student_attempts.
+    """
+    import json
+    from app.models.quiz_log import QuizLog, QuizStudentAttempt
+    from app.services.quiz_service.session import _store
+
+    questions_list = []
+    session = _store.get(body.session_id)
+    if session and not session.is_expired():
+        for q in session.questions:
+            questions_list.append({
+                "id": q.id,
+                "question": q.question,
+                "options": q.options,
+                "correct": q.correct,
+                "explanation": q.explanation,
+            })
+
+    quiz_log = db.query(QuizLog).filter(QuizLog.session_id == body.session_id).first()
+    if not questions_list and quiz_log and quiz_log.questions_json:
+        try:
+            questions_list = json.loads(quiz_log.questions_json)
+        except Exception:
+            pass
+
+    if not questions_list:
+        raise HTTPException(
+            status_code=404,
+            detail="Quiz session not found or has expired. Please generate a new quiz.",
+        )
+
+    total_questions = len(questions_list)
+    correct_count = 0
+    details = []
+
+    for q in questions_list:
+        q_id = str(q.get("id"))
+        selected_opt = body.answers.get(q_id)
+        if selected_opt is None and q_id.isdigit():
+            selected_opt = body.answers.get(int(q_id))
+        selected_clean = (str(selected_opt).strip().upper()) if selected_opt else ""
+        correct_opt = str(q.get("correct", "")).strip().upper()
+        is_correct = (selected_clean == correct_opt) if selected_clean else False
+        if is_correct:
+            correct_count += 1
+        details.append({
+            "id": int(q_id) if q_id.isdigit() else q_id,
+            "question": q.get("question"),
+            "selected": selected_clean,
+            "correct_answer": correct_opt,
+            "is_correct": is_correct,
+            "explanation": q.get("explanation", ""),
+        })
+
+    score_pct = round((correct_count / total_questions) * 100.0, 1) if total_questions > 0 else 0.0
+    passed = score_pct >= 50.0
+
+    # Record or update in DB
+    try:
+        if quiz_log:
+            quiz_log.score = score_pct
+            quiz_log.attempts_count = (quiz_log.attempts_count or 0) + 1
+            if body.student_id and not quiz_log.user_id:
+                quiz_log.user_id = body.student_id
+
+        # Save student attempt
+        if body.student_id:
+            attempt = QuizStudentAttempt(
+                session_id=body.session_id,
+                quiz_log_id=quiz_log.id if quiz_log else None,
+                student_id=body.student_id,
+                score=score_pct,
+                total_questions=total_questions,
+                correct_count=correct_count,
+                answers_json=json.dumps(body.answers, ensure_ascii=False),
+            )
+            db.add(attempt)
+        db.commit()
+    except Exception as e:
+        import logging
+        logging.getLogger("uvicorn.error").error(f"Error persisting quiz submit: {e}")
+        db.rollback()
+
+    return QuizSubmitResponse(
+        session_id=body.session_id,
+        total_questions=total_questions,
+        correct_count=correct_count,
+        score_percentage=score_pct,
+        passed=passed,
+        details=details,
+    )
+
 
 
 @router.get("/session/{session_id}/all-answers")

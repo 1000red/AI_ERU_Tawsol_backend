@@ -25,6 +25,7 @@ class _Session:
 
 
 _store: dict[str, _Session] = {}
+_sessions = _store  # Alias for compatibility
 
 
 def _evict_expired() -> None:
