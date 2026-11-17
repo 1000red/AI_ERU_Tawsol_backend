@@ -169,8 +169,11 @@ def student_check_in(db: Session, student_user: User, raw_token: str) -> Attenda
             session_id=session.session_id,
             material_id=session.material_id,
             course_name=mat.name if mat else session.material_id,
-            scanned_at=existing.scanned_at,
+            scanned_at=existing.scanned_at or datetime.now(timezone.utc),
             status=existing.status,
+            success=True,
+            student_name=student_user.name,
+            student_uni_code=student_user.uni_code or f"STU-{student_user.user_id}",
         )
 
     # Create new record
@@ -192,9 +195,47 @@ def student_check_in(db: Session, student_user: User, raw_token: str) -> Attenda
         session_id=session.session_id,
         material_id=session.material_id,
         course_name=mat.name if mat else session.material_id,
-        scanned_at=record.scanned_at,
+        scanned_at=record.scanned_at or datetime.now(timezone.utc),
         status=record.status,
+        success=True,
+        student_name=student_user.name,
+        student_uni_code=student_user.uni_code or f"STU-{student_user.user_id}",
     )
+
+
+def student_public_check_in(db: Session, raw_token: str, student_identifier: str) -> AttendanceCheckInOut:
+    """Public / camera scan check-in by student code, email, or user_id."""
+    clean_id = student_identifier.strip()
+    student = None
+
+    if clean_id.isdigit():
+        student = db.query(User).filter(User.user_id == int(clean_id), User.type_code == "STU").first()
+
+    if not student:
+        student = db.query(User).filter(
+            func.lower(User.uni_code) == clean_id.lower(),
+            User.type_code == "STU"
+        ).first()
+
+    if not student:
+        student = db.query(User).filter(
+            func.lower(User.email) == clean_id.lower(),
+            User.type_code == "STU"
+        ).first()
+
+    if not student:
+        student = db.query(User).filter(
+            User.name.ilike(f"%{clean_id}%"),
+            User.type_code == "STU"
+        ).first()
+
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="لم يتم العثور على طالب بهذا الكود أو البريد الإلكتروني. يرجى التأكد من كتابة كود الطالب بدقة."
+        )
+
+    return student_check_in(db, student, raw_token)
 
 
 def get_student_attendance_summary(db: Session, student_user: User) -> list[StudentCourseAttendanceSummary]:

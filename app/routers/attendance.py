@@ -8,6 +8,7 @@ from app.schemas.attendance import (
     AttendanceSessionCreate,
     AttendanceSessionOut,
     AttendanceCheckInRequest,
+    AttendancePublicCheckInRequest,
     AttendanceCheckInOut,
     StudentCourseAttendanceSummary,
     AttendanceSheetOut,
@@ -99,6 +100,15 @@ def student_check_in(
 ):
     """(Student) Submit scanned QR code token to record presence."""
     return att_svc.student_check_in(db, current_user, data.token)
+
+
+@router.post("/public-check-in", response_model=AttendanceCheckInOut)
+def public_student_check_in(
+    data: AttendancePublicCheckInRequest,
+    db: Session = Depends(get_db),
+):
+    """(Student Web Scanner) Check in using student ID/code/email and session token."""
+    return att_svc.student_public_check_in(db, data.token, data.student_identifier)
 
 
 @router.get("/my-summary", response_model=list[StudentCourseAttendanceSummary])

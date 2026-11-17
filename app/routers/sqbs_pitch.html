@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQBS — العرض التقديمي التنافسي الشامل | مدرسة WE للتكنولوجيا التطبيقية بالسويس</title>
+  
+  <!-- Fonts: Cairo, Tajawal, Inter & JetBrains Mono — LOCAL-FIRST with CDN fallback (offline-safe) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="pitch_assets/fonts/fonts.css"
+        onerror="this.onerror=null;this.href='https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap'">
+
+  <!-- Tailwind CSS: LOCAL-FIRST with CDN fallback (offline-safe) -->
+  <script src="pitch_assets/tailwind.js"></script>
+  <script>window.tailwind || document.write('<script src="https://cdn.tailwindcss.com"><\/script>')</script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            we: {
+              imperial: '#1F0D2B',    /* Imperial Deep Purple */
+              electric: '#6D28D9',    /* Vivid Violet/Purple */
+              gold: '#F59E0B',        /* Royal Amber Gold */
+              soft: '#F3ECFC',        /* Soft Lavender Background */
+              cardDark: '#281236',
+              borderDark: '#431E5B'
+            }
+          },
+          fontFamily: {
+            cairo: ['Cairo', 'sans-serif'],
+            tajawal: ['Tajawal', 'sans-serif'],
+            inter: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- FontAwesome 6: LOCAL-FIRST with CDN fallback (offline-safe) -->
+  <link rel="stylesheet" href="pitch_assets/fontawesome/css/all.min.css"
+        onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'">
+
+  <!-- Chart.js: LOCAL-FIRST with CDN fallback (offline-safe) -->
+  <script src="pitch_assets/chart.umd.js"></script>
+  <script>window.Chart || document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js"><\/script>')</script>
+
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #1F0D2B;
+      color: #FFFFFF;
+      overflow-x: hidden;
+      user-select: none;
+    }
+    
+    .glass-card {
+      background: rgba(40, 18, 54, 0.78);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(109, 40, 217, 0.35);
+    }
+    
+    .glass-card-hover:hover {
+      border-color: rgba(245, 158, 11, 0.6);
+      box-shadow: 0 10px 30px -10px rgba(109, 40, 217, 0.4);
+    }
+
+    .gold-gradient-text {
+      background: linear-gradient(135deg, #FDE68A 0%, #F59E0B 50%, #D97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .purple-gradient-text {
+      background: linear-gradient(135deg, #E9D5FF 0%, #A855F7 50%, #6D28D9 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Slide transition */
+    .slide-pane {
+      display: none;
+      opacity: 0;
+      transform: translateY(12px) scale(0.99);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .slide-pane.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1F0D2B;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #431E5B;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #6D28D9;
+    }
+
+    /* Ambient Video Layer */
+    #ambient-video-container {
+      transition: opacity 0.5s ease-in-out;
+    }
+  </style>
+</head>
+
+<body class="h-full flex flex-col bg-[#1F0D2B] text-slate-100 antialiased selection:bg-we-gold selection:text-we-imperial relative">
+
+  <!-- ========================================================================= -->
+  <!-- AMBIENT LOOPING BACKGROUND VIDEO LAYER                                    -->
+  <!-- ========================================================================= -->
+  <div id="ambient-video-container" class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <video id="ambient-bg-video" autoplay loop muted playsinline class="w-full h-full object-cover opacity-25 filter blur-[0.5px]">
+      <source src="sqbs_videos/ambient_bg.mp4" type="video/mp4">
+      <source src="sqbs_videos/field_video_1.mp4" type="video/mp4">
+    </video>
+    <!-- Imperial Purple Gradient Overlay for Perfect Contrast -->
+    <div class="absolute inset-0 bg-gradient-to-b from-[#1F0D2B]/90 via-[#1F0D2B]/85 to-[#1F0D2B]/95"></div>
+  </div>
+
+  <!-- Glow Background Accents -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-40 -right-40 w-96 h-96 bg-we-electric/20 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/2 -left-40 w-96 h-96 bg-purple-900/15 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-40 right-1/3 w-96 h-96 bg-we-gold/15 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TOP PRESENTATION TOOLBAR                                                  -->
+  <!-- ========================================================================= -->
+  <header class="relative z-30 shrink-0 border-b border-we-borderDark bg-[#1F0D2B]/95 backdrop-blur-md px-3 sm:px-6 py-2">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
+      
+      <!-- Brand & School Crest (WE Suez) -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-we-gold via-amber-500 to-amber-700 flex items-center justify-center text-we-imperial font-black shadow-lg shadow-amber-500/20 text-base shrink-0">
+          <i class="fa-solid fa-qrcode"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-black text-sm tracking-wide text-white">SQBS</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-we-gold text-we-imperial">WE Suez • السويس</span>
+            <span class="hidden md:inline text-xs text-slate-400 font-normal">| مدرسة WE للتكنولوجيا التطبيقية بالسويس</span>
+          </div>
+          <p class="text-[11px] text-purple-300 font-semibold truncate">Smart QR Behavior System • نظام السلوك المدرسي الذكي</p>
+        </div>
+      </div>
+
+      <!-- Center: Slide Progress & Timers -->
+      <div class="flex items-center gap-2 sm:gap-4">
+        
+        <!-- Global Competition Timer (5:00 min) -->
+        <div class="hidden sm:flex items-center gap-2 bg-[#281236] px-3 py-1.5 rounded-xl border border-we-borderDark text-xs">
+          <i class="fa-solid fa-stopwatch text-we-gold"></i>
+          <span class="text-slate-400">الوقت:</span>
+          <span id="global-timer" class="font-mono font-bold text-white text-sm">05:00</span>
+          <button onclick="toggleGlobalTimer()" id="btn-timer-toggle" class="hover:text-we-gold transition text-slate-400 ml-1" title="تشغيل / إيقاف المؤقت">
+            <i class="fa-solid fa-play text-xs"></i>
+          </button>
+          <button onclick="resetGlobalTimer()" class="hover:text-rose-400 transition text-slate-400" title="إعادة ضبط المؤقت">
+            <i class="fa-solid fa-rotate-left text-xs"></i>
+          </button>
+        </div>
+
+        <!-- Per-Slide Target Time Badge -->
+        <div class="flex items-center gap-2 bg-[#281236] px-2.5 py-1.5 rounded-xl border border-we-borderDark text-xs">
+          <span class="text-slate-400 font-medium">الشريحة:</span>
+          <span id="slide-indicator" class="font-mono font-bold text-we-gold">1 / 12</span>
+          <span class="text-slate-500">•</span>
+          <span id="slide-target-sec" class="font-mono text-purple-300 font-bold">20 ثانية</span>
+        </div>
+      </div>
+
+      <!-- Right Controls: Media, Voice-Over, Subtitles, Fullscreen -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        
+        <!-- Live System Quick Access Links -->
+        <a href="Teacher_Portal.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-purple-900/60 hover:bg-purple-800 text-purple-200 border border-purple-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="فتح بوابة المعلمين والمهندسين الحية">
+          <i class="fa-solid fa-chalkboard-user text-purple-300"></i>
+          <span class="hidden 2xl:inline">بوابة المعلم</span>
+        </a>
+
+        <a href="Student_CheckIn.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 border border-emerald-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="فتح بوابة مسح QR حضور الطلاب">
+          <i class="fa-solid fa-qrcode text-emerald-300"></i>
+          <span class="hidden 2xl:inline">حضور الطلاب</span>
+        </a>
+
+        <!-- Ambient Video Toggle -->
+        <button onclick="toggleAmbientVideo()" id="btn-ambient-toggle" class="p-2 rounded-xl bg-purple-950/60 hover:bg-purple-900 border border-we-borderDark text-purple-300 text-xs transition" title="تشغيل / إيقاف فيديو الخلفية">
+          <i class="fa-solid fa-video" id="icon-ambient-video"></i>
+        </button>
+
+        <!-- Field Videos Showcase Button -->
+        <button onclick="openVideoShowcaseModal()" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-we-gold/30 hover:from-amber-500/30 hover:to-we-gold/40 text-we-gold border border-we-gold/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="استعراض الفيديوهات الميدانية الحية للطلاب">
+          <i class="fa-solid fa-play-circle text-we-gold"></i>
+          <span class="hidden xl:inline">فيديوهات حية</span>
+        </button>
+
+        <!-- Arabic Voice-Over Toggle Button -->
+        <button onclick="toggleVoiceOver()" id="btn-voiceover" class="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-we-borderDark text-xs font-bold transition flex items-center gap-1.5" title="تشغيل / إيقاف التعليق الصوتي العربي (Arabic Voice-Over)">
+          <i class="fa-solid fa-volume-high text-purple-400" id="icon-voiceover"></i>
+          <span class="hidden lg:inline">تعليق صوتي</span>
+        </button>
+
+        <!-- English Subtitles (CC) Toggle Button -->
+        <button onclick="toggleSubtitles()" id="btn-subtitles" class="px-2.5 py-1.5 rounded-xl bg-we-electric/20 hover:bg-we-electric/40 text-purple-200 border border-we-electric/40 text-xs font-bold transition flex items-center gap-1.5" title="تشغيل / إيقاف الترجمة الإنجليزية (English Subtitles / CC)">
+          <i class="fa-solid fa-closed-captioning text-we-gold"></i>
+          <span class="hidden lg:inline">English Subtitles</span>
+        </button>
+
+        <!-- Speaker Notes Toggle -->
+        <button onclick="toggleSpeakerNotes()" id="btn-speaker-notes" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-we-borderDark text-xs transition" title="نص الإلقاء المنطوق (Speaker Script)">
+          <i class="fa-solid fa-microphone text-we-gold"></i>
+        </button>
+
+        <!-- Slide Grid -->
+        <button onclick="toggleSlideGrid()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-we-borderDark text-xs transition" title="فهرس الشرائح الـ 12">
+          <i class="fa-solid fa-grip"></i>
+        </button>
+
+        <!-- Fullscreen -->
+        <button onclick="toggleFullscreen()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-we-borderDark text-xs transition" title="ملء الشاشة (F)">
+          <i class="fa-solid fa-expand"></i>
+        </button>
+
+        <!-- Slide Nav Buttons -->
+        <div class="flex items-center gap-1 bg-[#281236] p-1 rounded-xl border border-we-borderDark">
+          <button onclick="prevSlide()" class="p-1.5 px-2.5 rounded-lg hover:bg-we-electric/30 text-white disabled:opacity-30 disabled:hover:bg-transparent transition text-xs" id="btn-prev" title="الشريحة السابقة (السهم الأيمن)">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+          <button onclick="nextSlide()" class="p-1.5 px-2.5 rounded-lg bg-we-electric hover:bg-we-electric/80 text-white disabled:opacity-30 disabled:hover:bg-we-electric transition text-xs font-bold" id="btn-next" title="الشريحة التالية (السهم الأيسر أو مسافة)">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Slide Top Mini Progress Bar -->
+    <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-we-borderDark">
+      <div id="progress-bar" class="h-full bg-gradient-to-l from-we-gold via-we-electric to-purple-400 transition-all duration-300" style="width: 8.33%;"></div>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN SLIDES CONTAINER                                                     -->
+  <!-- ========================================================================= -->
+  <main class="relative z-10 flex-1 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="w-full max-w-6xl mx-auto flex flex-col justify-center min-h-[530px]">
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 1: Title & Dramatic Hook (20s)                                  -->
+      <!-- ===================================================================== -->
+      <section id="slide-1" class="slide-pane active flex-col items-center justify-center min-h-[500px] text-center space-y-5">
+        
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-we-gold/15 border border-we-gold/30 text-we-gold font-bold text-xs">
+          <i class="fa-solid fa-award"></i>
+          <span>منظومة التحول التربوي والسلوكي الرقمي • مدرسة WE للتكنولوجيا التطبيقية بالسويس</span>
+        </div>
+
+        <div class="space-y-2 max-w-3xl mx-auto">
+          <h1 class="text-4xl sm:text-6xl font-black tracking-tight">
+            <span class="gold-gradient-text">SQBS</span>
+            <span class="block text-2xl sm:text-4xl font-extrabold text-white mt-1">Smart QR Behavior System</span>
+          </h1>
+          <p class="text-lg sm:text-2xl text-purple-200 font-bold">
+            «تحويل البيانات إلى أفعال لأن كل طالب يهم»
+          </p>
+        </div>
+
+        <!-- Dramatic Hook Card -->
+        <div class="glass-card rounded-2xl p-5 sm:p-6 max-w-2xl border border-we-electric/50 shadow-2xl relative overflow-hidden text-right">
+          <div class="absolute top-0 right-0 w-2 h-full bg-gradient-to-b from-we-gold to-we-electric"></div>
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-we-gold/20 text-we-gold flex items-center justify-center text-xl shrink-0 font-bold">
+              <i class="fa-solid fa-quote-right"></i>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <h4 class="font-black text-sm text-white">الخطاف الدرامي — قصة إنقاذ "الطلاب التسعة الصامتين":</h4>
+                <button onclick="playSpecificVideo('field_video_1.mp4', 'فصل C2 - بداية التجربة')" class="px-2.5 py-1 rounded-lg bg-we-electric/30 hover:bg-we-electric text-white text-[11px] font-bold transition flex items-center gap-1">
+                  <i class="fa-solid fa-play text-we-gold"></i>
+                  <span>فيديو ميداني</span>
+                </button>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                في فصل <strong class="text-we-gold">C2 (14 طالباً بالسويس)</strong>، كان <strong class="text-rose-400">5 طلاب فقط (36%)</strong> يجرؤون على المشاركة، بينما يقبع <strong class="text-purple-300">9 طلاب في صمت تام</strong> خشية الوقوع في الخطأ أو التعرض للإحراج. كيف حوّلت مسحة QR واحدة المعادلة من <em>«الخوف من العقاب»</em> إلى <em>«الشغف بالتميز»</em> في 14 يوماً فقط؟
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metric Badges Row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-3xl pt-1">
+          <div class="glass-card p-3 rounded-xl border border-we-borderDark text-center">
+            <p class="text-[11px] text-slate-400">توفير الوقت الصفي</p>
+            <h3 class="text-xl font-black text-emerald-400 font-mono">92% ⬇</h3>
+          </div>
+          <div class="glass-card p-3 rounded-xl border border-we-borderDark text-center">
+            <p class="text-[11px] text-slate-400">قفزة المشاركة</p>
+            <h3 class="text-xl font-black text-we-gold font-mono">36% ➔ 93%</h3>
+          </div>
+          <div class="glass-card p-3 rounded-xl border border-we-borderDark text-center">
+            <p class="text-[11px] text-slate-400">توازن النقاط الإيجابي</p>
+            <h3 class="text-xl font-black text-purple-300 font-mono">738 : 72 (~10:1)</h3>
+          </div>
+          <div class="glass-card p-3 rounded-xl border border-we-borderDark text-center">
+            <p class="text-[11px] text-slate-400">تكلفة التأسيس الحالية</p>
+            <h3 class="text-xl font-black text-we-gold font-mono">0 جنيه</h3>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 2: Theory of Action & Speed Race (25s)                          -->
+      <!-- ===================================================================== -->
+      <section id="slide-2" class="slide-pane flex-col min-h-[500px] justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-we-gold tracking-wider">نظرية العمل والسرعة الفائقة</span>
+            <span class="text-xs text-slate-400 font-mono">25 ثانية</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">تحدي السرعة: 180 ثانية ورقياً مقابل 15 ثانية بـ SQBS</h2>
+          <p class="text-xs text-slate-300 mt-0.5">كيف يؤدي اختصار 92% من زمن الرصد إلى استعادة هدوء الحصة وكرامة الطالب؟</p>
+        </div>
+
+        <!-- Split Screen Race -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+          
+          <!-- Traditional Paper Method (Red Alert) -->
+          <div class="glass-card rounded-2xl p-5 border border-rose-500/30 bg-rose-950/20 flex flex-col justify-between relative overflow-hidden">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  <i class="fa-solid fa-book-skull mr-1"></i> النظام الدفتري الورقي التقليدي
+                </span>
+                <span class="text-2xl font-black text-rose-400 font-mono">180 ثانية</span>
+              </div>
+              <h3 class="text-base font-bold text-white mt-3">3 دقائق ضائعة من الحصة:</h3>
+              <ul class="space-y-2 mt-3 text-xs text-slate-300">
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-xmark text-rose-400 mt-0.5"></i>
+                  <span>البحث في أدراج الفصل عن دفتر السلوك الورقي أو تدوين الملاحظة يدوياً.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-xmark text-rose-400 mt-0.5"></i>
+                  <span>إيقاف الشرح وتشتيت تركيز الطلاب وإثارة التوتر الصفي.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-xmark text-rose-400 mt-0.5"></i>
+                  <span>وصم الطالب أمام زملائه علناً، مما يغذي الخوف والتنمر والانسحاب.</span>
+                </li>
+              </ul>
+            </div>
+            <div class="p-2.5 mt-3 rounded-xl bg-rose-900/30 border border-rose-700/30 text-rose-200 text-xs text-center font-bold">
+              تشتيت صفي • عقاب بأثر رجعي • إحراج علني للطالب
+            </div>
+          </div>
+
+          <!-- SQBS Smart QR (Emerald/Gold Victory) -->
+          <div class="glass-card rounded-2xl p-5 border border-emerald-500/40 bg-emerald-950/20 flex flex-col justify-between relative overflow-hidden shadow-xl">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <i class="fa-solid fa-bolt mr-1"></i> منظومة SQBS الرقمية الفورية
+                </span>
+                <span class="text-3xl font-black text-emerald-400 font-mono">15 ثانية!</span>
+              </div>
+              <h3 class="text-base font-bold text-white mt-3">وفر بنسبة 92% في 3 خطوات بسيطة:</h3>
+              <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+                <div class="p-2 rounded-xl bg-we-imperial/80 border border-emerald-500/30">
+                  <div class="w-6 h-6 mx-auto rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xs mb-1">
+                    <i class="fa-solid fa-camera"></i>
+                  </div>
+                  <span class="text-[11px] font-bold block text-white">1. مسحة QR</span>
+                  <span class="text-[9px] text-slate-400">بهاتف المعلم في ثانية</span>
+                </div>
+                <div class="p-2 rounded-xl bg-we-imperial/80 border border-emerald-500/30">
+                  <div class="w-6 h-6 mx-auto rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xs mb-1">
+                    <i class="fa-solid fa-list-check"></i>
+                  </div>
+                  <span class="text-[11px] font-bold block text-white">2. تصنيف السلوك</span>
+                  <span class="text-[9px] text-slate-400">إيجابي معلن أو سري</span>
+                </div>
+                <div class="p-2 rounded-xl bg-we-imperial/80 border border-emerald-500/30">
+                  <div class="w-6 h-6 mx-auto rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xs mb-1">
+                    <i class="fa-solid fa-bell"></i>
+                  </div>
+                  <span class="text-[11px] font-bold block text-white">3. إشعار فوري</span>
+                  <span class="text-[9px] text-slate-400">مؤرخ بالدقيقة والثانية</span>
+                </div>
+              </div>
+              <ul class="space-y-1.5 mt-3 text-xs text-slate-200">
+                <li class="flex items-center gap-2">
+                  <i class="fa-solid fa-check text-emerald-400"></i>
+                  <span>شرح المعلم يستمر دون توقف الحصة أو إهدار الوقت.</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <i class="fa-solid fa-check text-emerald-400"></i>
+                  <span>حماية تامة لكرامة الطالب ومنع التنمر بفصل السجلات السلبية عن العلن.</span>
+                </li>
+              </ul>
+            </div>
+            <div class="p-2.5 mt-3 rounded-xl bg-emerald-900/40 border border-emerald-500/30 text-emerald-200 text-xs text-center font-bold flex items-center justify-center gap-2">
+              <i class="fa-solid fa-trophy text-we-gold"></i>
+              <span>وفر 92% من الوقت • تقييم المعلمين للسهولة: 4.8 من 5 بإجماع 100%</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="glass-card p-3 rounded-xl border border-we-borderDark flex items-center justify-between text-xs">
+          <span class="text-slate-300 font-semibold">المعادلة التربوية بالسويس:</span>
+          <span class="text-we-gold font-bold">رصد فوري بدون إحراج ➔ تعزيز إيجابي بمعدل 10:1 ➔ تحول دائم في السلوك</span>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 3: 6-Step Workflow & Zero-Cost Architecture (25s)                -->
+      <!-- ===================================================================== -->
+      <section id="slide-3" class="slide-pane flex-col min-h-[500px] justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-we-gold tracking-wider">خريطة العمليات والهندسة البرمجية</span>
+            <span class="text-xs text-slate-400 font-mono">25 ثانية</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">خريطة التدفق الميداني بست خطوات قياسية</h2>
+          <p class="text-xs text-slate-300 mt-0.5">بناء سحابي صفر التكلفة وجاهز للتشغيل في أي مدرسة خلال 48 ساعة فقط</p>
+        </div>
+
+        <!-- 6 Steps Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-2.5">
+          <div class="glass-card p-3 rounded-xl border border-we-borderDark text-center space-y-1.5 relative group hover:border-we-gold transition">
+            <span class="w-6 h-6 rounded-full bg-we-gold text-we-imperial font-black text-xs inline-flex items-center justify-center">1</span>
+            <div class="text-we-electric text-xl my-1"><i class="fa-solid fa-id-card"></i></div>
+            <h4 class="font-bold text-xs text-white">توليد QR</h4>
+            <p class="text-[10px] text-slate-400">طباعة بطاقة الطالب بهوية مشفرة</p>
+          </div>
+
+          <div class="glass-card p-3 rounded-xl border border-we-borderDark text-center space-y-1.5 relative group hover:border-we-gold transition">
+            <span class="w-6 h-6 rounded-full bg-we-gold text-we-imperial font-black text-xs inline-flex items-center justify-center">2</span>
+            <div class="text-we-electric text-xl my-1"><i class="fa-solid fa-mobile-screen"></i></div>
+            <h4 class="font-bold text-xs text-white">مسح فوري</h4>
+            <p class="text-[10px] text-slate-400">بهاتف المعلم في ثانية واحدة</p>
+          </div>
+
+          <div class="glass-card p-3 rounded-xl border border-we-borderDark text-center space-y-1.5 relative group hover:border-we-gold transition">
+            <span class="w-6 h-6 rounded-full bg-we-gold text-we-imperial font-black text-xs inline-flex items-center justify-center">3</span>
+            <div class="text-we-electric text-xl my-1"><i class="fa-solid fa-shield-halved"></i></div>
+            <h4 class="font-bold text-xs text-white">تصنيف مؤرخ</h4>
+            <p class="text-[10px] text-slate-400">إيجابي معلن أو علاجي سري</p>
+          </div>
+
+          <div class="glass-card p-3 rounded-xl border border-we-borderDark text-center space-y-1.5 relative group hover:border-we-gold transition">
+            <span class="w-6 h-6 rounded-full bg-we-gold text-we-imperial font-black text-xs inline-flex items-center justify-center">4</span>
+            <div class="text-we-electric text-xl my-1"><i class="fa-solid fa-award"></i></div>
+            <h4 class="font-bold text-xs text-white">لوحة الشرف</h4>
+            <p class="text-[10px] text-slate-400">عرض علني للنقاط الإيجابية</p>
+          </div>
+
+          <div class="glass-card p-3 rounded-xl border border-we-borderDark text-center space-y-1.5 relative group hover:border-we-gold transition">
+            <span class="w-6 h-6 rounded-full bg-we-gold text-we-imperial font-black text-xs inline-flex items-center justify-center">5</span>
+            <div class="text-we-electric text-xl my-1"><i class="fa-solid fa-brain"></i></div>
+            <h4 class="font-bold text-xs text-white">Smart Insights</h4>
+            <p class="text-[10px] text-slate-400">رصد الأنماط والإنذار المبكر</p>
+          </div>
+
+          <div class="glass-card p-3 rounded-xl border border-we-borderDark text-center space-y-1.5 relative group hover:border-we-gold transition">
+            <span class="w-6 h-6 rounded-full bg-we-gold text-we-imperial font-black text-xs inline-flex items-center justify-center">6</span>
+            <div class="text-we-electric text-xl my-1"><i class="fa-solid fa-user-check"></i></div>
+            <h4 class="font-bold text-xs text-white">اعتماد إنساني</h4>
+            <p class="text-[10px] text-slate-400">القرار بيد الأخصائي الاجتماعي</p>
+          </div>
+        </div>
+
+        <!-- Zero-Cost Tech Stack Showcase -->
+        <div class="glass-card rounded-2xl p-4 border border-we-electric/40 bg-gradient-to-r from-we-imperial via-[#2B103E] to-we-imperial">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-xl bg-we-gold/20 text-we-gold flex items-center justify-center text-xl font-bold shrink-0">
+                <i class="fa-solid fa-coins"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-sm text-white">بطاقة احتياجات التشغيل الصفرية (Zero Initial Cost):</h4>
+                <p class="text-xs text-slate-300">تكلفة التأسيس الحالية <strong class="text-we-gold font-mono">0 جنيه</strong> — المنصة مبنية على سحابة <span class="text-purple-300 font-bold">Supabase</span> وواجهات <span class="text-purple-300 font-bold">Lovable</span> مع تشفير كامل وسياسات RLS لحماية سرية الطلاب.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
+                <i class="fa-solid fa-lock"></i> RLS Policies Active
+              </span>
+              <span class="px-3 py-1.5 rounded-xl bg-we-gold/20 text-we-gold border border-we-gold/30 text-xs font-bold">
+                <i class="fa-solid fa-bolt"></i> جاهز للإطلاق
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-400 text-center">
+          * لا تتطلب المنصة شراء أي أجهزة جديدة بالمدرسة: هاتف المعلم الحالي + بطاقة QR ورقية بربع جنيه فقط للطالب.
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 4: Measurement Methodology in Class C2 (25s)                    -->
+      <!-- ===================================================================== -->
+      <section id="slide-4" class="slide-pane flex-col min-h-[500px] justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-we-gold tracking-wider">منهجية القياس الميداني</span>
+            <span class="text-xs text-slate-400 font-mono">25 ثانية</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">الميدان الحقيقي: تجربة مكثفة في فصل C2 بمدرسة WE السويس</h2>
+          <p class="text-xs text-slate-300 mt-0.5">عينة محددة وعالية الكثافة: 14 طالباً تحت مجهر 6 معلمين لقياس 8 مؤشرات دقيقة</p>
+        </div>
+
+        <!-- 8 KPIs Split (4 Quantitative + 4 Qualitative) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <!-- 4 Quantitative KPIs -->
+          <div class="glass-card rounded-2xl p-4 border border-blue-500/30 bg-blue-950/15 space-y-2.5">
+            <div class="flex items-center justify-between border-b border-blue-500/20 pb-2">
+              <h3 class="font-bold text-sm text-blue-300 flex items-center gap-2">
+                <i class="fa-solid fa-calculator"></i> 4 مؤشرات كمية (Quantitative Metrics)
+              </h3>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono">ميدانياً 100%</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="p-2.5 rounded-xl bg-we-imperial/60 border border-blue-500/20">
+                <span class="text-slate-400 block text-[10px]">1. زمن رصد الواقعة:</span>
+                <strong class="text-emerald-400 font-mono text-sm">15 ثانية (وفر 92%)</strong>
+              </div>
+              <div class="p-2.5 rounded-xl bg-we-imperial/60 border border-blue-500/20">
+                <span class="text-slate-400 block text-[10px]">2. نسبة المشاركة النشطة:</span>
+                <strong class="text-we-gold font-mono text-sm">قفزة من 36% إلى 93%</strong>
+              </div>
+              <div class="p-2.5 rounded-xl bg-we-imperial/60 border border-blue-500/20">
+                <span class="text-slate-400 block text-[10px]">3. توازن النقاط الإيجابية:</span>
+                <strong class="text-purple-300 font-mono text-sm">738 إيجابي : 72 سلبي (~10:1)</strong>
+              </div>
+              <div class="p-2.5 rounded-xl bg-we-imperial/60 border border-blue-500/20">
+                <span class="text-slate-400 block text-[10px]">4. مستويات الخطر السلوكي:</span>
+                <strong class="text-emerald-400 font-mono text-sm">13 من 14 في تحسن مستمر</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4 Qualitative KPIs -->
+          <div class="glass-card rounded-2xl p-4 border border-purple-500/30 bg-purple-950/15 space-y-2.5">
+            <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
+              <h3 class="font-bold text-sm text-purple-300 flex items-center gap-2">
+                <i class="fa-solid fa-heart-pulse"></i> 4 مؤشرات نوعية (Qualitative Metrics)
+              </h3>
+              <button onclick="playSpecificVideo('field_video_2.mp4', 'توثيق المعمل ومشاركة الطلاب')" class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-200 hover:bg-purple-500/40 font-bold transition flex items-center gap-1">
+                <i class="fa-solid fa-play text-we-gold"></i>
+                <span>فيديو المعمل</span>
+              </button>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="p-2.5 rounded-xl bg-we-imperial/60 border border-purple-500/20">
+                <span class="text-slate-400 block text-[10px]">5. شعور الطلاب بالعدالة:</span>
+                <strong class="text-emerald-400 font-mono text-sm">93% (13 من 14 طالباً)</strong>
+              </div>
+              <div class="p-2.5 rounded-xl bg-we-imperial/60 border border-purple-500/20">
+                <span class="text-slate-400 block text-[10px]">6. ثقة الطلاب في المعلم:</span>
+                <strong class="text-we-gold font-mono text-sm">100% (14 من 14 طالباً)</strong>
+              </div>
+              <div class="p-2.5 rounded-xl bg-we-imperial/60 border border-purple-500/20">
+                <span class="text-slate-400 block text-[10px]">7. رضا وسهولة المعلمين:</span>
+                <strong class="text-emerald-400 font-mono text-sm">4.8 من 5 (إجماع 100%)</strong>
+              </div>
+              <div class="p-2.5 rounded-xl bg-we-imperial/60 border border-purple-500/20">
+                <span class="text-slate-400 block text-[10px]">8. التحول النفسي للطالب:</span>
+                <strong class="text-purple-300 font-bold text-xs">«من الخوف إلى الشغف»</strong>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Sample Density Badge -->
+        <div class="glass-card p-3 rounded-xl border border-we-gold/40 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-we-gold text-base"></i>
+            <span class="text-slate-200"><strong>كثافة الرصد الميداني بالسويس:</strong> تم تسجيل <strong class="text-we-gold font-mono">810 رصدات حقيقية</strong> (738 إيجابي + 72 سلبي) خلال أسبوعين.</span>
+          </div>
+          <span class="px-2.5 py-1 rounded-lg bg-we-gold/20 text-we-gold font-mono text-[11px] font-bold shrink-0">N = 14 Students • 6 Teachers</span>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 5: Quantitative Results 1: Speed & Participation (25s)          -->
+      <!-- ===================================================================== -->
+      <section id="slide-5" class="slide-pane flex-col min-h-[500px] justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-we-gold tracking-wider">النتائج الكمية (1)</span>
+            <span class="text-xs text-slate-400 font-mono">25 ثانية</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">قفزة المشاركة من 36% إلى 93% واختصار 92% من الوقت</h2>
+          <p class="text-xs text-slate-300 mt-0.5">بالأدلة الرقمية المباشرة: كيف كسر SQBS حاجز الصمت لدى 9 طلاب دفعة واحدة بالسويس؟</p>
+        </div>
+
+        <!-- Two Live Dynamic Charts Side-by-Side -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+          
+          <!-- Chart 1: Time Reduction -->
+          <div class="glass-card rounded-2xl p-4 border border-we-borderDark flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-bold text-xs text-white flex items-center gap-1.5">
+                <i class="fa-solid fa-stopwatch text-emerald-400"></i> زمن رصد الواقعة بالثواني
+              </h4>
+              <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold">انخفاض 92%</span>
+            </div>
+            <div class="relative h-44 w-full">
+              <canvas id="chart-speed-reduction"></canvas>
+            </div>
+            <p class="text-[10px] text-slate-400 text-center mt-2 font-semibold">
+              انخفاض درامي من 180 ثانية ورقياً إلى 15 ثانية فقط عبر مسحة QR
+            </p>
+          </div>
+
+          <!-- Chart 2: Participation Leap -->
+          <div class="glass-card rounded-2xl p-4 border border-we-borderDark flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-bold text-xs text-white flex items-center gap-1.5">
+                <i class="fa-solid fa-chart-line text-we-gold"></i> قفزة نسبة المشاركة النشطة (فصل C2)
+              </h4>
+              <span class="text-[11px] px-2 py-0.5 rounded bg-we-gold/20 text-we-gold font-mono font-bold">+57% نمو</span>
+            </div>
+            <div class="relative h-44 w-full">
+              <canvas id="chart-participation-leap"></canvas>
+            </div>
+            <p class="text-[10px] text-slate-400 text-center mt-2 font-semibold">
+              ارتفاع من 5 طلاب (36%) قبل SQBS إلى 9 طلاب (64%) ثم 13 طالباً (93%)
+            </p>
+          </div>
+
+        </div>
+
+        <!-- The Silent 9 Callout Card -->
+        <div class="glass-card p-3 rounded-xl border border-purple-500/40 bg-purple-950/20 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-we-electric text-white flex items-center justify-center font-bold text-sm shrink-0">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div>
+              <strong class="text-white block">إنقاذ "الطلاب التسعة الصامتين":</strong>
+              <span class="text-slate-300 text-[11px]">عندما شعر الطلاب بالأمان النفسي وأن أخطاءهم لن تُعلن على الملأ، انضم 8 من أصل 9 طلاب للمشاركة النشطة خلال 14 يوماً.</span>
+            </div>
+          </div>
+          <button onclick="playSpecificVideo('field_video_3.mp4', 'توثيق قفزة المشاركة والبرمجة')" class="px-3 py-1.5 rounded-lg bg-we-gold text-we-imperial font-bold text-xs shrink-0 flex items-center gap-1.5 shadow-sm hover:opacity-95 transition">
+            <i class="fa-solid fa-play"></i>
+            <span>فيديو المشاركة</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 6: Quantitative Results 2: Balance & Risk (25s)                 -->
+      <!-- ===================================================================== -->
+      <section id="slide-6" class="slide-pane flex-col min-h-[500px] justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-we-gold tracking-wider">النتائج الكمية (2)</span>
+            <span class="text-xs text-slate-400 font-mono">25 ثانية</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">المعادلة الذهبية: 738 نقطة إيجابية مقابل 72 نقطة سلبية</h2>
+          <p class="text-xs text-slate-300 mt-0.5">معدل التعزيز الإيجابي 10:1 — كيف يقضي التركيز على الفضيلة على السلوكيات السلبية تلقائياً؟</p>
+        </div>
+
+        <!-- Metric Showcases -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+          
+          <!-- Positive Ratio Card -->
+          <div class="glass-card rounded-2xl p-5 border border-we-gold/30 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">توازن الطاقة السلوكية بالفصل</span>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-we-gold/20 text-we-gold font-mono">النسبة الذهبية ~10:1</span>
+            </div>
+            <div class="my-4 text-center space-y-2">
+              <div class="flex items-baseline justify-center gap-3">
+                <span class="text-4xl sm:text-5xl font-black text-emerald-400 font-mono">738</span>
+                <span class="text-2xl text-slate-500 font-bold">مقابل</span>
+                <span class="text-2xl sm:text-3xl font-black text-rose-400 font-mono">72</span>
+              </div>
+              <p class="text-xs text-slate-300">نقطة إيجابية علنية مقابل نقطة سلبية سرية مسجلة</p>
+              
+              <!-- Progress Comparison Bar -->
+              <div class="w-full h-3 rounded-full bg-rose-900/60 overflow-hidden flex mt-3">
+                <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500" style="width: 91.1%;"></div>
+                <div class="h-full bg-rose-500" style="width: 8.9%;"></div>
+              </div>
+              <div class="flex justify-between text-[10px] font-mono text-slate-400 px-1">
+                <span class="text-emerald-400">91.1% تعزيز وبناء إيجابي</span>
+                <span class="text-rose-400">8.9% معالجة هادئة</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-300 bg-we-imperial/60 p-2.5 rounded-xl border border-we-borderDark text-center">
+              القاعدة التربوية المطبقة: كل سلوك غير مرغوب فيه يواجهه 10 أفعال إيجابية تصنع القدوة داخل الفصل.
+            </p>
+          </div>
+
+          <!-- Risk Level Matrix Card -->
+          <div class="glass-card rounded-2xl p-5 border border-emerald-500/30 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">مصفوفة تتبع مستويات الخطر (فصل C2 بالسويس)</span>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 font-mono">تحسن 93%</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5 my-3">
+              <div class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-center">
+                <span class="text-[10px] text-slate-400 block">طلاب في تحسن مستمر</span>
+                <h4 class="text-2xl font-black text-emerald-400 font-mono mt-0.5">13 / 14</h4>
+                <span class="text-[9px] text-emerald-300">استجابة وقائية كاملة</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-900/40 border border-slate-700/40 text-center">
+                <span class="text-[10px] text-slate-400 block">خطر مرتفع (High Risk)</span>
+                <h4 class="text-2xl font-black text-white font-mono mt-0.5">0</h4>
+                <span class="text-[9px] text-slate-400">صفر حالات حرجة</span>
+              </div>
+              <div class="p-3 rounded-xl bg-amber-950/30 border border-amber-500/30 text-center">
+                <span class="text-[10px] text-slate-400 block">خطر متوسط (Medium)</span>
+                <h4 class="text-2xl font-black text-we-gold font-mono mt-0.5">1</h4>
+                <span class="text-[9px] text-amber-300">متابعة إرشادية هادئة</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-900/40 border border-slate-700/40 text-center">
+                <span class="text-[10px] text-slate-400 block">تدخل فوري (Immediate)</span>
+                <h4 class="text-2xl font-black text-white font-mono mt-0.5">0</h4>
+                <span class="text-[9px] text-slate-400">صفر استدعاءات طارئة</span>
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-300 bg-we-imperial/60 p-2.5 rounded-xl border border-we-borderDark text-center">
+              النتيجة الميدانية: تحول السلوك قبل تفاقمه، دون استدعاء ولي أمر واحد في خلاف حاد!
+            </p>
+          </div>
+
+        </div>
+
+        <div class="glass-card p-3 rounded-xl border border-we-borderDark text-xs flex items-center justify-between">
+          <span class="text-slate-300">البيانات مسجلة وموثقة في جداول Supabase السحابية عبر مفاتيح مؤرخة زمنياً.</span>
+          <span class="text-we-gold font-bold">13 طالباً في تحسن مستمر • 0 خطر مرتفع</span>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 7: Qualitative Results 1: Justice, Trust & Student Voice (25s)  -->
+      <!-- ===================================================================== -->
+      <section id="slide-7" class="slide-pane flex-col min-h-[500px] justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-we-gold tracking-wider">النتائج النوعية (1)</span>
+            <span class="text-xs text-slate-400 font-mono">25 ثانية</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">صوت الطالب: 93% عدالة و100% ثقة في المعلم والمنصة</h2>
+          <p class="text-xs text-slate-300 mt-0.5">التحول النفسي الأعمق: من «الخوف من العقاب» إلى «الشغف بالتميز»</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+          
+          <!-- Donut Chart 1: Fairness -->
+          <div class="glass-card rounded-2xl p-4 border border-we-borderDark flex flex-col justify-between items-center text-center">
+            <div class="w-full flex items-center justify-between mb-1">
+              <h4 class="font-bold text-xs text-white">الشعور بعدالة التقييم</h4>
+              <span class="text-xs font-mono font-black text-emerald-400">93% (13 / 14)</span>
+            </div>
+            <div class="relative w-36 h-36 my-2">
+              <canvas id="chart-fairness-donut"></canvas>
+              <div class="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
+                <span class="text-xl font-black font-mono text-emerald-400">93%</span>
+                <span class="text-[9px] text-slate-400">يشعرون بالعدالة</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-300">
+              «لأول مرة نشعر أن التقييم مبني على حقائق مؤرخة وليس مزاجية أو انطباعات شخصية»
+            </p>
+          </div>
+
+          <!-- Donut Chart 2: Trust -->
+          <div class="glass-card rounded-2xl p-4 border border-we-borderDark flex flex-col justify-between items-center text-center">
+            <div class="w-full flex items-center justify-between mb-1">
+              <h4 class="font-bold text-xs text-white">الثقة في المعلم والمنصة</h4>
+              <span class="text-xs font-mono font-black text-we-gold">100% (14 / 14)</span>
+            </div>
+            <div class="relative w-36 h-36 my-2">
+              <canvas id="chart-trust-donut"></canvas>
+              <div class="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
+                <span class="text-xl font-black font-mono text-we-gold">100%</span>
+                <span class="text-[9px] text-slate-400">إجماع كامل</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-300">
+              «ثقتنا في المعلم زادت لأن أخطاءنا لم تعد تُنشر أمام الفصل، بل تُعالج معنا سراً»
+            </p>
+          </div>
+
+        </div>
+
+        <!-- The Transformation Quote Banner -->
+        <div class="glass-card p-4 rounded-2xl border border-we-gold/40 bg-gradient-to-r from-we-imperial via-[#36154A] to-we-imperial">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-we-gold text-we-imperial flex items-center justify-center text-lg font-black shrink-0">
+              <i class="fa-solid fa-sparkles"></i>
+            </div>
+            <div>
+              <p class="text-xs text-we-gold font-bold">الخلاصة المستخلصة من مقابلات طلاب السويس:</p>
+              <h4 class="text-sm sm:text-base font-black text-white mt-0.5">
+                التحول الجذري من «الخوف من العقاب» إلى «الشغف بالتميز وصناعة القدوة»
+              </h4>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 8: Qualitative Results 2: Teachers & 4-Screen Matrix (25s)      -->
+      <!-- ===================================================================== -->
+      <section id="slide-8" class="slide-pane flex-col min-h-[500px] justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-we-gold tracking-wider">النتائج النوعية (2) وميثاق الكرامة</span>
+            <span class="text-xs text-slate-400 font-mono">25 ثانية</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">ميثاق الكرامة المدرسية ومحاكي الخصوصية رباعي الشاشات</h2>
+          <p class="text-xs text-slate-300 mt-0.5">تقييم سهولة 4.8 من 5 بإجماع 100% من معلمي السويس الستة — وحماية مطلقة من الوصم</p>
+        </div>
+
+        <!-- 4-Screen Privacy Simulation Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          
+          <!-- Screen 1: Classroom Public Honor Roll -->
+          <div class="glass-card rounded-xl p-3.5 border border-we-gold/40 space-y-2 bg-we-gold/5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-we-gold flex items-center gap-1">
+                <i class="fa-solid fa-desktop"></i> 1. شاشة الفصل
+              </span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-we-gold/20 text-we-gold font-bold">علنية 100%</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-we-imperial border border-we-gold/20 text-center space-y-1">
+              <i class="fa-solid fa-crown text-we-gold text-lg"></i>
+              <h5 class="text-xs font-bold text-white">لوحة الشرف (Honor Roll)</h5>
+              <p class="text-[10px] text-emerald-400 font-mono">738 نقطة إيجابية فقط</p>
+            </div>
+            <p class="text-[10px] text-slate-300">يظهر فيها فقط التميز والشارات الإيجابية لصناعة القدوة ومنع الإحراج والتنمر.</p>
+          </div>
+
+          <!-- Screen 2: Teacher Phone -->
+          <div class="glass-card rounded-xl p-3.5 border border-we-electric/40 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-purple-300 flex items-center gap-1">
+                <i class="fa-solid fa-mobile-screen"></i> 2. هاتف المعلم
+              </span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-we-electric/30 text-purple-200 font-bold">15 ثانية</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-we-imperial border border-we-electric/30 text-center space-y-1">
+              <i class="fa-solid fa-qrcode text-purple-400 text-lg"></i>
+              <h5 class="text-xs font-bold text-white">رصد بضغطة زر</h5>
+              <p class="text-[10px] text-we-gold font-mono">سهولة: 4.8 / 5</p>
+            </div>
+            <p class="text-[10px] text-slate-300">إجماع 100% من المعلمين (6/6) على توفير الوقت وتقليل الشد العصبي الصفي.</p>
+          </div>
+
+          <!-- Screen 3: Parent App -->
+          <div class="glass-card rounded-xl p-3.5 border border-blue-500/40 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-blue-300 flex items-center gap-1">
+                <i class="fa-solid fa-house-user"></i> 3. شاشة ولي الأمر
+              </span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold">خاص ومحدد</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-we-imperial border border-blue-500/20 text-center space-y-1">
+              <i class="fa-solid fa-clock-rotate-left text-blue-400 text-lg"></i>
+              <h5 class="text-xs font-bold text-white">تقرير مؤرخ بالدقيقة</h5>
+              <p class="text-[10px] text-blue-300">بدل الانطباعات العامة</p>
+            </div>
+            <p class="text-[10px] text-slate-300">سجل شفاف لابنه فقط، يوضح أوقات التألق والمجالات التي تحتاج لتوجيه منزلي هادئ.</p>
+          </div>
+
+          <!-- Screen 4: Social Worker -->
+          <div class="glass-card rounded-xl p-3.5 border border-rose-500/40 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-rose-300 flex items-center gap-1">
+                <i class="fa-solid fa-user-doctor"></i> 4. الأخصائي الاجتماعي
+              </span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold">سري للغاية</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-we-imperial border border-rose-500/20 text-center space-y-1">
+              <i class="fa-solid fa-file-shield text-rose-400 text-lg"></i>
+              <h5 class="text-xs font-bold text-white">ملف الحالة والإنذار</h5>
+              <p class="text-[10px] text-emerald-400">13 طالباً في تحسن</p>
+            </div>
+            <p class="text-[10px] text-slate-300">ربط السلوك بمستويات الخطر واقتراحات الذكاء الاصطناعي مع بقاء القرار النهائي بيده.</p>
+          </div>
+
+        </div>
+
+        <div class="p-3 rounded-xl bg-we-imperial border border-we-borderDark text-xs flex items-center justify-between">
+          <span class="text-slate-300 font-semibold">ميثاق منع الوصم والتنمر بالسويس: لا يرى أي طالب سجلات زميله السلبية إطلاقاً.</span>
+          <span class="text-we-gold font-bold">خصوصية تامة تحمي أجيالنا</span>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 9: Executive 8-KPI Summary Matrix (25s)                         -->
+      <!-- ===================================================================== -->
+      <section id="slide-9" class="slide-pane flex-col min-h-[500px] justify-between space-y-3">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-we-gold tracking-wider">لوحة القيادة الاستشارية</span>
+            <span class="text-xs text-slate-400 font-mono">25 ثانية</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">مصفوفة النتائج الشاملة: 8 مؤشرات في لمحة واحدة</h2>
+          <p class="text-xs text-slate-300 mt-0.5">مقارنة علمية دقيقة توثق أثر الانتقال من الدفاتر الورقية إلى منظومة SQBS</p>
+        </div>
+
+        <!-- Comprehensive 8-KPI Table -->
+        <div class="glass-card rounded-2xl overflow-hidden border border-we-borderDark shadow-xl flex-1 flex flex-col justify-center">
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-[#1F0D2B] text-we-gold font-bold border-b border-we-borderDark text-[11px]">
+                <tr>
+                  <th class="py-2.5 px-3">#</th>
+                  <th class="py-2.5 px-3">المؤشر المقاس (KPI)</th>
+                  <th class="py-2.5 px-3">قبل SQBS (الورقي)</th>
+                  <th class="py-2.5 px-3">بعد تطبيق SQBS</th>
+                  <th class="py-2.5 px-3">الدليل الميداني الموثق (فصل C2 السويس)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-we-borderDark text-slate-200 text-[11px]">
+                <tr class="hover:bg-we-electric/10 transition">
+                  <td class="py-1.5 px-3 font-mono text-slate-400">1</td>
+                  <td class="py-1.5 px-3 font-bold text-white">زمن رصد الواقعة السلوكية</td>
+                  <td class="py-1.5 px-3 text-rose-400 font-mono">180 ثانية (3 دقائق)</td>
+                  <td class="py-1.5 px-3 text-emerald-400 font-bold font-mono">15 ثانية فقط</td>
+                  <td class="py-1.5 px-3 text-we-gold font-semibold">توفير 92% من وقت الحصة الصفي</td>
+                </tr>
+                <tr class="hover:bg-we-electric/10 transition">
+                  <td class="py-1.5 px-3 font-mono text-slate-400">2</td>
+                  <td class="py-1.5 px-3 font-bold text-white">نسبة المشاركة الصالحة والنشطة</td>
+                  <td class="py-1.5 px-3 text-rose-400 font-mono">36% (5 طلاب فقط)</td>
+                  <td class="py-1.5 px-3 text-emerald-400 font-bold font-mono">93% (13 طالباً)</td>
+                  <td class="py-1.5 px-3 text-we-gold font-semibold">قفزة عبر أسبوعين (36% ➔ 64% ➔ 93%)</td>
+                </tr>
+                <tr class="hover:bg-we-electric/10 transition">
+                  <td class="py-1.5 px-3 font-mono text-slate-400">3</td>
+                  <td class="py-1.5 px-3 font-bold text-white">معادلة وتوازن النقاط السلوكية</td>
+                  <td class="py-1.5 px-3 text-slate-400">تركيز على المخالفات والعقاب</td>
+                  <td class="py-1.5 px-3 text-emerald-400 font-bold font-mono">738 إيجابي : 72 سلبي</td>
+                  <td class="py-1.5 px-3 text-we-gold font-semibold">المعدل الذهبي ~10 نقاط إيجابية لكل نقطة سلبية</td>
+                </tr>
+                <tr class="hover:bg-we-electric/10 transition">
+                  <td class="py-1.5 px-3 font-mono text-slate-400">4</td>
+                  <td class="py-1.5 px-3 font-bold text-white">مستويات الخطر والتدخل السلوكي</td>
+                  <td class="py-1.5 px-3 text-rose-400">عقاب بأثر رجعي بعد التفاقم</td>
+                  <td class="py-1.5 px-3 text-emerald-400 font-bold font-mono">13 من 14 في تحسن</td>
+                  <td class="py-1.5 px-3 text-we-gold font-semibold">0 حالات خطر مرتفع • 1 متوسط • 0 فوري</td>
+                </tr>
+                <tr class="hover:bg-we-electric/10 transition">
+                  <td class="py-1.5 px-3 font-mono text-slate-400">5</td>
+                  <td class="py-1.5 px-3 font-bold text-white">شعور الطلاب بعدالة التقييم</td>
+                  <td class="py-1.5 px-3 text-rose-400">شكاوى متكررة من التحيز</td>
+                  <td class="py-1.5 px-3 text-emerald-400 font-bold font-mono">93% (13 من 14)</td>
+                  <td class="py-1.5 px-3 text-we-gold font-semibold">استبيان نوعي مستقل بعد أسبوعين</td>
+                </tr>
+                <tr class="hover:bg-we-electric/10 transition">
+                  <td class="py-1.5 px-3 font-mono text-slate-400">6</td>
+                  <td class="py-1.5 px-3 font-bold text-white">ثقة الطلاب في المعلم والمنصة</td>
+                  <td class="py-1.5 px-3 text-slate-400">توجس من التدوين الورقي</td>
+                  <td class="py-1.5 px-3 text-emerald-400 font-bold font-mono">100% (14 من 14)</td>
+                  <td class="py-1.5 px-3 text-we-gold font-semibold">إجماع كامل على الشفافية والأمان</td>
+                </tr>
+                <tr class="hover:bg-we-electric/10 transition">
+                  <td class="py-1.5 px-3 font-mono text-slate-400">7</td>
+                  <td class="py-1.5 px-3 font-bold text-white">تقييم سهولة المعلمين ورضاهم</td>
+                  <td class="py-1.5 px-3 text-rose-400">عبء إداري وتوتر صفي</td>
+                  <td class="py-1.5 px-3 text-emerald-400 font-bold font-mono">4.8 من 5 (100% رضا)</td>
+                  <td class="py-1.5 px-3 text-we-gold font-semibold">إشادة كاملة من جميع المعلمين المشاركين الـ 6</td>
+                </tr>
+                <tr class="hover:bg-we-electric/10 transition">
+                  <td class="py-1.5 px-3 font-mono text-slate-400">8</td>
+                  <td class="py-1.5 px-3 font-bold text-white">حماية الكرامة ومنع التنمر والوصم</td>
+                  <td class="py-1.5 px-3 text-rose-400">إحراج علني أمام الفصل</td>
+                  <td class="py-1.5 px-3 text-emerald-400 font-bold">فصل السجلات بالكامل</td>
+                  <td class="py-1.5 px-3 text-we-gold font-semibold">الشرف علني • المخالفات سرية لولي الأمر والأخصائي</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-we-gold text-center font-bold">
+          ✓ تم تدقيق كافة المؤشرات الميدانية بنسبة 100% من واقع بيانات فصل C2 المسجلة في السحابة بالسويس.
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 10: Smart Insights AI & Ethical Governance (30s)                 -->
+      <!-- ===================================================================== -->
+      <section id="slide-10" class="slide-pane flex-col min-h-[500px] justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-we-gold tracking-wider">محرك الذكاء الاصطناعي الأخلاقي</span>
+            <span class="text-xs text-slate-400 font-mono">30 ثانية</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">تشريح محرك Smart Insights: استباق المشكلة قبل وقوعها</h2>
+          <p class="text-xs text-slate-300 mt-0.5">المنظومة الاستباقية ثلاثية الطبقات — والقرار النهائي دائماً وأبداً للإنسان (الأخصائي)</p>
+        </div>
+
+        <!-- 3 Layers of Smart Insights -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 flex-1">
+          
+          <!-- Layer 1: Pattern Recognition -->
+          <div class="glass-card rounded-2xl p-4 border border-purple-500/30 flex flex-col justify-between">
+            <div>
+              <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center font-bold text-sm mb-2">
+                1
+              </div>
+              <h4 class="font-bold text-sm text-white">الطبقة الأولى: رصد الأنماط الزمنية</h4>
+              <p class="text-[11px] text-slate-300 mt-2 leading-relaxed">
+                اكتشف المحرك تلقائياً تركز <strong class="text-rose-400 font-mono">7 من أصل 14 مخالفة في يوم الخميس</strong> تحديداً (50% من إجمالي المخالفات في يوم واحد!).
+              </p>
+            </div>
+            <div class="p-2.5 mt-3 rounded-xl bg-purple-950/40 border border-purple-700/30 text-purple-200 text-xs">
+              <i class="fa-solid fa-calendar-xmark text-we-gold mr-1"></i>
+              <span>تحليل الإجهاد التراكمي لنهاية الأسبوع</span>
+            </div>
+          </div>
+
+          <!-- Layer 2: Early Warning & Solutions -->
+          <div class="glass-card rounded-2xl p-4 border border-we-gold/40 flex flex-col justify-between">
+            <div>
+              <div class="w-8 h-8 rounded-lg bg-we-gold/20 text-we-gold flex items-center justify-center font-bold text-sm mb-2">
+                2
+              </div>
+              <h4 class="font-bold text-sm text-white">الطبقة الثانية: الإنذار المبكر والحلول</h4>
+              <p class="text-[11px] text-slate-300 mt-2 leading-relaxed">
+                تنبيه استباقي يُرسل للأخصائي صباح كل أربعاء مع <strong class="text-we-gold">اقتراح حلول تربوية عملية</strong> (مثل تنظيم فترات راحة قصيرة أو أنشطة تفاعلية لتخفيف التوتر).
+              </p>
+            </div>
+            <div class="p-2.5 mt-3 rounded-xl bg-we-gold/10 border border-we-gold/30 text-we-gold text-xs">
+              <i class="fa-solid fa-lightbulb text-we-gold mr-1"></i>
+              <span>اقتراح حلول قبل وقوع المخالفة بـ 24 ساعة</span>
+            </div>
+          </div>
+
+          <!-- Layer 3: Human-in-the-Loop Governance -->
+          <div class="glass-card rounded-2xl p-4 border border-emerald-500/40 flex flex-col justify-between">
+            <div>
+              <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-sm mb-2">
+                3
+              </div>
+              <h4 class="font-bold text-sm text-white">الطبقة الثالثة: حوكمة القرار البشري</h4>
+              <p class="text-[11px] text-slate-300 mt-2 leading-relaxed">
+                مبدأ <strong class="text-emerald-400">Human-in-the-Loop</strong>: الذكاء الاصطناعي لا يعاقب ولا يتخذ قرارات تلقائية؛ بل يقدم التوصية، و<strong class="text-white">القرار النهائي دائماً للأخصائي البشري</strong>.
+              </p>
+            </div>
+            <div class="p-2.5 mt-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-200 text-xs font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-user-check text-emerald-400"></i>
+              <span>شارة: «الاعتماد البشري إلزامي»</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- AI Ethical Badge -->
+        <div class="glass-card p-3 rounded-xl border border-we-borderDark flex items-center justify-between text-xs">
+          <span class="text-slate-300">الذكاء الاصطناعي في SQBS خادم لتربية الطالب وكرامته، وليس قاضياً يعاقبه.</span>
+          <span class="text-we-gold font-bold">ذكاء اصطناعي استباقي • حوكمة بشرية كاملة</span>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 11: 7-Module ERP & Profit Engine (30s)                          -->
+      <!-- ===================================================================== -->
+      <section id="slide-11" class="slide-pane flex-col min-h-[500px] justify-between space-y-4">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-we-gold tracking-wider">التوسع الشامل والجدوى الاقتصادية</span>
+            <span class="text-xs text-slate-400 font-mono">30 ثانية</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white mt-1">المنظومة الشاملة بـ 7 وحدات ومحرك الربحية السريع</h2>
+          <p class="text-xs text-slate-300 mt-0.5">ما رأيتموه وحدتان فقط مُجرَّبتان من نظام إدارة مدرسي شامل مبني وجاهز للإطلاق</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
+          
+          <!-- Left: 7 Modules Architecture (7 Cols) -->
+          <div class="lg:col-span-7 glass-card rounded-2xl p-4 border border-we-borderDark flex flex-col justify-between space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-xs text-white flex items-center gap-1.5">
+                <i class="fa-solid fa-cubes text-we-gold"></i> وحدات المنظومة المدرسية الشاملة (7 Modules)
+              </h4>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-we-electric/30 text-purple-200 font-bold">School ERP Ready</span>
+            </div>
+
+            <!-- Two Piloted Modules -->
+            <div>
+              <span class="text-[10px] font-bold text-emerald-400 block mb-1">✓ تم تجريبهما ميدانياً بنجاح 100%:</span>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="p-2 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-center gap-2">
+                  <i class="fa-solid fa-qrcode text-emerald-400 text-base"></i>
+                  <div>
+                    <strong class="text-xs block text-white">1. تتبع السلوك بالـ QR</strong>
+                    <span class="text-[9px] text-slate-400">رصد فوري في 15 ثانية</span>
+                  </div>
+                </div>
+                <div class="p-2 rounded-xl bg-emerald-950/30 border border-emerald-500/30 flex items-center gap-2">
+                  <i class="fa-solid fa-brain text-emerald-400 text-base"></i>
+                  <div>
+                    <strong class="text-xs block text-white">2. الرؤى الذكية بالـ AI</strong>
+                    <span class="text-[9px] text-slate-400">Smart Insights والتنبؤ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Five Built & Ready Modules -->
+            <div>
+              <span class="text-[10px] font-bold text-we-gold block mb-1">⚡ 5 وحدات مبنية في الكود وجاهزة للإطلاق الفوري:</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                <div class="p-2 rounded-xl bg-we-imperial border border-we-borderDark">
+                  <i class="fa-solid fa-chart-pie text-we-gold mb-1 block"></i>
+                  <strong class="block text-[11px] text-white">3. التحليلات الإدارية</strong>
+                  <span class="text-[9px] text-slate-400">تقارير الوزارة والقيادة</span>
+                </div>
+                <div class="p-2 rounded-xl bg-we-imperial border border-we-borderDark">
+                  <i class="fa-solid fa-clipboard-user text-we-gold mb-1 block"></i>
+                  <strong class="block text-[11px] text-white">4. الحضور والغياب</strong>
+                  <span class="text-[9px] text-slate-400">بصمة QR للحصص</span>
+                </div>
+                <div class="p-2 rounded-xl bg-we-imperial border border-we-borderDark">
+                  <i class="fa-solid fa-graduation-cap text-we-gold mb-1 block"></i>
+                  <strong class="block text-[11px] text-white">5. الأداء الأكاديمي</strong>
+                  <span class="text-[9px] text-slate-400">ربط السلوك بالدرجات</span>
+                </div>
+                <div class="p-2 rounded-xl bg-we-imperial border border-we-borderDark">
+                  <i class="fa-solid fa-heart-pulse text-we-gold mb-1 block"></i>
+                  <strong class="block text-[11px] text-white">6. الخدمات الصحية</strong>
+                  <span class="text-[9px] text-slate-400">السجل الطبي المدرسي</span>
+                </div>
+                <div class="p-2 rounded-xl bg-we-imperial border border-we-borderDark col-span-2 sm:col-span-2">
+                  <i class="fa-solid fa-hand-holding-hand text-we-gold mb-1 block"></i>
+                  <strong class="block text-[11px] text-white">7. الدعم النفسي والإرشاد</strong>
+                  <span class="text-[9px] text-slate-400">جلسات الإرشاد السري وحالات الدعم</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right: Profit Engine & Financial Feasibility (5 Cols) -->
+          <div class="lg:col-span-5 glass-card rounded-2xl p-4 border border-we-gold/40 flex flex-col justify-between space-y-3 bg-we-gold/5">
+            <div>
+              <div class="flex items-center justify-between">
+                <h4 class="font-bold text-xs text-we-gold flex items-center gap-1.5">
+                  <i class="fa-solid fa-sack-dollar"></i> محرك الربحية والجدوى
+                </h4>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono font-bold">High Margin</span>
+              </div>
+
+              <div class="space-y-2 mt-3 text-xs">
+                <div class="flex justify-between items-center p-2 rounded-lg bg-we-imperial border border-we-borderDark">
+                  <span class="text-slate-400 text-[11px]">التكلفة التقنية الحالية:</span>
+                  <strong class="text-emerald-400 font-mono">0 جنيه (أدوات مجانية)</strong>
+                </div>
+                <div class="flex justify-between items-center p-2 rounded-lg bg-we-imperial border border-we-borderDark">
+                  <span class="text-slate-400 text-[11px]">سعر الاشتراك المقترح:</span>
+                  <strong class="text-we-gold font-mono">1,500 جنيه / شهرياً للمدرسة</strong>
+                </div>
+                <div class="flex justify-between items-center p-2 rounded-lg bg-we-imperial border border-we-borderDark">
+                  <span class="text-slate-400 text-[11px]">الميزانية التشغيلية المخططة:</span>
+                  <strong class="text-purple-300 font-mono">~3,500 جنيه (60-70$)</strong>
+                </div>
+                <div class="flex justify-between items-center p-2 rounded-lg bg-we-imperial border border-emerald-500/30">
+                  <span class="text-slate-200 text-[11px] font-bold">نقطة التعادل (Break-even):</span>
+                  <strong class="text-emerald-400 font-mono font-black">3 مدارس فقط!</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expansion at 10 Schools Target Card -->
+            <div class="p-3 rounded-xl bg-gradient-to-br from-we-gold/20 via-amber-500/10 to-transparent border border-we-gold/40 text-center">
+              <span class="text-[10px] text-we-gold font-bold block">مستهدف المرحلة الأولى: 10 مدارس (5,000 طالب)</span>
+              <div class="mt-1">
+                <h3 class="text-xl font-black text-white font-mono">11,500 جنيه شهرياً</h3>
+                <span class="text-[11px] text-emerald-300 font-bold block">فائض سنوي: ~138,000 جنيه</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="text-[11px] text-slate-400 text-center">
+          * اشتراك 1,500 جنيه شهرياً يمثل أقل من 5% من تكلفة بدائل الأنظمة الدفترية والبرمجية المعقدة.
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- SLIDE 12: Grand Finale & Live QR Demo (20s)                           -->
+      <!-- ===================================================================== -->
+      <section id="slide-12" class="slide-pane flex-col items-center justify-center min-h-[500px] text-center space-y-5">
+        
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-we-gold/15 border border-we-gold/30 text-we-gold font-bold text-xs">
+          <i class="fa-solid fa-flag-checkered"></i>
+          <span>الختام ورسالة الفريق • مدرسة WE للتكنولوجيا التطبيقية بالسويس</span>
+        </div>
+
+        <div class="space-y-2 max-w-2xl mx-auto">
+          <h2 class="text-3xl sm:text-5xl font-black tracking-tight text-white">
+            «تحويل البيانات إلى أفعال...
+            <span class="block gold-gradient-text mt-1">لأن كل طالب يهم»</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-300">
+            SQBS ليس مجرد تطبيق لرصد النقاط؛ بل هو بيئة تربوية تحفظ كرامة الطالب وتمنح المعلم الوقت للإلهام والتعليم.
+          </p>
+        </div>
+
+        <!-- Live QR Code Card for Judges -->
+        <div class="glass-card rounded-2xl p-5 border border-we-gold/40 max-w-md w-full shadow-2xl relative overflow-hidden flex flex-col items-center">
+          <div class="w-10 h-10 rounded-xl bg-we-gold text-we-imperial flex items-center justify-center text-lg font-bold mb-2">
+            <i class="fa-solid fa-qrcode"></i>
+          </div>
+          
+          <h4 class="font-bold text-sm text-white mb-0.5">تجربة النظام حياً أمام لجنة التحكيم</h4>
+          <p class="text-[11px] text-slate-400 mb-3">امسح الرمز بكاميرا هاتفك أو اضغط لتجربة المنصة فوراً:</p>
+
+          <!-- Interactive QR Simulator -->
+          <div class="w-32 h-32 bg-white p-2.5 rounded-2xl shadow-inner flex items-center justify-center relative group cursor-pointer" onclick="simulateLiveScan()">
+            <!-- SVG QR Code -->
+            <svg viewBox="0 0 100 100" class="w-full h-full text-slate-900 fill-current">
+              <path d="M0,0 h30 v30 h-30 z M5,5 v20 h20 v-20 z M10,10 h10 v10 h-10 z"/>
+              <path d="M70,0 h30 v30 h-30 z M75,5 v20 h20 v-20 z M80,10 h10 v10 h-10 z"/>
+              <path d="M0,70 h30 v30 h-30 z M5,75 v20 h20 v-20 z M10,80 h10 v10 h-10 z"/>
+              <rect x="35" y="10" width="10" height="10"/>
+              <rect x="50" y="5" width="10" height="20"/>
+              <rect x="35" y="35" width="30" height="30"/>
+              <rect x="75" y="45" width="20" height="10"/>
+              <rect x="45" y="75" width="20" height="20"/>
+              <rect x="75" y="75" width="15" height="15"/>
+              <circle cx="50" cy="50" r="5" fill="#6D28D9"/>
+            </svg>
+            <div class="absolute inset-0 bg-we-electric/90 rounded-2xl flex flex-col items-center justify-center text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition duration-200">
+              <i class="fa-solid fa-arrow-up-right-from-square text-lg mb-1"></i>
+              <span>افتح الرابط الحي</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 mt-3">
+            <button onclick="simulateLiveScan()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-we-gold to-amber-600 text-we-imperial font-black text-xs shadow-lg shadow-amber-500/20 hover:opacity-95 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-play"></i>
+              <span>بدء المحاكاة التفاعلية</span>
+            </button>
+            <button onclick="playSpecificVideo('field_video_4.mp4', 'رسالة ختام فريق عمل السويس')" class="px-3 py-2 rounded-xl bg-we-electric hover:bg-we-electric/80 text-white font-bold text-xs shadow-lg shadow-purple-500/20 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-video"></i>
+              <span>فيديو الفريق</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Team & Supervision Credits -->
+        <div class="text-xs text-slate-400 space-y-1">
+          <p>فريق تطوير المشروع • تحت إشراف وتوجيه <strong class="text-white">مدرسة WE للتكنولوجيا التطبيقية بالسويس</strong></p>
+          <p class="text-[10px] text-purple-300">نحو مدرسة ذكية، عادلة، وخالية تماماً من التنمر والوصم الاجتماعي.</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- FLOATING BILINGUAL SUBTITLES BAR (English Subtitles / CC)                 -->
+  <!-- ========================================================================= -->
+  <div id="subtitles-banner" class="relative z-20 max-w-4xl mx-auto px-4 w-full mb-1">
+    <div class="glass-card rounded-xl p-2.5 sm:p-3 border border-we-gold/40 shadow-2xl bg-black/75 backdrop-blur-md flex items-center gap-3">
+      <span class="px-2 py-0.5 rounded text-[10px] font-black bg-we-gold text-we-imperial font-mono shrink-0">EN SUB</span>
+      <p id="subtitles-text" class="text-xs sm:text-sm font-inter text-amber-100 font-medium leading-relaxed tracking-wide dir-ltr text-left flex-1">
+        In the name of Allah. Esteemed Judging Panel, we proudly present SQBS from WE Applied Technology School - Suez.
+      </p>
+      <button onclick="toggleSubtitles()" class="text-slate-400 hover:text-white text-xs shrink-0" title="إخفاء الترجمة">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- BOTTOM DYNAMIC SPEAKER NOTES DRAWER (Collapsible)                         -->
+  <!-- ========================================================================= -->
+  <aside id="speaker-notes-drawer" class="relative z-20 border-t border-we-borderDark bg-[#1F0D2B]/95 backdrop-blur-md px-3 sm:px-6 py-2.5 transition-all duration-300">
+    <div class="max-w-7xl mx-auto space-y-1.5">
+      <div class="flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" id="voiceover-pulse-dot"></span>
+          <strong class="text-we-gold font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-microphone-lines"></i> نص الإلقاء الموقّت للمتحدث (Speaker Script):
+          </strong>
+          <span id="speaker-slide-title" class="text-slate-300 font-semibold">الشريحة 1</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <!-- Voice-over Control in Drawer -->
+          <button onclick="speakCurrentSlide()" class="px-2 py-0.5 rounded-md bg-purple-900/60 hover:bg-purple-800 text-purple-200 text-[11px] font-bold transition flex items-center gap-1 border border-purple-700/40">
+            <i class="fa-solid fa-play text-we-gold text-[10px]"></i>
+            <span>نطق الشريحة</span>
+          </button>
+          <span class="text-[11px] text-slate-400">الوقت: <strong id="notes-target-time" class="text-we-gold font-mono">20 ثانية</strong></span>
+          <button onclick="toggleSpeakerNotes()" class="text-slate-400 hover:text-white transition text-xs" title="تصغير / إخفاء">
+            <i class="fa-solid fa-chevron-down" id="notes-toggle-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Spoken Script Text Content -->
+      <div id="speaker-script-content" class="text-xs sm:text-sm text-slate-200 leading-relaxed font-tajawal bg-[#281236] p-2.5 rounded-xl border border-we-borderDark/80 max-h-20 overflow-y-auto">
+        <!-- Rendered via JS per active slide -->
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: FIELD VIDEOS SHOWCASE & PLAYER                                     -->
+  <!-- ========================================================================= -->
+  <div id="modal-video-showcase" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-5" onclick="closeVideoShowcaseModal()">
+    <div class="glass-card rounded-2xl max-w-4xl w-full p-4 sm:p-6 border border-we-gold/40 shadow-2xl flex flex-col space-y-4 max-h-[90vh]" onclick="event.stopPropagation()">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-we-borderDark pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-we-gold text-we-imperial flex items-center justify-center font-bold text-base">
+            <i class="fa-solid fa-play"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-white" id="modal-video-title">فيديوهات التوثيق الميداني الحي — مدرسة WE السويس</h3>
+            <p class="text-xs text-slate-400">مقاطع حية لطلاب فصل C2 والمعلمين أثناء استخدام المنظومة</p>
+          </div>
+        </div>
+        <button onclick="closeVideoShowcaseModal()" class="text-slate-400 hover:text-white transition text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Active Video Player Area -->
+      <div class="relative bg-black rounded-xl overflow-hidden border border-we-borderDark aspect-video w-full flex items-center justify-center">
+        <video id="showcase-main-video" controls class="w-full h-full object-contain">
+          <source src="sqbs_videos/field_video_1.mp4" type="video/mp4">
+        </video>
+      </div>
+
+      <!-- Video Thumbnails Playlist Selector -->
+      <div>
+        <p class="text-xs font-bold text-we-gold mb-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-film"></i> اختر المقطع الميداني للعرض:
+        </p>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="video-playlist-thumbs">
+          <button onclick="playSpecificVideo('field_video_1.mp4', 'المقطع 1: انطلاق التجربة بفصل C2 بالسويس')" class="p-2 rounded-xl bg-we-imperial hover:bg-we-electric/30 border border-we-borderDark text-right text-xs transition group">
+            <i class="fa-solid fa-play text-we-gold text-[10px] block mb-1"></i>
+            <span class="font-bold text-white block truncate">المقطع 1: فصل C2</span>
+            <span class="text-[10px] text-slate-400 font-mono">1.49 MB</span>
+          </button>
+          <button onclick="playSpecificVideo('field_video_2.mp4', 'المقطع 2: الطلاب في معمل البرمجة')" class="p-2 rounded-xl bg-we-imperial hover:bg-we-electric/30 border border-we-borderDark text-right text-xs transition group">
+            <i class="fa-solid fa-play text-we-gold text-[10px] block mb-1"></i>
+            <span class="font-bold text-white block truncate">المقطع 2: معمل البرمجة</span>
+            <span class="text-[10px] text-slate-400 font-mono">1.55 MB</span>
+          </button>
+          <button onclick="playSpecificVideo('field_video_3.mp4', 'المقطع 3: قفزة المشاركة النشطة')" class="p-2 rounded-xl bg-we-imperial hover:bg-we-electric/30 border border-we-borderDark text-right text-xs transition group">
+            <i class="fa-solid fa-play text-we-gold text-[10px] block mb-1"></i>
+            <span class="font-bold text-white block truncate">المقطع 3: المشاركة</span>
+            <span class="text-[10px] text-slate-400 font-mono">1.89 MB</span>
+          </button>
+          <button onclick="playSpecificVideo('field_video_4.mp4', 'المقطع 4: استجابة وتفاعل الطلاب')" class="p-2 rounded-xl bg-we-imperial hover:bg-we-electric/30 border border-we-borderDark text-right text-xs transition group">
+            <i class="fa-solid fa-play text-we-gold text-[10px] block mb-1"></i>
+            <span class="font-bold text-white block truncate">المقطع 4: التفاعل</span>
+            <span class="text-[10px] text-slate-400 font-mono">1.90 MB</span>
+          </button>
+          <button onclick="playSpecificVideo('ambient_bg.mp4', 'المقطع 5: لقطة الفصل العامة')" class="p-2 rounded-xl bg-we-imperial hover:bg-we-electric/30 border border-we-borderDark text-right text-xs transition group">
+            <i class="fa-solid fa-play text-we-gold text-[10px] block mb-1"></i>
+            <span class="font-bold text-white block truncate">المقطع 5: لقطة الفصل</span>
+            <span class="text-[10px] text-slate-400 font-mono">1.92 MB</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- SLIDE GRID INDEX MODAL                                                    -->
+  <!-- ========================================================================= -->
+  <div id="modal-slide-grid" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="glass-card rounded-2xl max-w-4xl w-full p-6 border border-we-electric/40 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-we-borderDark pb-3">
+        <h3 class="font-bold text-base text-white flex items-center gap-2">
+          <i class="fa-solid fa-grip text-we-gold"></i> فهرس شرائح العرض التنافسي — مدرسة WE السويس (12 شريحة)
+        </h3>
+        <button onclick="toggleSlideGrid()" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 overflow-y-auto p-1" id="grid-thumbnails-container">
+        <!-- Generated via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-16 left-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="px-4 py-2.5 rounded-xl bg-we-electric text-white text-xs font-bold shadow-2xl flex items-center gap-2 border border-purple-400/40">
+      <i class="fa-solid fa-circle-check text-we-gold"></i>
+      <span id="toast-text">تمت العملية بنجاح!</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT LOGIC & PRESENTATION ENGINE                                    -->
+  <!-- ========================================================================= -->
+  <script>
+    // ── SLIDES DATA: WE SUEZ SPECIFICATION, TIMING & DUAL SUBTITLES ───────────
+    const slidesData = [
+      {
+        id: 1,
+        title: "العنوان والخطاف الدرامي",
+        targetSec: 20,
+        script: "بسم الله الرحمن الرحيم. مع لجنة التحكيم الموقرة، يسعدنا أن نقدم لكم منصة SQBS من مدرسة WE للتكنولوجيا التطبيقية بالسويس. دعوني أبدأ بقصة حقيقية من فصل C2: 14 طالباً كان 5 منهم فقط يجرؤون على المشاركة، بينما يقبع 9 طلاب في صمت تام خوفاً من الوقوع في الخطأ أو التعرض للإحراج. SQBS جاء ليحول المعادلة بالكامل لأن كل طالب يهم.",
+        subtitleEn: "In the name of Allah, Most Gracious, Most Merciful. Esteemed Judging Panel, we proudly present SQBS from WE Applied Technology School - Suez. Out of 14 students in Class C2, only 5 dared to participate, while 9 sat in complete silence fearing reprimand. SQBS transformed this equation because every single student matters."
+      },
+      {
+        id: 2,
+        title: "نظرية العمل وتحدي السرعة",
+        targetSec: 25,
+        script: "المعلم كان يقضي 3 دقائق كاملة، أي 180 ثانية، يبحث عن الدفتر ويكتب الملاحظة يدوياً وسط إيقاف الشرح وتشتيت الفصل ووصم الطالب علناً. مع SQBS، بمسحة QR واحدة بهاتف المعلم في 15 ثانية فقط، يُرصد السلوك مؤرخاً بالدقيقة والثانية. وفرنا 92% من الوقت وحافظنا على تركيز الفصل وكرامة الطالب كاملة.",
+        subtitleEn: "Teachers previously spent 3 full minutes (180 seconds) searching for paper logbooks, interrupting the lecture, and publicly stigmatizing students. With SQBS, a single 15-second QR scan records authenticated behavior instantly. We saved 92% of class time and fully protected student dignity."
+      },
+      {
+        id: 3,
+        title: "خريطة العمليات والهندسة",
+        targetSec: 25,
+        script: "خريطة العمليات مبنية بست خطوات قياسية تبدأ بطباعة بطاقة QR وتنتهي بالاعتماد البشري. والأهم أن التكلفة التأسيسية للمدرسة حالياً هي 0 جنيه، لأننا اعتمدنا على البنية السحابية لـ Supabase وLovable مع تفعيل سياسات الأمان RLS، مما يتيح تشغيل أي مدرسة في مصر خلال 48 ساعة فقط.",
+        subtitleEn: "Our 6-step standardized workflow ranges from instant QR generation to social worker validation. Crucially, the initial school setup cost is currently $0 (0 EGP), built on Supabase cloud and Lovable with enterprise RLS security policies, deployable across any school within 48 hours."
+      },
+      {
+        id: 4,
+        title: "منهجية القياس في فصل C2",
+        targetSec: 25,
+        script: "لم نعتمد على الانطباعات، بل طبقنا منهجية علمية في فصل C2 بالسويس: 14 طالباً تحت إشراف 6 معلمين لقياس 8 مؤشرات دقيقة (4 كمية و4 نوعية). سجلنا كثافة رصد عالية بلغت 810 عمليات رصد حقيقية خلال أسبوعين، مما يمنح هذه الأرقام مصداقية ميدانية بنسبة 100%.",
+        subtitleEn: "Rejecting vague impressions, we applied rigorous empirical metrics in Class C2 (Suez): 14 students under 6 teachers measuring 8 distinct KPIs (4 quantitative + 4 qualitative). We recorded 810 authenticated field logs in just two weeks, providing 100% statistical confidence."
+      },
+      {
+        id: 5,
+        title: "النتائج الكمية 1: السرعة والمشاركة",
+        targetSec: 25,
+        script: "النتائج جاءت قاطعة: زمن الرصد انخفض بنسبة 92% من 180 ثانية إلى 15 ثانية. والأهم هو قفزة المشاركة النشطة: من 36% فقط قبل التطبيق إلى 64% في الأسبوع الأول، ثم إلى 93% في الأسبوع الثاني، مما يعني استعادة 8 طلاب من الطلاب التسعة الصامتين إلى قلب المشاركة.",
+        subtitleEn: "Results were decisive: recording time plunged by 92% (180s to 15s). More importantly, active participation surged from 36% (5 students) to 64% in week 1, and 93% (13 students) in week 2—reclaiming 8 of the 9 previously silent students."
+      },
+      {
+        id: 6,
+        title: "النتائج الكمية 2: توازن النقاط ومستويات الخطر",
+        targetSec: 25,
+        script: "حققنا المعادلة الذهبية للتعزيز الإيجابي: 738 نقطة إيجابية مقابل 72 سلبية فقط، بمعدل 10 إلى 1! ومصفوفة تتبع الخطر أظهرت أن 13 من أصل 14 طالباً في تحسن مستمر، وسجلنا 0 حالات خطر مرتفع و0 تدخل فوري، مما أوقف المشكلات قبل تفاقمها.",
+        subtitleEn: "We achieved the Golden Positive Ratio: 738 positive points vs. only 72 negative (~10:1 ratio!). Risk tracking showed 13 of 14 students continuously improving, with 0 high-risk cases and 0 immediate emergency interventions, resolving behavioral friction preemptively."
+      },
+      {
+        id: 7,
+        title: "النتائج النوعية 1: العدالة وثقة الطلاب",
+        targetSec: 25,
+        script: "صوت الطلاب كان الإنجاز الأكبر: 93% يشعرون بعدالة التقييم لأن الرصد مؤرخ بالحقائق، و100% بإجماع كامل يثقون في المعلم والمنصة. الطلاب صرحوا بأنهم تحولوا تماماً من «الخوف من العقاب» إلى «الشغف بالتميز وصناعة القدوة».",
+        subtitleEn: "Student Voice was our pinnacle breakthrough: 93% perceive complete evaluation fairness, and 100% express absolute trust in teachers and the platform. Documented student testimonials revealed a profound shift: from 'Fear of Punishment' to 'Passion for Excellence'."
+      },
+      {
+        id: 8,
+        title: "النتائج النوعية 2: المعلمون وميثاق الكرامة",
+        targetSec: 25,
+        script: "جميع المعلمين الستة بالسويس بنسبة 100% أجمعوا على انخفاض التوتر وسهولة الاستخدام بتقييم 4.8 من 5. وطبقنا محاكي الخصوصية الرباعي: لوحة الشرف فقط هي العلنية في الفصل، بينما المخالفات سرية مشفرة للمعلم وولي الأمر والأخصائي فقط، لمنع التنمر والوصم تماماً.",
+        subtitleEn: "100% of the 6 participating teachers confirmed classroom stress reduction with a 4.8/5 ease rating. Our 4-screen privacy matrix guarantees that only the Honor Roll is visible in class, while disciplinary notes remain strictly confidential between teacher, parent, and social worker."
+      },
+      {
+        id: 9,
+        title: "مصفوفة النتائج الشاملة",
+        targetSec: 25,
+        script: "أمامكم الجدول التنفيذي الذي يلخص المؤشرات الثمانية: من 180 إلى 15 ثانية، من 36% إلى 93% مشاركة، 10 نقاط إيجابية لكل نقطة سلبية، و13 من 14 في تحسن مستمر، مع رضا المعلمين 4.8 وحماية تامة للكرامة. كل سطر هنا مدعوم بسجل زمني لا يقبل الشك.",
+        subtitleEn: "The executive dashboard summarizes all 8 KPIs: 180s down to 15s, participation up from 36% to 93%, 10 positive points per negative, 13 of 14 students improving, 4.8 teacher satisfaction, and total anti-bullying protection. Every row is backed by tamper-proof timestamps."
+      },
+      {
+        id: 10,
+        title: "الرؤى الذكية Smart Insights",
+        targetSec: 30,
+        script: "محرك Smart Insights يعمل بثلاث طبقات استباقية: اكتشف تلقائياً أن نصف المخالفات (7 من 14) تتركز يوم الخميس بسبب الإجهاد التراكمي، فأرسل إنذاراً مبكراً للأخصائي باقتراح حلول تربوية قبل الخميس التالي. ومع ذلك نطبق مبدأ Human-in-the-Loop الصارم: الذكاء الاصطناعي يقترح، والقرار النهائي دائماً للأخصائي البشري.",
+        subtitleEn: "Smart Insights operates in 3 predictive layers: it automatically discovered that 50% of infractions (7 of 14) clustered on Thursdays due to cumulative fatigue, sending early warnings with pedagogical remedies before next Thursday. Human-in-the-Loop is paramount: AI advises, humans decide."
+      },
+      {
+        id: 11,
+        title: "التوسع الشامل والجدوى الاقتصادية",
+        targetSec: 30,
+        script: "SQBS ليس مجرد تطبيق سلوك؛ بل هو نظام إدارة مدرسي شامل بـ 7 وحدات (وحدتان جُربتا و5 وحدات جاهزة للإطلاق في الكود). واقتصادياً: تكلفة تأسيس 0 جنيه، اشتراك شهري 1,500 جنيه للمدرسة، تشغيل 3,500 جنيه شهرياً، ونصل للتعادل عند 3 مدارس فقط، ونحقق فائضاً سنوياً 138 ألف جنيه عند 10 مدارس.",
+        subtitleEn: "SQBS is a comprehensive 7-module school ERP (2 piloted, 5 code-ready). Financially: $0 setup cost, 1,500 EGP monthly school subscription, ~3,500 EGP operating budget, breaking even at just 3 schools, and generating 138,000 EGP annual surplus at 10 schools (5,000 students)."
+      },
+      {
+        id: 12,
+        title: "الختام ورسالة الفريق",
+        targetSec: 20,
+        script: "نختتم برسالتنا الخالدة: «تحويل البيانات إلى أفعال لأن كل طالب يهم». ندعو حضراتكم لمسح رمز QR أمامكم الآن بهواتفكم لتجربة المنصة حياً والتأكد بأنفسكم من أن مدرسة WE بالسويس تقدم اليوم نموذجاً رائداً يعيد تشكيل مستقبل التعليم في مصر. شكراً لكم.",
+        subtitleEn: "We conclude with our guiding mission: 'Turning Data into Action, Because Every Student Matters'. We invite the honorable judges to scan the QR code now to experience SQBS live, proving that WE Suez offers a pioneering model reshaping education. Thank you."
+      }
+    ];
+
+    let currentSlide = 1;
+    const totalSlides = slidesData.length;
+    let globalTimerSeconds = 300; // 5 minutes
+    let isTimerRunning = false;
+    let timerInterval = null;
+
+    // Feature Toggles
+    let isAmbientVideoOn = true;
+    let isSubtitlesOn = true;
+    let isVoiceOverActive = false;
+    let currentSpeechUtterance = null;
+
+    // Charts instances
+    let chartSpeed = null;
+    let chartParticipation = null;
+    let chartFairness = null;
+    let chartTrust = null;
+
+    // ── INITIALIZATION ────────────────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', () => {
+      buildSlideThumbnails();
+      updateSlideView();
+      initKeyboardNavigation();
+      initSpeechVoices();
+    });
+
+    // ── SLIDE NAVIGATION ──────────────────────────────────────────────────────
+    function goToSlide(slideNum) {
+      if (slideNum < 1 || slideNum > totalSlides) return;
+      currentSlide = slideNum;
+      updateSlideView();
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlideView();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlideView();
+      }
+    }
+
+    function updateSlideView() {
+      // Toggle slide panes
+      document.querySelectorAll('.slide-pane').forEach((el, idx) => {
+        if (idx + 1 === currentSlide) {
+          el.classList.add('active');
+        } else {
+          el.classList.remove('active');
+        }
+      });
+
+      // Update toolbar counters
+      const slideMeta = slidesData[currentSlide - 1];
+      document.getElementById('slide-indicator').innerText = `${currentSlide} / ${totalSlides}`;
+      document.getElementById('slide-target-sec').innerText = `${slideMeta.targetSec} ثانية`;
+      document.getElementById('progress-bar').style.width = `${(currentSlide / totalSlides) * 100}%`;
+
+      // Update speaker notes
+      document.getElementById('speaker-slide-title').innerText = `الشريحة ${currentSlide}: ${slideMeta.title}`;
+      document.getElementById('notes-target-time').innerText = `${slideMeta.targetSec} ثانية`;
+      document.getElementById('speaker-script-content').innerHTML = `
+        <p class="leading-relaxed"><strong class="text-we-gold">النص المنطوق بالسويس:</strong> ${slideMeta.script}</p>
+      `;
+
+      // Update English Subtitles
+      document.getElementById('subtitles-text').innerText = slideMeta.subtitleEn;
+
+      // Disable/enable prev/next buttons
+      document.getElementById('btn-prev').disabled = (currentSlide === 1);
+      document.getElementById('btn-next').disabled = (currentSlide === totalSlides);
+
+      // Render charts if slide 5 or slide 7 is active
+      if (currentSlide === 5) {
+        setTimeout(renderSlide5Charts, 150);
+      }
+      if (currentSlide === 7) {
+        setTimeout(renderSlide7Charts, 150);
+      }
+
+      // Voice-Over Auto Read if active
+      if (isVoiceOverActive) {
+        speakCurrentSlide();
+      }
+    }
+
+    // ── KEYBOARD NAVIGATION ───────────────────────────────────────────────────
+    function initKeyboardNavigation() {
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === ' ' || e.key === 'PageDown') {
+          e.preventDefault();
+          nextSlide();
+        } else if (e.key === 'ArrowRight' || e.key === 'PageUp') {
+          e.preventDefault();
+          prevSlide();
+        } else if (e.key.toLowerCase() === 'f') {
+          toggleFullscreen();
+        } else if (e.key.toLowerCase() === 'n') {
+          toggleSpeakerNotes();
+        } else if (e.key.toLowerCase() === 'c') {
+          toggleSubtitles();
+        } else if (e.key.toLowerCase() === 'v') {
+          toggleVoiceOver();
+        } else if (e.key === 'Escape') {
+          const gallery = document.getElementById('modal-video-gallery');
+          const grid = document.getElementById('modal-slide-grid');
+          if (gallery && !gallery.classList.contains('hidden')) closeVideoGallery();
+          if (grid && !grid.classList.contains('hidden')) toggleSlideGrid();
+        }
+      });
+    }
+
+    // ── CHARTS RENDERING (CHART.JS) ───────────────────────────────────────────
+    function renderSlide5Charts() {
+      // Chart 1: Speed Reduction
+      const ctxSpeed = document.getElementById('chart-speed-reduction');
+      if (ctxSpeed) {
+        if (chartSpeed) chartSpeed.destroy();
+        chartSpeed = new Chart(ctxSpeed, {
+          type: 'bar',
+          data: {
+            labels: ['الدفتر الورقي التقليدي', 'منظومة SQBS الذكية'],
+            datasets: [{
+              label: 'زمن الرصد بالثواني',
+              data: [180, 15],
+              backgroundColor: ['rgba(239, 68, 68, 0.8)', 'rgba(16, 185, 129, 0.9)'],
+              borderColor: ['#EF4444', '#10B981'],
+              borderWidth: 2,
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.raw} ثانية (وفر 92%)`
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 200,
+                grid: { color: 'rgba(255,255,255,0.08)' },
+                ticks: { color: '#94A3B8', font: { family: 'Cairo' } }
+              },
+              x: {
+                grid: { display: false },
+                ticks: { color: '#E2E8F0', font: { family: 'Cairo', weight: 'bold' } }
+              }
+            }
+          }
+        });
+      }
+
+      // Chart 2: Participation Leap
+      const ctxPart = document.getElementById('chart-participation-leap');
+      if (ctxPart) {
+        if (chartParticipation) chartParticipation.destroy();
+        chartParticipation = new Chart(ctxPart, {
+          type: 'bar',
+          data: {
+            labels: ['قبل SQBS', 'الأسبوع 1', 'الأسبوع 2'],
+            datasets: [{
+              label: 'نسبة المشاركة %',
+              data: [36, 64, 93],
+              backgroundColor: [
+                'rgba(168, 85, 247, 0.4)',
+                'rgba(245, 158, 11, 0.7)',
+                'rgba(16, 185, 129, 0.9)'
+              ],
+              borderColor: ['#A855F7', '#F59E0B', '#10B981'],
+              borderWidth: 2,
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.raw}% (${ctx.raw === 36 ? '5 طلاب' : (ctx.raw === 64 ? '9 طلاب' : '13 طالباً بالسويس')})`
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                grid: { color: 'rgba(255,255,255,0.08)' },
+                ticks: {
+                  callback: (v) => `${v}%`,
+                  color: '#94A3B8',
+                  font: { family: 'Cairo' }
+                }
+              },
+              x: {
+                grid: { display: false },
+                ticks: { color: '#E2E8F0', font: { family: 'Cairo', weight: 'bold' } }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function renderSlide7Charts() {
+      // Donut 1: Fairness
+      const ctxFairness = document.getElementById('chart-fairness-donut');
+      if (ctxFairness) {
+        if (chartFairness) chartFairness.destroy();
+        chartFairness = new Chart(ctxFairness, {
+          type: 'doughnut',
+          data: {
+            labels: ['يشعرون بالعدالة (13 طالب)', 'غير متأكد (طالب واحد)'],
+            datasets: [{
+              data: [93, 7],
+              backgroundColor: ['#10B981', 'rgba(255,255,255,0.1)'],
+              borderColor: ['#059669', 'transparent'],
+              borderWidth: 2,
+              cutout: '72%'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      // Donut 2: Trust
+      const ctxTrust = document.getElementById('chart-trust-donut');
+      if (ctxTrust) {
+        if (chartTrust) chartTrust.destroy();
+        chartTrust = new Chart(ctxTrust, {
+          type: 'doughnut',
+          data: {
+            labels: ['ثقة كاملة (14 طالباً بالسويس)'],
+            datasets: [{
+              data: [100],
+              backgroundColor: ['#F59E0B'],
+              borderColor: ['#D97706'],
+              borderWidth: 2,
+              cutout: '72%'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+    }
+
+    // ── ARABIC VOICE-OVER (WEB SPEECH API) ─────────────────────────────────────
+    let availableVoices = [];
+    function initSpeechVoices() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          availableVoices = window.speechSynthesis.getVoices();
+        };
+      }
+    }
+
+    function toggleVoiceOver() {
+      isVoiceOverActive = !isVoiceOverActive;
+      const btn = document.getElementById('btn-voiceover');
+      const icon = document.getElementById('icon-voiceover');
+      const pulse = document.getElementById('voiceover-pulse-dot');
+
+      if (isVoiceOverActive) {
+        btn.className = 'px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-we-electric to-purple-600 text-white font-bold text-xs shadow-md shadow-purple-500/30 flex items-center gap-1.5 border border-purple-400';
+        icon.className = 'fa-solid fa-volume-high text-we-gold animate-bounce';
+        pulse.className = 'w-2.5 h-2.5 rounded-full bg-we-gold animate-ping';
+        speakCurrentSlide();
+        showToast('تم تفعيل التعليق الصوتي العربي للمتحدث', 'success');
+      } else {
+        stopVoiceOver();
+        btn.className = 'px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-we-borderDark text-xs font-bold transition flex items-center gap-1.5';
+        icon.className = 'fa-solid fa-volume-xmark text-slate-400';
+        pulse.className = 'w-2.5 h-2.5 rounded-full bg-slate-600';
+        showToast('تم إيقاف التعليق الصوتي', 'info');
+      }
+    }
+
+    function speakCurrentSlide() {
+      if (!('speechSynthesis' in window)) {
+        showToast('المتصفح لا يدعم توليد الصوت المباشر', 'warning');
+        return;
+      }
+      window.speechSynthesis.cancel();
+
+      const text = slidesData[currentSlide - 1].script;
+      currentSpeechUtterance = new SpeechSynthesisUtterance(text);
+      currentSpeechUtterance.lang = 'ar-SA';
+      currentSpeechUtterance.rate = 0.95; // Clear presentation pacing
+
+      // Attempt to pick an Arabic voice
+      const voices = window.speechSynthesis.getVoices();
+      const arabicVoice = voices.find(v => v.lang.startsWith('ar'));
+      if (arabicVoice) {
+        currentSpeechUtterance.voice = arabicVoice;
+      }
+
+      window.speechSynthesis.speak(currentSpeechUtterance);
+    }
+
+    function stopVoiceOver() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    // ── SUBTITLES TOGGLE (ENGLISH CC) ─────────────────────────────────────────
+    function toggleSubtitles() {
+      isSubtitlesOn = !isSubtitlesOn;
+      const banner = document.getElementById('subtitles-banner');
+      const btn = document.getElementById('btn-subtitles');
+      if (isSubtitlesOn) {
+        banner.classList.remove('hidden');
+        btn.className = 'px-2.5 py-1.5 rounded-xl bg-we-electric/30 hover:bg-we-electric/50 text-white border border-we-gold/60 text-xs font-bold transition flex items-center gap-1.5 shadow-sm';
+        showToast('تم تفعيل الترجمة الإنجليزية (English CC On)', 'success');
+      } else {
+        banner.classList.add('hidden');
+        btn.className = 'px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 border border-we-borderDark text-xs font-bold transition flex items-center gap-1.5 opacity-60';
+        showToast('تم إخفاء الترجمة الإنجليزية', 'info');
+      }
+    }
+
+    // ── AMBIENT VIDEO TOGGLE ──────────────────────────────────────────────────
+    function toggleAmbientVideo() {
+      const video = document.getElementById('ambient-bg-video');
+      const icon = document.getElementById('icon-ambient-video');
+      const btn = document.getElementById('btn-ambient-toggle');
+
+      if (isAmbientVideoOn) {
+        video.pause();
+        isAmbientVideoOn = false;
+        icon.className = 'fa-solid fa-video-slash text-slate-400';
+        btn.classList.add('opacity-50');
+        showToast('تم إيقاف فيديو الخلفية مؤقتاً', 'info');
+      } else {
+        video.play();
+        isAmbientVideoOn = true;
+        icon.className = 'fa-solid fa-video text-we-gold';
+        btn.classList.remove('opacity-50');
+        showToast('تم استئناف تشغيل فيديو الخلفية', 'success');
+      }
+    }
+
+    // ── FIELD VIDEO SHOWCASE MODAL ────────────────────────────────────────────
+    function openVideoShowcaseModal() {
+      const modal = document.getElementById('modal-video-showcase');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeVideoShowcaseModal() {
+      const modal = document.getElementById('modal-video-showcase');
+      const player = document.getElementById('showcase-main-video');
+      player.pause();
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function playSpecificVideo(videoFileName, titleDesc) {
+      openVideoShowcaseModal();
+      const player = document.getElementById('showcase-main-video');
+      const title = document.getElementById('modal-video-title');
+      
+      title.innerText = titleDesc || 'فيديو ميداني — مدرسة WE السويس';
+      player.src = `sqbs_videos/${videoFileName}`;
+      player.play().catch(e => console.log('Autoplay handled'));
+    }
+
+    // ── GLOBAL 5-MINUTE TIMER LOGIC ───────────────────────────────────────────
+    function toggleGlobalTimer() {
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        document.getElementById('btn-timer-toggle').innerHTML = '<i class="fa-solid fa-play text-xs"></i>';
+      } else {
+        isTimerRunning = true;
+        document.getElementById('btn-timer-toggle').innerHTML = '<i class="fa-solid fa-pause text-xs text-we-gold"></i>';
+        timerInterval = setInterval(() => {
+          if (globalTimerSeconds > 0) {
+            globalTimerSeconds--;
+            renderTimer();
+          } else {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            showToast('انتهت الـ 5 دقائق المخصصة للعرض التقديمي!', 'warning');
+          }
+        }, 1000);
+      }
+    }
+
+    function resetGlobalTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      globalTimerSeconds = 300;
+      document.getElementById('btn-timer-toggle').innerHTML = '<i class="fa-solid fa-play text-xs"></i>';
+      renderTimer();
+    }
+
+    function renderTimer() {
+      const mins = Math.floor(globalTimerSeconds / 60);
+      const secs = globalTimerSeconds % 60;
+      const display = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      const el = document.getElementById('global-timer');
+      el.innerText = display;
+      if (globalTimerSeconds <= 30) {
+        el.className = 'font-mono font-bold text-rose-400 text-sm animate-pulse';
+      } else {
+        el.className = 'font-mono font-bold text-white text-sm';
+      }
+    }
+
+    // ── UI TOGGLES (Notes, Grid, Fullscreen) ───────────────────────────────────
+    function toggleSpeakerNotes() {
+      const drawer = document.getElementById('speaker-notes-drawer');
+      const icon = document.getElementById('notes-toggle-icon');
+      if (drawer.classList.contains('hidden')) {
+        drawer.classList.remove('hidden');
+        icon.className = 'fa-solid fa-chevron-down';
+      } else {
+        drawer.classList.add('hidden');
+        icon.className = 'fa-solid fa-chevron-up';
+      }
+    }
+
+    function toggleSlideGrid() {
+      const modal = document.getElementById('modal-slide-grid');
+      modal.classList.toggle('hidden');
+      modal.classList.toggle('flex');
+    }
+
+    function buildSlideThumbnails() {
+      const container = document.getElementById('grid-thumbnails-container');
+      if (!container) return;
+      container.innerHTML = slidesData.map(s => `
+        <button onclick="goToSlide(${s.id}); toggleSlideGrid();" class="p-3 rounded-xl bg-we-imperial hover:bg-we-electric/30 border border-we-borderDark text-right transition flex flex-col justify-between h-24 hover:border-we-gold group">
+          <div class="flex items-center justify-between w-full">
+            <span class="w-5 h-5 rounded-full bg-we-electric text-white text-[10px] font-bold flex items-center justify-center font-mono">${s.id}</span>
+            <span class="text-[10px] text-we-gold font-mono">${s.targetSec}s</span>
+          </div>
+          <p class="text-xs font-bold text-white group-hover:text-we-gold transition line-clamp-2">${s.title}</p>
+        </button>
+      `).join('');
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          showToast('تعذر الدخول في وضع ملء الشاشة تلقائياً', 'info');
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    function simulateLiveScan() {
+      showToast('جاري فتح محاكي المسح الذكي لرمز QR لفصل C2 بالسويس...', 'success');
+      setTimeout(() => {
+        alert('✨ محاكاة SQBS المباشرة (مدرسة WE السويس):\n\n✓ تم مسح بطاقة الطالب: أحمد رضا (فصل C2)\n✓ الزمن المستغرق: 1.1 ثانية\n✓ رصد: سلوك قيادي متميز (+10 نقاط)\n✓ تم تحديث لوحة الشرف وإرسال إشعار مؤرخ لولي الأمر فوراً!');
+      }, 500);
+    }
+
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+      toastText.innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3500);
+    }
+  </script>
+</body>
+</html>

@@ -40,14 +40,23 @@ class AttendanceCheckInRequest(BaseModel):
     token: str
 
 
+class AttendancePublicCheckInRequest(BaseModel):
+    token: str
+    student_identifier: str  # student_id, uni_code, or email
+    pin: Optional[str] = None
+
+
 class AttendanceCheckInOut(BaseModel):
     message: str
-    record_id: int
+    record_id: Optional[int] = None
     session_id: int
     material_id: str
     course_name: str
-    scanned_at: datetime
+    scanned_at: Optional[datetime] = None
     status: str
+    success: bool = True
+    student_name: Optional[str] = None
+    student_uni_code: Optional[str] = None
 
 
 class StudentCourseAttendanceSummary(BaseModel):

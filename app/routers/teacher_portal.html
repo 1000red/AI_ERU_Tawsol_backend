@@ -95,6 +95,24 @@
 
         <!-- Right Controls: Teacher Profile, Dark Mode, Quick Login -->
         <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Student QR Check-In Gateway Link -->
+          <a href="Student_CheckIn.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold transition flex items-center gap-1.5" title="بوابة مسح رمز QR حضور الطلاب">
+            <i class="fa-solid fa-qrcode text-emerald-600 dark:text-emerald-400"></i>
+            <span class="hidden xl:inline">بوابة حضور الطلاب</span>
+          </a>
+
+          <!-- English Subtitles / Bilingual Overlay Toggle -->
+          <button id="lang-toggle-btn" onclick="toggleLanguageOverlay()" class="px-2.5 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700/60 text-xs font-bold transition flex items-center gap-1.5" title="تبديل الترجمة الإنجليزية الفورية (English Subtitles & UI)">
+            <i class="fa-solid fa-language text-indigo-600 dark:text-indigo-400"></i>
+            <span id="lang-btn-label">English</span>
+          </button>
+
+          <!-- Arabic Voice-Over Assistant Toggle -->
+          <button id="voiceover-toggle-btn" onclick="toggleVoiceOverAssistant()" class="px-2.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 text-xs font-bold transition flex items-center gap-1.5" title="تفعيل / إيقاف المعلق الصوتي الذكي باللغة العربية">
+            <i id="voiceover-icon" class="fa-solid fa-volume-high text-purple-600 dark:text-purple-400"></i>
+            <span id="voiceover-label" class="hidden sm:inline">صوت معلق</span>
+          </button>
+
           <!-- Credentials Drawer Toggle -->
           <button onclick="toggleCredentialsDrawer()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 text-xs font-bold transition flex items-center gap-1.5" title="عرض حسابات المعلمين للدخول الفوري">
             <i class="fa-solid fa-id-badge text-amber-500"></i>
@@ -299,6 +317,11 @@
       <button onclick="switchTab('attendance')" id="tab-btn-attendance" class="nav-tab px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-2 shrink-0">
         <i class="fa-solid fa-clipboard-user"></i>
         <span>كشوفات الحضور</span>
+      </button>
+
+      <button onclick="switchTab('honor-roll')" id="tab-btn-honor-roll" class="nav-tab px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-2 shrink-0">
+        <i class="fa-solid fa-award text-amber-500"></i>
+        <span>لوحة الشرف (SQBS)</span>
       </button>
 
       <button onclick="switchTab('profile')" id="tab-btn-profile" class="nav-tab px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-2 shrink-0">
@@ -568,46 +591,691 @@
     </section>
 
     <!-- ======================================================================= -->
-    <!-- TAB 6: ATTENDANCE SESSIONS                                              -->
+    <!-- TAB 6: ATTENDANCE SESSIONS & INTERACTIVE SHEET                          -->
     <!-- ======================================================================= -->
-    <section id="tab-content-attendance" class="hidden space-y-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
-            جلسات حضور وغياب الطلاب
-          </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400">
-            فتح جلسة حضور إلكترونية مؤقتة لطلاب الفصل مع رمز تحقق لحظي
-          </p>
-        </div>
-        <button onclick="openCreateSessionModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 hover:opacity-95 transition flex items-center gap-1.5 shrink-0">
-          <i class="fa-solid fa-qrcode"></i>
-          <span>فتح جلسة حضور جديدة</span>
-        </button>
-      </div>
-
-      <div id="active-session-card" class="hidden glass-card rounded-2xl p-5 border border-emerald-300 dark:border-emerald-700/60 shadow-lg bg-gradient-to-r from-emerald-500/5 to-teal-500/5">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-xl">
-              <i class="fa-solid fa-user-check"></i>
-            </div>
-            <div>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">جلسة نشطة الآن</span>
-              <h4 id="active-session-title" class="font-extrabold text-base text-slate-900 dark:text-white mt-1">حضور محاضرة</h4>
-              <p id="active-session-course" class="text-xs text-slate-500 dark:text-slate-400">كود المقرر: --</p>
-            </div>
+    <section id="tab-content-attendance" class="hidden space-y-6">
+      
+      <!-- Top Action Bar & Course Selector -->
+      <div class="glass-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center text-xl font-bold shadow-md shadow-emerald-500/20 shrink-0">
+            <i class="fa-solid fa-qrcode"></i>
           </div>
-          <button onclick="closeCurrentSession()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center gap-1.5">
-            <i class="fa-solid fa-lock"></i>
-            <span>إغلاق جلسة الحضور</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
+                منظومة الحضور الذكي وكشوفات الطلاب
+              </h3>
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                WE Suez QR
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              فتح جلسة حضور إلكترونية مؤقتة بـ QR Code مع رصد وتعبئة كشف الحضور والانصراف المباشر
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3 w-full md:w-auto flex-wrap">
+          <!-- Course Selector -->
+          <div class="flex items-center gap-1.5 flex-1 sm:flex-initial">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">المقرر:</span>
+            <select id="attendance-filter-course" onchange="handleAttendanceCourseChange()" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-500">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+
+          <button onclick="openCreateAttendanceSessionModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:opacity-95 text-white font-bold text-xs shadow-md shadow-emerald-500/25 transition flex items-center gap-2 shrink-0">
+            <i class="fa-solid fa-plus-circle"></i>
+            <span>فتح جلسة حضور وتوليد QR</span>
           </button>
         </div>
       </div>
 
-      <div id="attendance-history-list" class="space-y-3">
-        <!-- Rendered via JS -->
+      <!-- ACTIVE SESSION & QR CODE HERO CARD (Visible when session is active or loaded) -->
+      <div id="active-session-card" class="hidden glass-card rounded-2xl p-5 sm:p-6 border-2 border-emerald-500/40 dark:border-emerald-500/30 shadow-xl bg-gradient-to-br from-emerald-500/5 via-teal-500/5 to-purple-500/5 space-y-6">
+        
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-5 border-b border-emerald-500/20">
+          
+          <!-- Right Info: Session Title, Course & Timer -->
+          <div class="space-y-3 text-right w-full lg:w-auto">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span id="session-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1.5 animate-pulse">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>جلسة حضور نشطة الآن</span>
+              </span>
+              <span id="session-course-badge" class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
+                CS101
+              </span>
+            </div>
+
+            <h3 id="active-session-title" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">
+              محاضرة تخصصية
+            </h3>
+
+            <!-- Countdown Timer & Token Info -->
+            <div class="flex items-center gap-3 text-xs font-medium text-slate-600 dark:text-slate-400 flex-wrap">
+              <div class="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 font-mono">
+                <i class="fa-solid fa-stopwatch text-emerald-500"></i>
+                <span>متبقي:</span>
+                <strong id="session-countdown-timer" class="text-emerald-600 dark:text-emerald-400 font-bold text-sm">--:--</strong>
+              </div>
+
+              <div class="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 font-mono">
+                <i class="fa-solid fa-key text-purple-500"></i>
+                <span class="text-slate-400">الكود:</span>
+                <span id="session-token-text" class="font-bold text-slate-800 dark:text-slate-200 select-all">--</span>
+                <button onclick="copySessionToken()" class="hover:text-purple-500 mr-1" title="نسخ الكود">
+                  <i class="fa-solid fa-copy text-xs"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Left Controls: Close Session & Refresh -->
+          <div class="flex items-center gap-2 self-stretch lg:self-center justify-end flex-wrap">
+            <button onclick="openProjectorQRModal()" class="px-4 py-2.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold transition flex items-center gap-2 shadow-md shadow-purple-700/20" title="تكبير رمز الـ QR على كامل الشاشة للعرض بالبروجيكتور في القاعة">
+              <i class="fa-solid fa-expand"></i>
+              <span>عرض بروجيكتور (Fullscreen)</span>
+            </button>
+            <button onclick="refreshActiveAttendanceSheet()" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition" title="تحديث الكشف لحظياً">
+              <i class="fa-solid fa-arrows-rotate text-xs"></i>
+            </button>
+            <button onclick="closeCurrentAttendanceSession()" id="btn-close-session" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center gap-2 shadow-md shadow-rose-600/20">
+              <i class="fa-solid fa-lock"></i>
+              <span>قفل وإنهاء الجلسة</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- QR Code & Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+          
+          <!-- Dynamic QR Code Card -->
+          <div class="flex flex-col items-center justify-center p-4 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-500/30 shadow-inner text-center">
+            <div id="session-qr-box" class="p-3 bg-white rounded-xl shadow-md border border-slate-100 flex items-center justify-center min-w-[200px] min-h-[200px]">
+              <!-- QR Canvas Injected by QRCode.js -->
+            </div>
+            <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-2.5 flex items-center gap-1.5">
+              <i class="fa-solid fa-camera text-emerald-500"></i>
+              <span>مسح الـ QR بهاتف الطالب لتسجيل الحضور فورياً</span>
+            </p>
+            <div class="mt-3 flex items-center gap-2 w-full justify-center flex-wrap">
+              <button type="button" onclick="copyStudentCheckInUrl()" class="px-3 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-300 font-bold text-xs transition flex items-center gap-1.5" title="نسخ رابط صفحة تسجيل الحضور">
+                <i class="fa-solid fa-copy"></i>
+                <span>نسخ الرابط</span>
+              </button>
+              <a href="Student_CheckIn.html" target="_blank" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1.5" title="فتح بوابة الطالب في نافذة جديدة">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span>فتح البوابة</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Live Attendance Metric Counters -->
+          <div class="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            
+            <!-- Present Counter -->
+            <div class="glass-card rounded-xl p-3.5 border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/50 dark:bg-emerald-950/30 text-center">
+              <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 block mb-1">حاضر (Present)</span>
+              <strong id="counter-present" class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">0</strong>
+            </div>
+
+            <!-- Late Counter -->
+            <div class="glass-card rounded-xl p-3.5 border border-amber-200 dark:border-amber-800/80 bg-amber-50/50 dark:bg-amber-950/30 text-center">
+              <span class="text-[11px] font-bold text-amber-700 dark:text-amber-400 block mb-1">متأخر (Late)</span>
+              <strong id="counter-late" class="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">0</strong>
+            </div>
+
+            <!-- Excused Counter -->
+            <div class="glass-card rounded-xl p-3.5 border border-blue-200 dark:border-blue-800/80 bg-blue-50/50 dark:bg-blue-950/30 text-center">
+              <span class="text-[11px] font-bold text-blue-700 dark:text-blue-400 block mb-1">عذر (Excused)</span>
+              <strong id="counter-excused" class="text-2xl font-black text-blue-600 dark:text-blue-400 font-mono">0</strong>
+            </div>
+
+            <!-- Absent Counter -->
+            <div class="glass-card rounded-xl p-3.5 border border-rose-200 dark:border-rose-800/80 bg-rose-50/50 dark:bg-rose-950/30 text-center">
+              <span class="text-[11px] font-bold text-rose-700 dark:text-rose-400 block mb-1">غائب (Absent)</span>
+              <strong id="counter-absent" class="text-2xl font-black text-rose-600 dark:text-rose-400 font-mono">0</strong>
+            </div>
+
+            <!-- Total Enrolled & Rate Banner -->
+            <div class="col-span-2 sm:col-span-4 mt-2 p-3 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+              <span class="text-slate-500 dark:text-slate-400">إجمالي طلاب الشعبة: <strong id="counter-total-enrolled" class="text-slate-800 dark:text-slate-200 font-bold">0</strong> طالب</span>
+              <div class="flex items-center gap-2">
+                <span class="text-slate-500 dark:text-slate-400">نسبة الحضور:</span>
+                <span id="counter-attendance-rate" class="px-2 py-0.5 rounded-full font-bold text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-mono">0.0%</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
+
+      <!-- INTERACTIVE ATTENDANCE SHEET (كشف الحضور والانصراف المباشر) -->
+      <div id="attendance-sheet-card" class="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-4 p-5 sm:p-6">
+        
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
+          <div>
+            <h4 class="font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
+              <i class="fa-solid fa-clipboard-check text-emerald-600"></i>
+              <span>كشف الحضور والانصراف التفصيلي (Attendance Sheet)</span>
+            </h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              يمكنك تغيير حالة أي طالب فورياً، أو استخدام أزرار الرصد الجماعي والتصدير
+            </p>
+          </div>
+
+          <!-- Quick Sheet Actions -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="handleBatchMarkAll('PRESENT')" class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 hover:bg-emerald-100 border border-emerald-300 text-xs font-bold transition flex items-center gap-1">
+              <i class="fa-solid fa-check-double"></i>
+              <span>تحضير الكل</span>
+            </button>
+            <button onclick="handleBatchMarkAll('ABSENT')" class="px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 hover:bg-rose-100 border border-rose-300 text-xs font-bold transition flex items-center gap-1">
+              <i class="fa-solid fa-user-xmark"></i>
+              <span>رصد غياب الكل</span>
+            </button>
+            <button onclick="exportAttendanceCSV()" class="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1">
+              <i class="fa-solid fa-file-excel text-emerald-600"></i>
+              <span>تصدير Excel</span>
+            </button>
+            <button onclick="printOfficialAttendanceSheet()" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white dark:bg-purple-900 hover:opacity-90 text-xs font-bold transition flex items-center gap-1 shadow-sm">
+              <i class="fa-solid fa-print"></i>
+              <span>طباعة الكشف</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Pills & Search Bar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <!-- Filter Buttons -->
+          <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl text-xs overflow-x-auto w-full sm:w-auto">
+            <button onclick="filterAttendanceSheet('ALL')" id="filter-att-ALL" class="att-filter-btn px-3 py-1 rounded-lg font-bold bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm transition">
+              الكل (<span id="filter-count-all">0</span>)
+            </button>
+            <button onclick="filterAttendanceSheet('PRESENT')" id="filter-att-PRESENT" class="att-filter-btn px-3 py-1 rounded-lg font-bold text-slate-600 dark:text-slate-400 hover:text-emerald-600 transition">
+              حاضر (<span id="filter-count-present">0</span>)
+            </button>
+            <button onclick="filterAttendanceSheet('LATE')" id="filter-att-LATE" class="att-filter-btn px-3 py-1 rounded-lg font-bold text-slate-600 dark:text-slate-400 hover:text-amber-600 transition">
+              متأخر (<span id="filter-count-late">0</span>)
+            </button>
+            <button onclick="filterAttendanceSheet('EXCUSED')" id="filter-att-EXCUSED" class="att-filter-btn px-3 py-1 rounded-lg font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition">
+              عذر (<span id="filter-count-excused">0</span>)
+            </button>
+            <button onclick="filterAttendanceSheet('ABSENT')" id="filter-att-ABSENT" class="att-filter-btn px-3 py-1 rounded-lg font-bold text-slate-600 dark:text-slate-400 hover:text-rose-600 transition">
+              غائب (<span id="filter-count-absent">0</span>)
+            </button>
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative w-full sm:w-64">
+            <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="att-sheet-search" oninput="handleAttendanceSearch(this.value)" placeholder="ابحث باسم الطالب أو الكود..." class="w-full pr-8 pl-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+
+        <!-- Student Attendance Table -->
+        <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="py-3 px-4 font-bold">#</th>
+                <th class="py-3 px-4 font-bold">اسم الطالب</th>
+                <th class="py-3 px-4 font-bold">الكود الأكاديمي</th>
+                <th class="py-3 px-4 font-bold">وقت المسح والوسيلة</th>
+                <th class="py-3 px-4 font-bold text-center">الحالة</th>
+                <th class="py-3 px-4 font-bold text-center">رصد المعلم المباشر</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-sheet-tbody" class="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-slate-900">
+              <!-- Rendered via JS -->
+              <tr>
+                <td colspan="6" class="text-center py-10 text-slate-400">
+                  <i class="fa-solid fa-clipboard-user text-2xl mb-2 text-slate-300"></i>
+                  <p>اختر جلسة نشطة أو افتح جلسة حضور جديدة لعرض وتعبئة الكشف</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- PAST SESSIONS HISTORY ACCORDION -->
+      <div class="glass-card rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <h4 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-clock-rotate-left text-purple-600"></i>
+          <span>سجل جلسات الحضور السابقة للمقرر</span>
+        </h4>
+        <div id="attendance-history-list" class="space-y-2">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 7: PUBLIC HONOR ROLL & ANTI-BULLYING DIGNITY MATRIX (SQBS)          -->
+    <!-- ======================================================================= -->
+    <section id="tab-content-honor-roll" class="hidden space-y-6">
+      
+      <!-- Honor Roll Hero Banner -->
+      <div class="rounded-3xl bg-gradient-to-r from-amber-500 via-purple-700 to-indigo-800 text-white p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        <div class="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          <div class="space-y-3">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black bg-amber-400 text-slate-950 shadow-md">
+              <i class="fa-solid fa-crown"></i>
+              <span>لوحة الشرف ومصفوفة الكرامة المدرسية — SQBS</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
+              لوحة التميز وصناعة القدوة — مدرسة WE بالسويس
+            </h2>
+            <p class="text-xs sm:text-sm text-purple-100 max-w-2xl leading-relaxed">
+              تحفيز بالتقدير العلني، وحماية كاملة لكرامة الطلاب عبر فصل الشاشات المدرسية: <strong class="text-amber-300 font-bold">738 نقطة إيجابية معلنة</strong> تصنع القدوة، و <strong class="text-cyan-200 font-bold">72 توجيه خاص سري</strong> لحفظ الخصوصية ومنع الوصم الاجتماعي والتنمر نهائياً.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0">
+            <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-amber-400/20 transition flex items-center gap-2">
+              <i class="fa-solid fa-trophy text-slate-900"></i>
+              <span>عرض التجربة الميدانية (Pitch)</span>
+            </a>
+            <button onclick="printHonorRollCharter()" class="px-4 py-3 rounded-2xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-xs sm:text-sm font-bold transition flex items-center gap-2 backdrop-blur-sm">
+              <i class="fa-solid fa-print"></i>
+              <span>طباعة لوحة الشرف</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Key Impact Metric Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-5 border border-amber-200 dark:border-amber-900/40 shadow-sm relative overflow-hidden group hover:border-amber-400 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">إجمالي النقاط الإيجابية</span>
+            <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base">
+              <i class="fa-solid fa-star"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <span class="text-3xl font-black text-amber-500 dark:text-amber-400 font-mono">738</span>
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">نقطة تميز</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">مقابل 72 نقطة سلبية خاصة (معدل 10 : 1)</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-emerald-200 dark:border-emerald-900/40 shadow-sm relative overflow-hidden group hover:border-emerald-400 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">المشاركة النشطة (فصل C2)</span>
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <span class="text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">93%</span>
+            <span class="text-xs font-bold text-emerald-500">13 من 14 طالباً</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">قفزة من 36% (5 طلاب فقط) قبل المنظومة</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-indigo-200 dark:border-indigo-900/40 shadow-sm relative overflow-hidden group hover:border-indigo-400 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">الشعور بالعدالة والثقة</span>
+            <div class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-base">
+              <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <span class="text-3xl font-black text-indigo-600 dark:text-indigo-400 font-mono">100%</span>
+            <span class="text-xs font-bold text-indigo-500">ثقة مطلقة</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">93% عدالة و 0 حالات تنمر مسجلة</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-purple-200 dark:border-purple-900/40 shadow-sm relative overflow-hidden group hover:border-purple-400 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">سرعة الرصد بالـ QR</span>
+            <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-base">
+              <i class="fa-solid fa-stopwatch-20"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <span class="text-3xl font-black text-purple-600 dark:text-purple-400 font-mono">15s</span>
+            <span class="text-xs font-bold text-purple-500">وفر 92%</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">بدلاً من 180 ثانية ضائعة في الحصة</p>
+        </div>
+      </div>
+
+      <!-- 4-Screen Privacy & Anti-Bullying Protocol Matrix -->
+      <div class="glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-shield-cat"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-base text-slate-900 dark:text-white">
+                محاكي الكرامة ومنع التنمر رباعي الشاشات (4-Screen Anti-Bullying Matrix)
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                كيف تعالج منصة SQBS بمدرسة WE بالسويس كل واقعة سلوكية بأربع واجهات منفصلة الصلاحيات
+              </p>
+            </div>
+          </div>
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+            حماية الخصوصية 100%
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+          <!-- Screen 1: Classroom Board -->
+          <div class="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-4 space-y-2 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-chalkboard-user"></i>
+                1. شاشة الفصل العلنية
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500 text-slate-950">علنية للجميع</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              تظهر فيها <strong>فقط لوحة الشرف</strong>، شارات التحفيز، وإجمالي <strong>738 نقطة إيجابية</strong>. لا يُعرض أي عقاب أو تنبيه سلبي أمام الزملاء مطلقاً لمنع الإحراج والوصم الاجتماعي.
+            </p>
+            <div class="pt-2 text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+              <i class="fa-solid fa-check-circle"></i> صناعة القدوة والتحفيز
+            </div>
+          </div>
+
+          <!-- Screen 2: Teacher's Mobile Phone -->
+          <div class="rounded-2xl bg-purple-500/5 border border-purple-500/20 p-4 space-y-2 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-mobile-screen"></i>
+                2. هاتف المعلم السريع
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">خاص بالمعلم</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              واجهة تفاعلية فائقة السرعة تسجل السلوك في <strong>15 ثانية فقط</strong> عبر رمز QR. حازت على تقييم سهولة <strong>4.8 / 5</strong> بإجماع 100% من معلمي ومهندسي مدرسة WE.
+            </p>
+            <div class="pt-2 text-[11px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+              <i class="fa-solid fa-bolt"></i> صفر تشتيت لزمن الحصة
+            </div>
+          </div>
+
+          <!-- Screen 3: Parent Portal -->
+          <div class="rounded-2xl bg-cyan-500/5 border border-cyan-500/20 p-4 space-y-2 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-cyan-700 dark:text-cyan-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-user-group"></i>
+                3. شاشة ولي الأمر الخاصة
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-100 dark:bg-cyan-900 text-cyan-800 dark:text-cyan-200">سرية ومشفرة</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              تقرير لحظي ومؤرخ بالدقيقة والتاريخ بدلاً من الشكاوى الانطباعية العامة. يشاهد ولي الأمر كل إنجازات ابنه ونقاط توجيهه الخاصة في مساحة شراكة وتربية محترمة.
+            </p>
+            <div class="pt-2 text-[11px] font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1">
+              <i class="fa-solid fa-handshake"></i> شفافية وشراكة أسرية
+            </div>
+          </div>
+
+          <!-- Screen 4: Social Counselor Dashboard -->
+          <div class="rounded-2xl bg-rose-500/5 border border-rose-500/20 p-4 space-y-2 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-user-doctor"></i>
+                4. شاشة الأخصائي السري
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200">أعلى صلاحية أمان</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              لوحة تحليل استباقي تربط المخالفات بمؤشرات الخطر: <strong>13 طالباً في تحسن مستمر</strong>، 0 خطر مرتفع، و 1 تدخل متوسط. كل تدخل يتم بهدوء وبدون أي إحراج.
+            </p>
+            <div class="pt-2 text-[11px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+              <i class="fa-solid fa-heart-pulse"></i> دعم نفسي وتربوي حقيقي
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Public Student Leaderboard (Class C2 - 14 Students) -->
+      <div class="glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-md space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-trophy text-amber-500"></i>
+                <span>لوحة شرف فرسان التميز (فصل C2 — 14 طالباً)</span>
+              </h3>
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                نتائج التجربة الميدانية الموثقة
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              ترتيب الطلاب وفقاً لإجمالي النقاط الإيجابية وشارات المبادرة والتعاون البرمجي بمدرسة WE بالسويس
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">تصفية حسب:</span>
+            <select id="leaderboard-filter" onchange="filterHonorRoll(this.value)" class="text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 px-3 py-1.5 focus:outline-none">
+              <option value="all">جميع الطلاب (14 طالباً)</option>
+              <option value="top">المراكز الثلاثة الأولى</option>
+              <option value="badges">الحاصلون على أوسمة تميز</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Top 3 Podium (Visual Stage) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+          <!-- Rank 2: Silver -->
+          <div class="rounded-2xl bg-gradient-to-b from-slate-100 to-white dark:from-slate-800 dark:to-slate-900 p-5 border-2 border-slate-300 dark:border-slate-700 shadow-md text-center flex flex-col items-center justify-between order-2 md:order-1 relative">
+            <div class="absolute -top-3 px-3 py-0.5 rounded-full bg-slate-300 dark:bg-slate-600 text-slate-900 dark:text-white font-black text-xs shadow">
+              🥈 المركز الثاني
+            </div>
+            <div class="w-16 h-16 rounded-2xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-2xl flex items-center justify-center mt-3 shadow-inner">
+              ع
+            </div>
+            <div class="mt-3">
+              <h4 class="font-black text-base text-slate-900 dark:text-white">عمر خالد عبد العزيز</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">C2-STU-02</p>
+              <div class="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-200 dark:border-indigo-800">
+                <i class="fa-solid fa-puzzle-piece"></i> نجم حل المشكلات
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 w-full flex items-center justify-around">
+              <div>
+                <span class="text-[10px] text-slate-400 block">النقاط الإيجابية</span>
+                <span class="text-xl font-black text-amber-500 font-mono">128</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">المشاركة</span>
+                <span class="text-sm font-black text-emerald-600 font-mono">96%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rank 1: Gold Winner -->
+          <div class="rounded-2xl bg-gradient-to-b from-amber-100/90 via-amber-50 to-white dark:from-amber-950/60 dark:via-slate-800 dark:to-slate-900 p-6 border-2 border-amber-400 dark:border-amber-500 shadow-xl text-center flex flex-col items-center justify-between order-1 md:order-2 relative scale-105 z-10">
+            <div class="absolute -top-3.5 px-4 py-1 rounded-full bg-amber-400 text-slate-950 font-black text-xs shadow-lg flex items-center gap-1.5">
+              <i class="fa-solid fa-crown text-amber-900"></i>
+              <span>🥇 بطل فصل C2</span>
+            </div>
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-200 text-slate-950 font-black text-3xl flex items-center justify-center mt-3 shadow-lg shadow-amber-400/25">
+              ي
+            </div>
+            <div class="mt-3">
+              <h4 class="font-black text-lg text-slate-900 dark:text-white">يوسف أحمد إبراهيم</h4>
+              <p class="text-xs text-amber-700 dark:text-amber-300 font-mono font-bold">C2-STU-01</p>
+              <div class="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-200 text-xs font-black border border-amber-400/40">
+                <i class="fa-solid fa-code"></i> قائد الابتكار البرمجي
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-amber-200 dark:border-amber-900/60 w-full flex items-center justify-around">
+              <div>
+                <span class="text-[10px] text-slate-400 block">النقاط الإيجابية</span>
+                <span class="text-2xl font-black text-amber-500 font-mono">142</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">المشاركة</span>
+                <span class="text-sm font-black text-emerald-600 font-mono">100%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rank 3: Bronze -->
+          <div class="rounded-2xl bg-gradient-to-b from-amber-50 to-white dark:from-slate-800 dark:to-slate-900 p-5 border-2 border-amber-700/40 dark:border-amber-700/60 shadow-md text-center flex flex-col items-center justify-between order-3 relative">
+            <div class="absolute -top-3 px-3 py-0.5 rounded-full bg-amber-700 text-white font-black text-xs shadow">
+              🥉 المركز الثالث
+            </div>
+            <div class="w-16 h-16 rounded-2xl bg-amber-700/20 text-amber-800 dark:text-amber-300 font-black text-2xl flex items-center justify-center mt-3 shadow-inner">
+              م
+            </div>
+            <div class="mt-3">
+              <h4 class="font-black text-base text-slate-900 dark:text-white">مصطفى محمود رضوان</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 font-mono">C2-STU-03</p>
+              <div class="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800">
+                <i class="fa-solid fa-heart-handshake"></i> سفير التعاون والأخلاق
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 w-full flex items-center justify-around">
+              <div>
+                <span class="text-[10px] text-slate-400 block">النقاط الإيجابية</span>
+                <span class="text-xl font-black text-amber-500 font-mono">116</span>
+              </div>
+              <div>
+                <span class="text-[10px] text-slate-400 block">المشاركة</span>
+                <span class="text-sm font-black text-emerald-600 font-mono">92%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Class Roster Table (All 14 Students) -->
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-50 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="p-3.5 font-bold"># الترتيب</th>
+                <th class="p-3.5 font-bold">اسم الطالب</th>
+                <th class="p-3.5 font-bold">كود الطالب</th>
+                <th class="p-3.5 font-bold text-center">النقاط الإيجابية</th>
+                <th class="p-3.5 font-bold">الشارة والوسام المستحق</th>
+                <th class="p-3.5 font-bold text-center">نسبة الحضور</th>
+                <th class="p-3.5 font-bold text-center">مسار التطور</th>
+              </tr>
+            </thead>
+            <tbody id="honor-roll-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-950 font-medium">
+              <!-- Rendered via JS dynamically with all 14 students of C2 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Smart Insights Thursday Pattern & Human Decision Matrix -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="glass-card rounded-3xl p-6 border border-amber-300 dark:border-amber-900/50 shadow-md space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-brain"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-base text-slate-900 dark:text-white">
+                اكتشاف نمط يوم الخميس (Thursday Fatigue Pattern)
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                تحليل الذكاء الاصطناعي للأسبوعين الميدانيين بمدرسة WE بالسويس
+              </p>
+            </div>
+          </div>
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <span>المخالفات المرصودة حسب أيام الأسبوع:</span>
+              <span class="text-rose-600 dark:text-rose-400">7 من أصل 14 يوم الخميس (50%)</span>
+            </div>
+            <!-- Visual Bar of Weekdays -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-[11px] text-slate-500">
+                <span>الأحد (نشاط وانضباط تام)</span>
+                <span class="font-mono">1 مخالفة (7%)</span>
+              </div>
+              <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-2 rounded-full" style="width: 7%"></div>
+              </div>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-[11px] text-slate-500">
+                <span>الإثنين والثلاثاء (استقرار أكاديمي)</span>
+                <span class="font-mono">3 مخالفات (21%)</span>
+              </div>
+              <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-indigo-500 h-2 rounded-full" style="width: 21%"></div>
+              </div>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-[11px] text-slate-500">
+                <span>الأربعاء (بداية تراكم الإجهاد)</span>
+                <span class="font-mono">3 مخالفات (21%)</span>
+              </div>
+              <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-500 h-2 rounded-full" style="width: 21%"></div>
+              </div>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-[11px] text-rose-600 dark:text-rose-400 font-bold">
+                <span>الخميس (ذروة الإجهاد التراكمي ونهاية الأسبوع)</span>
+                <span class="font-mono">7 مخالفات (50%)</span>
+              </div>
+              <div class="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-rose-500 h-2 rounded-full animate-pulse" style="width: 50%"></div>
+              </div>
+            </div>
+          </div>
+          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            <strong>التوصية التربوية الاستباقية:</strong> بدلاً من توقيع عقوبات على إجهاد الطلاب، اقترح النظام جدول ورش عمل ترفيهية تفاعلية كل خميس لتفريغ الطاقة الذهنية وتخفيض المخالفات إلى الصفر.
+          </p>
+        </div>
+
+        <div class="glass-card rounded-3xl p-6 border border-indigo-300 dark:border-indigo-900/50 shadow-md space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-user-check"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-base text-slate-900 dark:text-white">
+                حوكمة القرار البشري (Human-in-the-Loop AI)
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                ضمان أخلاقي قطعي: الذكاء الاصطناعي لا يقرر العقاب أو التدخل تلقائياً
+              </p>
+            </div>
+          </div>
+          <div class="p-4 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 space-y-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping"></span>
+              <h4 class="font-bold text-xs text-indigo-900 dark:text-indigo-200">الضوابط الأخلاقية المعتمدة بمنظومة SQBS:</h4>
+            </div>
+            <ul class="text-xs text-slate-600 dark:text-slate-300 space-y-2 list-disc list-inside">
+              <li><strong>الذكاء الاصطناعي يقترح فقط:</strong> يظهر التنبيه للأخصائي مع زر «اعتماد القرار» أو «تعديل» أو «حفظ للأرشفة».</li>
+              <li><strong>منع المعالجة العقابية الآلية:</strong> لا تصدر المنظومة أي إجراء ضد أي طالب بدون مراجعة وتوقيع الأخصائي البشري.</li>
+              <li><strong>خصوصية وسرية السجلات:</strong> تقتصر رؤية السجلات السلوكية التوجيهية على المعلم المباشر والأخصائي وولي الأمر فقط.</li>
+            </ul>
+          </div>
+          <div class="flex items-center justify-between pt-2">
+            <div class="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>متوافق مع ميثاق أخلاقيات الذكاء الاصطناعي المصري</span>
+            </div>
+            <span class="text-xs font-mono font-bold text-slate-400">WE SUEZ 2026</span>
+          </div>
+        </div>
+      </div>
+
     </section>
 
     <!-- ======================================================================= -->
@@ -1546,7 +2214,7 @@
       const activeBtn = document.getElementById(`tab-btn-${tabId}`);
       if (activeBtn) activeBtn.classList.add('active');
 
-      const tabs = ['courses', 'files', 'assignments', 'announcements', 'quiz-ai', 'attendance', 'profile'];
+      const tabs = ['courses', 'files', 'assignments', 'announcements', 'quiz-ai', 'attendance', 'honor-roll', 'profile'];
       tabs.forEach(t => {
         const el = document.getElementById(`tab-content-${t}`);
         if (el) {
@@ -1556,6 +2224,10 @@
       });
 
       if (tabId === 'announcements') loadTeacherAnnouncements();
+      if (tabId === 'honor-roll') renderHonorRollTable();
+
+      updateLiveSubtitleForTab(tabId);
+      narrateTabSwitch(tabId);
     }
 
     // ── FILE TYPE AUTO DETECTION ──────────────────────────────────────────────
@@ -3800,10 +4472,17 @@
       const box = document.getElementById('session-qr-box');
       if (!box) return;
       box.innerHTML = '';
+
+      let finalPayload = qrText || '';
+      if (!finalPayload.startsWith('http')) {
+        const cleanToken = finalPayload.replace('eru_attendance:', '').trim();
+        finalPayload = getCheckInUrlForSession(cleanToken);
+      }
+
       if (typeof QRCode !== 'undefined') {
         try {
           new QRCode(box, {
-            text: qrText,
+            text: finalPayload,
             width: 190,
             height: 190,
             colorDark: '#1F0D2B',
@@ -3815,7 +4494,7 @@
           console.warn('QRCode library error, falling back to image:', e);
         }
       }
-      box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=${encodeURIComponent(qrText)}" class="w-48 h-48 rounded-lg" alt="QR Code">`;
+      box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=${encodeURIComponent(finalPayload)}" class="w-48 h-48 rounded-lg" alt="QR Code">`;
     }
 
     function startSessionTimer(expiresAtIso) {
@@ -4087,7 +4766,11 @@
       
       const box = document.getElementById('projector-qr-box');
       box.innerHTML = '';
-      const qrText = s.qr_payload || `eru_attendance:${s.token}`;
+      let qrText = s.qr_payload || `eru_attendance:${s.token}`;
+      if (!qrText.startsWith('http')) {
+        const cleanToken = (s.token || qrText.replace('eru_attendance:', '')).trim();
+        qrText = getCheckInUrlForSession(cleanToken);
+      }
       if (typeof QRCode !== 'undefined') {
         try {
           new QRCode(box, {
@@ -4341,6 +5024,267 @@
         toast.classList.add('translate-y-2', 'opacity-0');
         setTimeout(() => toast.remove(), 300);
       }, 4000);
+    }
+
+
+    // ── PUBLIC HONOR ROLL DATASET (CLASS C2 - WE SUEZ) ────────────────────────
+    const C2_HONOR_ROLL_STUDENTS = [
+      { rank: 1, id: "C2-STU-01", name: "يوسف أحمد إبراهيم", points: 142, badge: "قائد الابتكار البرمجي", badgeIcon: "fa-code", badgeColor: "amber", attendance: "100%", status: "تحسن استثنائي", note: "ابتكار خوارزمية فرز ذكية ومساعدة 4 زملاء" },
+      { rank: 2, id: "C2-STU-02", name: "عمر خالد عبد العزيز", points: 128, badge: "نجم حل المشكلات", badgeIcon: "fa-puzzle-piece", badgeColor: "indigo", attendance: "96%", status: "تحسن مستمر", note: "حل تحدي الشبكات العملي في زمن قياسي" },
+      { rank: 3, id: "C2-STU-03", name: "مصطفى محمود رضوان", points: 116, badge: "سفير التعاون والأخلاق", badgeIcon: "fa-heart-handshake", badgeColor: "emerald", attendance: "92%", status: "تحسن مستمر", note: "دعم الزملاء في إعداد بيئة التطوير" },
+      { rank: 4, id: "C2-STU-04", name: "عبد الله الشربيني", points: 98, badge: "التميز في شبكات WE", badgeIcon: "fa-network-wired", badgeColor: "purple", attendance: "95%", status: "تحسن مستمر", note: "توصيل وبرمجة راوتر Cisco بنجاح" },
+      { rank: 5, id: "C2-STU-05", name: "محمد طارق علي", points: 92, badge: "المبرمج المبدع", badgeIcon: "fa-laptop-code", badgeColor: "teal", attendance: "90%", status: "تحول نشط", note: "انتقل من الصمت للمشاركة الفعالة 100%" },
+      { rank: 6, id: "C2-STU-06", name: "كريم حسام الدين", points: 84, badge: "الالتزام والانضباط", badgeIcon: "fa-award", badgeColor: "cyan", attendance: "93%", status: "تحول نشط", note: "حضور مبكر وتسليم جميع الواجبات كاملة" },
+      { rank: 7, id: "C2-STU-07", name: "أحمد ياسر سليمان", points: 79, badge: "روح المبادرة", badgeIcon: "fa-fire", badgeColor: "rose", attendance: "88%", status: "تحول نشط", note: "مشاركة يومية وتفاعل نشط مع الأسئلة" },
+      { rank: 8, id: "C2-STU-08", name: "محمود سامح كمال", points: 74, badge: "المشارك المثالي", badgeIcon: "fa-comments", badgeColor: "blue", attendance: "86%", status: "تحسن مستمر", note: "طرح استفسارات هندسية عميقة في المعمل" },
+      { rank: 9, id: "C2-STU-09", name: "إبراهيم عادل فتحي", points: 68, badge: "الهمة والاجتهاد", badgeIcon: "fa-bolt", badgeColor: "amber", attendance: "85%", status: "تحول نشط", note: "أحد الطلاب التسعة الصامتين سابقاً" },
+      { rank: 10, id: "C2-STU-10", name: "زياد هاني مصطفى", points: 64, badge: "التركيز التقني", badgeIcon: "fa-bullseye", badgeColor: "indigo", attendance: "89%", status: "تحول نشط", note: "دقة عالية في تنفيذ كود بايثون" },
+      { rank: 11, id: "C2-STU-11", name: "حمزة شريف فؤاد", points: 58, badge: "المستكشف الرقمي", badgeIcon: "fa-compass", badgeColor: "emerald", attendance: "84%", status: "تحسن مستمر", note: "شغف استكشاف أدوات الذكاء الاصطناعي" },
+      { rank: 12, id: "C2-STU-12", name: "بلال وليد الشريف", points: 52, badge: "الانضباط الصفي", badgeIcon: "fa-user-shield", badgeColor: "violet", attendance: "82%", status: "تحسن مستمر", note: "التزام كامل بقواعد المعمل وسلامة الأجهزة" },
+      { rank: 13, id: "C2-STU-13", name: "أنس ناصر جودة", points: 48, badge: "نجم التطور", badgeIcon: "fa-chart-line", badgeColor: "teal", attendance: "80%", status: "تحسن مستمر", note: "أعلى معدل نمو أسبوعي (+34 نقطة)" },
+      { rank: 14, id: "C2-STU-14", name: "ياسين هشام عبد ربه", points: 41, badge: "المحاول الواعد", badgeIcon: "fa-seedling", badgeColor: "green", attendance: "78%", status: "دعم مستمر", note: "متابعة هادئة من الأخصائي وتحسن ملموس" }
+    ];
+
+    function renderHonorRollTable(list = C2_HONOR_ROLL_STUDENTS) {
+      const tbody = document.getElementById('honor-roll-table-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = list.map((s, idx) => {
+        const medal = s.rank === 1 ? '🥇' : s.rank === 2 ? '🥈' : s.rank === 3 ? '🥉' : `#${s.rank}`;
+        const rowBg = s.rank === 1 ? 'bg-amber-500/10 dark:bg-amber-950/30 font-bold' :
+                      s.rank === 2 ? 'bg-slate-500/5 dark:bg-slate-800/40' :
+                      s.rank === 3 ? 'bg-amber-700/5 dark:bg-amber-950/20' : '';
+
+        const badgeClass = s.badgeColor === 'amber'   ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300' :
+                           s.badgeColor === 'indigo'  ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300' :
+                           s.badgeColor === 'emerald' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300' :
+                           s.badgeColor === 'purple'  ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-300' :
+                           s.badgeColor === 'teal'    ? 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 border-teal-300' :
+                           s.badgeColor === 'rose'    ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300' :
+                                                        'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border-cyan-300';
+
+        return `
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition ${rowBg}">
+            <td class="p-3.5 font-black text-center text-sm font-mono">${medal}</td>
+            <td class="p-3.5">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 font-black flex items-center justify-center text-xs shrink-0">
+                  ${s.name.charAt(0)}
+                </div>
+                <div>
+                  <span class="font-bold text-slate-900 dark:text-white block">${s.name}</span>
+                  <span class="text-[10px] text-slate-400 block">${s.note}</span>
+                </div>
+              </div>
+            </td>
+            <td class="p-3.5 font-mono text-slate-500 dark:text-slate-400 text-xs">${s.id}</td>
+            <td class="p-3.5 text-center">
+              <span class="inline-flex items-center gap-1 font-mono font-black text-amber-500 text-sm">
+                <i class="fa-solid fa-star text-xs"></i>
+                <span>${s.points}</span>
+              </span>
+            </td>
+            <td class="p-3.5">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${badgeClass}">
+                <i class="fa-solid ${s.badgeIcon}"></i>
+                <span>${s.badge}</span>
+              </span>
+            </td>
+            <td class="p-3.5 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
+              ${s.attendance}
+            </td>
+            <td class="p-3.5 text-center">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                <i class="fa-solid fa-arrow-trend-up"></i> ${s.status}
+              </span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterHonorRoll(val) {
+      if (val === 'top') {
+        renderHonorRollTable(C2_HONOR_ROLL_STUDENTS.slice(0, 3));
+      } else if (val === 'badges') {
+        renderHonorRollTable(C2_HONOR_ROLL_STUDENTS.filter(s => s.points >= 70));
+      } else {
+        renderHonorRollTable(C2_HONOR_ROLL_STUDENTS);
+      }
+    }
+
+    function printHonorRollCharter() {
+      showToast('جاري تجهيز لوحة الشرف وميثاق الكرامة للطباعة الرسمية... 🖨️', 'info');
+      setTimeout(() => window.print(), 300);
+    }
+
+    // ── CHECK-IN URL HELPER FOR MOBILE SCANNER ────────────────────────────────
+    function getCheckInUrlForSession(token) {
+      if (!token) return 'Student_CheckIn.html';
+      const cleanToken = token.replace('eru_attendance:', '').trim();
+      if (window.location.protocol.startsWith('http')) {
+        return `${window.location.origin}/checkin?token=${encodeURIComponent(cleanToken)}`;
+      }
+      return `Student_CheckIn.html?token=${encodeURIComponent(cleanToken)}`;
+    }
+
+    function copyStudentCheckInUrl() {
+      const s = activeAttendanceSession || currentAttendanceSheetData;
+      if (!s || !s.token) {
+        showToast('لا توجد جلسة حضور نشطة حالياً', 'warning');
+        return;
+      }
+      const url = getCheckInUrlForSession(s.token);
+      navigator.clipboard.writeText(url).then(() => {
+        showToast('تم نسخ رابط بوابة حضور الطلاب المباشر! 📋🔗', 'success');
+      }).catch(() => {
+        prompt('انسخ رابط حضور الطلاب:', url);
+      });
+    }
+
+    // ── BILINGUAL OVERLAY & LIVE SUBTITLES ENGINE ─────────────────────────────
+    let isEnglishMode = false;
+
+    const TAB_SUBTITLES = {
+      'courses': {
+        ar: 'قسم المقررات الدراسية والفصول المسندة لمعلمي ومهندسي مدرسة WE بالسويس.',
+        en: 'My Courses & Classes: Active syllabus and curriculum at WE Suez School.'
+      },
+      'files': {
+        ar: 'مستودع المحاضرات، العروض التقديمية، والملفات العلمية بصيغ PDF و PPT.',
+        en: 'Lectures & Materials: Upload and access PDF course documents and slides.'
+      },
+      'assignments': {
+        ar: 'لوحة التكليفات والواجبات المدرسية ومتابعة تسليمات الطلاب.',
+        en: 'Assignments & Homework: Grade submissions and publish academic tasks.'
+      },
+      'announcements': {
+        ar: 'لوحة الإعلانات المدرسية الرسمية والتنبيهات الموجهة للطلاب.',
+        en: 'School Broadcasts & Bulletins: Official alerts for enrolled students.'
+      },
+      'quiz-ai': {
+        ar: 'استوديو الذكاء الاصطناعي التفاعلي (Gemini Function Calling) لتوليد بنوك الأسئلة من المحتوى فقط.',
+        en: 'Interactive AI Quiz Studio: Grounded questions generated with Gemini functions.'
+      },
+      'attendance': {
+        ar: 'منظومة الحضور الذكي برمز QR وتعبئة كشوف الغياب اللحظية بنقرة واحدة.',
+        en: 'Smart QR Attendance: Live session code generator and instant attendance sheet.'
+      },
+      'honor-roll': {
+        ar: 'لوحة الشرف العلنية ومصفوفة الكرامة: 738 نقطة إيجابية وتحفيز بلا تشهير.',
+        en: 'Public Honor Roll & Anti-Bullying Charter: 738 positive points celebrating dignity.'
+      },
+      'profile': {
+        ar: 'إعدادات الحساب الشخصي والأمان الأكاديمي وهيئة التدريس.',
+        en: 'Account & Security: Teacher credentials and password management.'
+      }
+    };
+
+    function updateLiveSubtitleForTab(tabId) {
+      const bar = document.getElementById('live-subtitle-bar');
+      const text = document.getElementById('live-subtitle-text');
+      if (!bar || !text) return;
+      bar.classList.remove('hidden');
+
+      const data = TAB_SUBTITLES[tabId] || {
+        ar: 'بوابة المعلمين والمهندسين — مدرسة WE للتكنولوجيا التطبيقية بالسويس',
+        en: 'WE Suez Applied Technology School - Teacher & Engineer Gateway'
+      };
+
+      text.innerText = isEnglishMode ? data.en : `${data.en} | ${data.ar}`;
+    }
+
+    function toggleLanguageOverlay() {
+      isEnglishMode = !isEnglishMode;
+      const btnLabel = document.getElementById('lang-btn-label');
+      const badge = document.getElementById('subtitle-lang-badge');
+
+      if (btnLabel) btnLabel.innerText = isEnglishMode ? 'العربية' : 'English';
+      if (badge) badge.innerText = isEnglishMode ? 'AR' : 'EN';
+
+      // Update Subtitle
+      if (typeof currentActiveTab !== 'undefined') {
+        updateLiveSubtitleForTab(currentActiveTab);
+      }
+
+      showToast(
+        isEnglishMode ? 'Switched to English Subtitle & Bilingual Mode 🌐' : 'تم العودة إلى واجهة اللغة العربية 🇪🇬',
+        'info'
+      );
+    }
+
+    // ── ARABIC VOICE-OVER ASSISTANT (WEB SPEECH API) ──────────────────────────
+    let isVoiceOverEnabled = false;
+
+    const TAB_VOICEOVER_AR = {
+      'courses': 'مرحباً بك في صفحة المقررات والفصول الدراسية لمدرسة وي بالسويس.',
+      'files': 'قسم المحاضرات والملفات العلمية والوثائق الأكاديمية.',
+      'assignments': 'قسم التكليفات والواجبات المدرسية ومتابعة أداء الطلاب.',
+      'announcements': 'قسم الإعلانات المدرسية الرسمية والتنبيهات العاجلة.',
+      'quiz-ai': 'استوديو الذكاء الاصطناعي التفاعلي جيميني لتوليد بنوك الأسئلة المعتمدة.',
+      'attendance': 'نظام كشوف الحضور الإلكترونية ورمز الاستجابة السريعة كيو آر.',
+      'honor-roll': 'لوحة الشرف العلنية وكرامة الطالب. سبعمائة وثمانية وثلاثون نقطة إيجابية، وصناعة القدوة بلا تشهير.',
+      'profile': 'بيانات الحساب الشخصي والأمان الأكاديمي.'
+    };
+
+    function toggleVoiceOverAssistant() {
+      if (!('speechSynthesis' in window)) {
+        showToast('متصفحك لا يدعم توليد الصوت عبر Web Speech API', 'warning');
+        return;
+      }
+
+      isVoiceOverEnabled = !isVoiceOverEnabled;
+      const btn = document.getElementById('voiceover-toggle-btn');
+      const label = document.getElementById('voiceover-label');
+      const icon = document.getElementById('voiceover-icon');
+      const subIcon = document.getElementById('subtitle-voice-icon');
+
+      if (isVoiceOverEnabled) {
+        if (btn) btn.classList.add('bg-purple-600', 'text-white', 'shadow-lg');
+        if (label) label.innerText = 'صوت مفعّل';
+        if (icon) icon.className = 'fa-solid fa-volume-high text-amber-300 animate-pulse';
+        if (subIcon) subIcon.className = 'fa-solid fa-volume-high text-emerald-400 animate-pulse';
+        
+        speakNarration('تم تفعيل المعلق الصوتي الذكي لمنصة مدرسة وي بالسويس. مرحباً بك.');
+        showToast('تم تفعيل المعلق الصوتي الذكي (Arabic Voice-Over) 🔊', 'success');
+      } else {
+        if (btn) btn.classList.remove('bg-purple-600', 'text-white', 'shadow-lg');
+        if (label) label.innerText = 'صوت معلق';
+        if (icon) icon.className = 'fa-solid fa-volume-high text-purple-600 dark:text-purple-400';
+        if (subIcon) subIcon.className = 'fa-solid fa-volume-high text-slate-300';
+        
+        window.speechSynthesis.cancel();
+        showToast('تم إيقاف المعلق الصوتي 🔇', 'info');
+      }
+    }
+
+    function narrateTabSwitch(tabId) {
+      if (!isVoiceOverEnabled) return;
+      const phrase = TAB_VOICEOVER_AR[tabId];
+      if (phrase) speakNarration(phrase);
+    }
+
+    function speakNarration(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ar-SA';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+
+      // Pulse visual indicator on dot
+      const dot = document.getElementById('subtitle-pulse-dot');
+      if (dot) dot.classList.add('bg-amber-400');
+
+      utterance.onend = () => {
+        if (dot) dot.classList.remove('bg-amber-400');
+      };
+      utterance.onerror = () => {
+        if (dot) dot.classList.remove('bg-amber-400');
+      };
+
+      window.speechSynthesis.speak(utterance);
     }
 
     async function checkBackendHealth() {

@@ -122,7 +122,7 @@ def serve_upload_file(file_path: str):
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 
-from app.routers import auth, support, users, materials, chat as chat_router, content, admin_dashboard, attendance, user_management_web, teacher_portal_web  # noqa
+from app.routers import auth, support, users, materials, chat as chat_router, content, admin_dashboard, attendance, user_management_web, teacher_portal_web, student_checkin_web, sqbs_pitch_web  # noqa
 from app.routers.quiz import router as quiz_router  # noqa
 from app.routers.neon_services import router as neon_router  # noqa
 
@@ -139,6 +139,8 @@ app.include_router(attendance.router)
 app.include_router(admin_dashboard.router)
 app.include_router(user_management_web.router)
 app.include_router(teacher_portal_web.router)
+app.include_router(student_checkin_web.router)
+app.include_router(sqbs_pitch_web.router)
 
 @app.get("/dashboard", response_class=HTMLResponse, tags=["Admin Dashboard"])
 def dashboard_view():

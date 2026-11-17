@@ -10,6 +10,7 @@ from app.services.attendance_service import (
     get_session_attendance_sheet,
     mark_student_attendance,
     batch_mark_attendance,
+    student_public_check_in,
 )
 
 
@@ -110,6 +111,73 @@ class TestAttendanceSheetService(unittest.TestCase):
         sheet = mark_student_attendance(self.mock_db, 100, 11, "LATE")
         self.mock_db.add.assert_called()
         self.mock_db.commit.assert_called()
+
+    def test_04_student_public_check_in_success(self):
+        session = AttendanceSession(
+            session_id=200,
+            material_id="CS101",
+            created_by=1,
+            title="Interactive Session",
+            token="WE-ATT-ABC123",
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+            is_active=True,
+            created_at=datetime.now(timezone.utc),
+        )
+        enrollment = MaterialStudent(material_id="CS101", user_id=10)
+
+        def mock_query_side_effect(model):
+            q = MagicMock()
+            if model == AttendanceSession:
+                q.filter.return_value.first.return_value = session
+            elif model == User:
+                q.filter.return_value.first.return_value = self.student_1
+            elif model == MaterialStudent:
+                q.filter.return_value.first.return_value = enrollment
+            elif model == AttendanceRecord:
+                q.filter.return_value.first.return_value = None
+            elif model == Material:
+                q.filter.return_value.first.return_value = self.material
+            return q
+
+        self.mock_db.query.side_effect = mock_query_side_effect
+        res = student_public_check_in(self.mock_db, "WE-ATT-ABC123", "WE-2026-001")
+        self.assertTrue(res.success)
+        self.assertEqual(res.status, "PRESENT")
+        self.assertEqual(res.student_name, "Ali Hassan")
+        self.assertEqual(res.course_name, "Computer Science Intro")
+
+    def test_05_student_public_check_in_with_qr_prefix(self):
+        session = AttendanceSession(
+            session_id=200,
+            material_id="CS101",
+            created_by=1,
+            title="Interactive Session",
+            token="WE-ATT-ABC123",
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+            is_active=True,
+            created_at=datetime.now(timezone.utc),
+        )
+        enrollment = MaterialStudent(material_id="CS101", user_id=10)
+
+        def mock_query_side_effect(model):
+            q = MagicMock()
+            if model == AttendanceSession:
+                q.filter.return_value.first.return_value = session
+            elif model == User:
+                q.filter.return_value.first.return_value = self.student_1
+            elif model == MaterialStudent:
+                q.filter.return_value.first.return_value = enrollment
+            elif model == AttendanceRecord:
+                q.filter.return_value.first.return_value = None
+            elif model == Material:
+                q.filter.return_value.first.return_value = self.material
+            return q
+
+        self.mock_db.query.side_effect = mock_query_side_effect
+        # Test full QR code payload with prefix eru_attendance:
+        res = student_public_check_in(self.mock_db, "eru_attendance:WE-ATT-ABC123", "WE-2026-001")
+        self.assertTrue(res.success)
+        self.assertEqual(res.student_uni_code, "WE-2026-001")
 
 
 if __name__ == "__main__":

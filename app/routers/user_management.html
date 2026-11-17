@@ -109,22 +109,41 @@
           </span>
         </div>
 
-        <!-- Right Controls: Admin Profile, Dark Mode & Language -->
+        <!-- Right Controls: Admin Profile, Dark Mode, Voice-Over & Portals -->
         <div class="flex items-center gap-2 sm:gap-3">
-          <!-- Competition Pitch Deck Quick Launch -->
-          <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-black shadow-md shadow-amber-500/25 hover:opacity-95 transition flex items-center gap-1.5" title="فتح العرض التقديمي التنافسي (Pitch Deck)">
-            <i class="fa-solid fa-trophy"></i>
-            <span class="hidden sm:inline">العرض التقديمي التنافسي</span>
+          <!-- Student QR Check-In Gateway Link -->
+          <a href="Student_CheckIn.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold transition flex items-center gap-1.5" title="بوابة مسح رمز QR حضور الطلاب">
+            <i class="fa-solid fa-qrcode text-emerald-600 dark:text-emerald-400"></i>
+            <span class="hidden xl:inline">بوابة حضور الطلاب</span>
           </a>
+
+          <!-- Teacher Portal Link -->
+          <a href="Teacher_Portal.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 text-xs font-bold transition flex items-center gap-1.5" title="الانتقال إلى بوابة المعلمين والمهندسين">
+            <i class="fa-solid fa-chalkboard-user text-purple-600 dark:text-purple-400"></i>
+            <span class="hidden lg:inline">بوابة المعلمين</span>
+          </a>
+
+          <!-- Competition Pitch Deck Quick Launch -->
+          <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-black shadow-md shadow-amber-500/25 hover:opacity-95 transition flex items-center gap-1.5" title="فتح العرض التقديمي التنافسي (Pitch Deck)">
+            <i class="fa-solid fa-trophy"></i>
+            <span class="hidden sm:inline">العرض التنافسي</span>
+          </a>
+
+          <!-- Arabic Voice-Over Assistant Toggle -->
+          <button id="admin-voiceover-btn" onclick="toggleAdminVoiceOverAssistant()" class="px-2.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 text-xs font-bold transition flex items-center gap-1.5" title="تفعيل / إيقاف المعلق الصوتي الذكي">
+            <i id="admin-voiceover-icon" class="fa-solid fa-volume-high text-purple-600 dark:text-purple-400"></i>
+            <span id="admin-voiceover-label" class="hidden sm:inline">صوت معلق</span>
+          </button>
+
+          <!-- Language Toggle -->
+          <button id="lang-toggle" onclick="toggleAdminLanguageOverlay()" class="px-2.5 py-1.5 text-xs font-bold rounded-xl border border-indigo-300 dark:border-indigo-700/60 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 transition flex items-center gap-1" title="Toggle English Subtitles & UI">
+            <i class="fa-solid fa-language"></i>
+            <span id="admin-lang-label">EN</span>
+          </button>
 
           <!-- Dark Mode Toggle -->
           <button id="theme-toggle" class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="تبديل الوضع الليلي">
             <i id="theme-toggle-icon" class="fa-solid fa-moon text-sm"></i>
-          </button>
-
-          <!-- Language Toggle -->
-          <button id="lang-toggle" class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Change Language">
-            EN
           </button>
 
           <!-- Admin Profile / Login Pill -->
@@ -221,6 +240,11 @@
       <button onclick="switchAdminTab('platform')" id="btn-tab-platform" class="admin-tab-btn px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center gap-2 transition shrink-0">
         <i class="fa-solid fa-chart-pie text-emerald-600 dark:text-emerald-400"></i>
         <span>إحصائيات المنصة والمحتوى</span>
+      </button>
+
+      <button onclick="switchAdminTab('honor-roll')" id="btn-tab-honor-roll" class="admin-tab-btn px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center gap-2 transition shrink-0">
+        <i class="fa-solid fa-award text-amber-500"></i>
+        <span>لوحة الشرف وكرامة الطالب (SQBS)</span>
       </button>
     </nav>
 
@@ -955,6 +979,242 @@
     </section>
     <!-- END OF TAB 4: PLATFORM -->
 
+    <!-- ======================================================================= -->
+    <!-- TAB 5: PUBLIC HONOR ROLL & ANTI-BULLYING DIGNITY MATRIX (SQBS)          -->
+    <!-- ======================================================================= -->
+    <section id="section-tab-honor-roll" class="hidden space-y-6">
+      
+      <!-- Honor Roll Hero Banner -->
+      <div class="rounded-3xl bg-gradient-to-r from-amber-500 via-purple-700 to-indigo-800 text-white p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        <div class="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          <div class="space-y-3">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-black bg-amber-400 text-slate-950 shadow-md">
+              <i class="fa-solid fa-crown"></i>
+              <span>لوحة الشرف ومصفوفة الكرامة المدرسية — SQBS</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
+              لوحة التميز وصناعة القدوة — مدرسة WE بالسويس
+            </h2>
+            <p class="text-xs sm:text-sm text-purple-100 max-w-2xl leading-relaxed">
+              تحفيز بالتقدير العلني، وحماية كاملة لكرامة الطلاب عبر فصل الشاشات المدرسية: <strong class="text-amber-300 font-bold">738 نقطة إيجابية معلنة</strong> تصنع القدوة، و <strong class="text-cyan-200 font-bold">72 توجيه خاص سري</strong> لحفظ الخصوصية ومنع الوصم الاجتماعي والتنمر نهائياً.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0">
+            <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-amber-400/20 transition flex items-center gap-2">
+              <i class="fa-solid fa-trophy text-slate-900"></i>
+              <span>عرض التجربة الميدانية (Pitch)</span>
+            </a>
+            <button onclick="printAdminHonorRollCharter()" class="px-4 py-3 rounded-2xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-xs sm:text-sm font-bold transition flex items-center gap-2 backdrop-blur-sm">
+              <i class="fa-solid fa-print"></i>
+              <span>طباعة لوحة الشرف</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Key Impact Metric Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-5 border border-amber-200 dark:border-amber-900/40 shadow-sm relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">إجمالي النقاط الإيجابية</span>
+            <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base">
+              <i class="fa-solid fa-star"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <span class="text-3xl font-black text-amber-500 dark:text-amber-400 font-mono">738</span>
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">نقطة تميز</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">مقابل 72 نقطة سلبية خاصة (معدل 10 : 1)</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-emerald-200 dark:border-emerald-900/40 shadow-sm relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">المشاركة النشطة (فصل C2)</span>
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <span class="text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">93%</span>
+            <span class="text-xs font-bold text-emerald-500">13 من 14 طالباً</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">قفزة من 36% (5 طلاب فقط) قبل المنظومة</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-indigo-200 dark:border-indigo-900/40 shadow-sm relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">الشعور بالعدالة والثقة</span>
+            <div class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-base">
+              <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <span class="text-3xl font-black text-indigo-600 dark:text-indigo-400 font-mono">100%</span>
+            <span class="text-xs font-bold text-indigo-500">ثقة مطلقة</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">93% عدالة و 0 حالات تنمر مسجلة</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-5 border border-purple-200 dark:border-purple-900/40 shadow-sm relative overflow-hidden">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">سرعة الرصد بالـ QR</span>
+            <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-base">
+              <i class="fa-solid fa-stopwatch-20"></i>
+            </div>
+          </div>
+          <div class="mt-3 flex items-baseline gap-2">
+            <span class="text-3xl font-black text-purple-600 dark:text-purple-400 font-mono">15s</span>
+            <span class="text-xs font-bold text-purple-500">وفر 92%</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">بدلاً من 180 ثانية ضائعة في الحصة</p>
+        </div>
+      </div>
+
+      <!-- 4-Screen Privacy & Anti-Bullying Protocol Matrix -->
+      <div class="glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-shield-cat"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-base text-slate-900 dark:text-white">
+                محاكي الكرامة ومنع التنمر رباعي الشاشات (4-Screen Anti-Bullying Matrix)
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">
+                كيف تعالج منصة SQBS بمدرسة WE بالسويس كل واقعة سلوكية بأربع واجهات منفصلة الصلاحيات
+              </p>
+            </div>
+          </div>
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+            حماية الخصوصية 100%
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+          <!-- Screen 1: Classroom Board -->
+          <div class="rounded-2xl bg-amber-500/5 border border-amber-500/20 p-4 space-y-2 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-chalkboard-user"></i>
+                1. شاشة الفصل العلنية
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500 text-slate-950">علنية للجميع</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              تظهر فيها <strong>فقط لوحة الشرف</strong>، شارات التحفيز، وإجمالي <strong>738 نقطة إيجابية</strong>. لا يُعرض أي عقاب أو تنبيه سلبي أمام الزملاء مطلقاً لمنع الإحراج والوصم الاجتماعي.
+            </p>
+            <div class="pt-2 text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+              <i class="fa-solid fa-check-circle"></i> صناعة القدوة والتحفيز
+            </div>
+          </div>
+
+          <!-- Screen 2: Teacher's Mobile Phone -->
+          <div class="rounded-2xl bg-purple-500/5 border border-purple-500/20 p-4 space-y-2 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-mobile-screen"></i>
+                2. هاتف المعلم السريع
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">خاص بالمعلم</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              واجهة تفاعلية فائقة السرعة تسجل السلوك في <strong>15 ثانية فقط</strong> عبر رمز QR. حازت على تقييم سهولة <strong>4.8 / 5</strong> بإجماع 100% من معلمي ومهندسي مدرسة WE.
+            </p>
+            <div class="pt-2 text-[11px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1">
+              <i class="fa-solid fa-bolt"></i> صفر تشتيت لزمن الحصة
+            </div>
+          </div>
+
+          <!-- Screen 3: Parent Portal -->
+          <div class="rounded-2xl bg-cyan-500/5 border border-cyan-500/20 p-4 space-y-2 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-cyan-700 dark:text-cyan-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-user-group"></i>
+                3. شاشة ولي الأمر الخاصة
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-100 dark:bg-cyan-900 text-cyan-800 dark:text-cyan-200">سرية ومشفرة</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              تقرير لحظي ومؤرخ بالدقيقة والتاريخ بدلاً من الشكاوى الانطباعية العامة. يشاهد ولي الأمر كل إنجازات ابنه ونقاط توجيهه الخاصة في مساحة شراكة وتربية محترمة.
+            </p>
+            <div class="pt-2 text-[11px] font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1">
+              <i class="fa-solid fa-handshake"></i> شفافية وشراكة أسرية
+            </div>
+          </div>
+
+          <!-- Screen 4: Social Counselor Dashboard -->
+          <div class="rounded-2xl bg-rose-500/5 border border-rose-500/20 p-4 space-y-2 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-black text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-user-doctor"></i>
+                4. شاشة الأخصائي السري
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200">أعلى صلاحية أمان</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              لوحة تحليل استباقي تربط المخالفات بمؤشرات الخطر: <strong>13 طالباً في تحسن مستمر</strong>، 0 خطر مرتفع، و 1 تدخل متوسط. كل تدخل يتم بهدوء وبدون أي إحراج.
+            </p>
+            <div class="pt-2 text-[11px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+              <i class="fa-solid fa-heart-pulse"></i> دعم نفسي وتربوي حقيقي
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Public Student Leaderboard (Class C2 - 14 Students) -->
+      <div class="glass-card rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-md space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-trophy text-amber-500"></i>
+                <span>لوحة شرف فرسان التميز (فصل C2 — 14 طالباً)</span>
+              </h3>
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                نتائج التجربة الميدانية الموثقة
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              ترتيب الطلاب وفقاً لإجمالي النقاط الإيجابية وشارات المبادرة والتعاون البرمجي بمدرسة WE بالسويس
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-bold">تصفية حسب:</span>
+            <select id="admin-leaderboard-filter" onchange="filterAdminHonorRoll(this.value)" class="text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 px-3 py-1.5 focus:outline-none">
+              <option value="all">جميع الطلاب (14 طالباً)</option>
+              <option value="top">المراكز الثلاثة الأولى</option>
+              <option value="badges">الحاصلون على أوسمة تميز</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Full Class Roster Table (All 14 Students) -->
+        <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-50 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="p-3.5 font-bold text-center"># الترتيب</th>
+                <th class="p-3.5 font-bold">اسم الطالب</th>
+                <th class="p-3.5 font-bold">كود الطالب</th>
+                <th class="p-3.5 font-bold text-center">النقاط الإيجابية</th>
+                <th class="p-3.5 font-bold">الشارة والوسام المستحق</th>
+                <th class="p-3.5 font-bold text-center">نسبة الحضور</th>
+                <th class="p-3.5 font-bold text-center">مسار التطور</th>
+              </tr>
+            </thead>
+            <tbody id="admin-honor-roll-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-950 font-medium">
+              <!-- Rendered via JS dynamically with all 14 students of C2 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
 
   </main>
 
@@ -2557,7 +2817,7 @@
 
     function switchAdminTab(tabId) {
       currentAdminTab = tabId;
-      const tabs = ['users', 'chats', 'quizzes', 'platform'];
+      const tabs = ['users', 'chats', 'quizzes', 'platform', 'honor-roll'];
 
       tabs.forEach(t => {
         const sec = document.getElementById(`section-tab-${t}`);
@@ -2579,7 +2839,12 @@
         loadQuizzesMonitoring();
       } else if (tabId === 'platform') {
         loadPlatformAnalytics();
+      } else if (tabId === 'honor-roll') {
+        renderAdminHonorRollTable();
       }
+
+      updateAdminLiveSubtitleForTab(tabId);
+      narrateAdminTabSwitch(tabId);
     }
 
     // ── CHATS & MESSAGES MONITORING ───────────────────────────────────────────
