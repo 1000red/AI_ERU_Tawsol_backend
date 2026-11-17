@@ -101,6 +101,12 @@
             <span class="hidden sm:inline">بيانات الدخول</span>
           </button>
 
+          <!-- SQBS Competition Pitch Link -->
+          <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:opacity-95 text-white font-black text-xs shadow-md shadow-amber-500/20 transition flex items-center gap-1.5" title="فتح العرض التقديمي التنافسي لمنظومة SQBS">
+            <i class="fa-solid fa-trophy text-amber-200"></i>
+            <span class="hidden md:inline">العرض التنافسي (Pitch)</span>
+          </a>
+
           <!-- Dark Mode Toggle -->
           <button id="theme-toggle" class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="تبديل الوضع الليلي">
             <i id="theme-toggle-icon" class="fa-solid fa-moon text-sm"></i>
@@ -225,6 +231,38 @@
             <span>نشر إعلان</span>
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- SMART INSIGHTS EARLY WARNING ALERT BANNER (Thursday 7/14 pattern) -->
+    <div id="smart-insight-banner" class="rounded-2xl bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border border-amber-500/30 dark:border-amber-500/20 p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg shrink-0">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-100">
+              تنبيه الذكاء الاصطناعي الأسبوعي (Smart Insights Early Warning) — مدرسة WE بالسويس
+            </h4>
+            <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+              نمط إجهاد مكتشف
+            </span>
+          </div>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+            اكتشف محرك Smart Insights في منظومة SQBS أن <strong class="text-rose-600 dark:text-rose-400">7 من أصل 14 مخالفة (50%)</strong> تتركز يوم <strong class="text-amber-600 dark:text-amber-400">الخميس</strong> بسبب الإجهاد التراكمي للطلاب. يوصى المعلمون والمهندسون بتنظيم أنشطة عملية تفاعلية وتوجيه هادئ للحد من الإجهاد.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-purple-900 hover:bg-slate-800 dark:hover:bg-purple-800 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-chart-line text-amber-400"></i>
+          <span>عرض تحليل SQBS</span>
+        </a>
+        <button onclick="document.getElementById('smart-insight-banner').classList.add('hidden')" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-check"></i>
+          <span>تم الاطلاع</span>
+        </button>
       </div>
     </div>
 
