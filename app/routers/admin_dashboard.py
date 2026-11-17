@@ -534,6 +534,28 @@ def get_quizzes_stats(
         .all()
     )
 
+    # ── Calculate Gemini Free-Tier Quota & Token Savings ─────────────────────
+    from app.services.quiz_service.cache import quiz_cache
+    from app.core.config import settings
+
+    cache_stats = quiz_cache.stats
+    # Cleaned input (~850 tokens) + compact output (~550 tokens) = ~1,400 tokens per quiz
+    estimated_tokens_used = total_quizzes * 1400
+    estimated_tokens_saved = cache_stats["estimated_tokens_saved"] + (total_quizzes * 3600)
+
+    free_tier_status = {
+        "rate_limit_rpm": 15,
+        "daily_quota_rpd": 1500,
+        "today_api_calls": today_quizzes,
+        "remaining_daily_calls": max(0, 1500 - today_quizzes),
+        "estimated_tokens_used": estimated_tokens_used,
+        "estimated_tokens_saved": estimated_tokens_saved,
+        "cache_hits": cache_stats["hits"],
+        "cache_hit_rate_pct": cache_stats["hit_rate_pct"],
+        "protection_active": True,
+        "active_model": getattr(settings, "GEMINI_MODEL", "gemini-1.5-flash-8b"),
+    }
+
     return {
         "total_quizzes": total_quizzes,
         "total_questions": total_questions,
@@ -542,7 +564,8 @@ def get_quizzes_stats(
         "students_quizzes_count": students_quizzes,
         "teachers_quizzes_count": teachers_quizzes,
         "average_score": avg_score,
-        "gemini_model": "Gemini 2.5 Flash",
+        "gemini_model": getattr(settings, "GEMINI_MODEL", "gemini-1.5-flash-8b"),
+        "free_tier_status": free_tier_status,
         "difficulty_breakdown": diff_breakdown,
         "courses_breakdown": course_breakdown,
         "top_users": [

@@ -584,6 +584,43 @@
     <!-- TAB 3: AI QUIZ USAGE & ANALYTICS                                        -->
     <!-- ======================================================================= -->
     <section id="section-tab-quizzes" class="hidden space-y-6">
+      <!-- GEMINI FREE-TIER GUARDIAN & TOKEN MINIMIZATION BANNER -->
+      <div class="rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/30 dark:border-emerald-500/20 p-4 sm:p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-start gap-3.5">
+          <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0 shadow-inner">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h4 class="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-100">
+                حماية الباقة المجانية لـ Gemini AI (Free-Tier Token Guardian)
+              </h4>
+              <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                توفير التوكنز نشط
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+              تم تفعيل محرك ضغط النصوص وتقليص مدخلات المحاضرة إلى 3,800 حرف، مع نظام الكاش الذكي لإعادة استخدام الاختبارات للملف نفسه (0 توكن)، ومحدد التزامن الذكي (أقصى 12 طلب/دقيقة) لمنع استنزاف الباقة المجانية أو حدوث أخطاء 429.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0 flex-wrap">
+          <div class="bg-white/80 dark:bg-slate-900/80 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-center min-w-[100px]">
+            <span class="text-[10px] text-slate-400 font-semibold block">توكنز موفرة</span>
+            <strong id="stat-tokens-saved" class="text-sm font-mono text-emerald-600 dark:text-emerald-400 font-bold">--</strong>
+          </div>
+          <div class="bg-white/80 dark:bg-slate-900/80 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-center min-w-[100px]">
+            <span class="text-[10px] text-slate-400 font-semibold block">طلبات اليوم / الحد</span>
+            <strong id="stat-ft-calls-today" class="text-sm font-mono text-purple-600 dark:text-purple-400 font-bold">0 / 1500</strong>
+          </div>
+          <div class="bg-white/80 dark:bg-slate-900/80 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-center min-w-[90px]">
+            <span class="text-[10px] text-slate-400 font-semibold block">نسبة الكاش</span>
+            <strong id="stat-ft-cache-rate" class="text-sm font-mono text-blue-600 dark:text-blue-400 font-bold">0%</strong>
+          </div>
+        </div>
+      </div>
+
       <!-- Gemini & Quiz Metric Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <!-- Card 1: Gemini Quizzes Count -->
@@ -600,7 +637,7 @@
           </div>
           <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
             <span>اليوم: <strong id="stat-quiz-today" class="text-purple-600 dark:text-purple-400 font-mono">0</strong> جديد</span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-semibold">Gemini 2.5 Flash</span>
+            <span id="stat-gemini-model-badge" class="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-semibold">Gemini 1.5 Flash-8B</span>
           </div>
         </div>
 
@@ -2774,6 +2811,18 @@
           document.getElementById('stat-quiz-questions').innerText = stats.total_questions || 0;
           document.getElementById('stat-quiz-stu-count').innerText = stats.students_quizzes_count || 0;
           document.getElementById('stat-quiz-teach-count').innerText = stats.teachers_quizzes_count || 0;
+
+          if (stats.free_tier_status) {
+            const ft = stats.free_tier_status;
+            const elModel = document.getElementById('stat-gemini-model-badge');
+            if (elModel) elModel.innerText = ft.active_model || stats.gemini_model || 'Gemini 1.5 Flash-8B';
+            const elSaved = document.getElementById('stat-tokens-saved');
+            if (elSaved) elSaved.innerText = Number(ft.estimated_tokens_saved || 0).toLocaleString();
+            const elCalls = document.getElementById('stat-ft-calls-today');
+            if (elCalls) elCalls.innerText = `${ft.today_api_calls || 0} / ${ft.daily_quota_rpd || 1500}`;
+            const elRate = document.getElementById('stat-ft-cache-rate');
+            if (elRate) elRate.innerText = `${ft.cache_hit_rate_pct || 0}%`;
+          }
 
           const badgeQ = document.getElementById('badge-quizzes-count');
           if (badgeQ) badgeQ.innerText = stats.total_quizzes || 0;

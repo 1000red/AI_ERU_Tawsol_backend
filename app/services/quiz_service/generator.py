@@ -5,6 +5,8 @@ from fastapi import HTTPException
 
 from app.core.config import settings
 from app.services.quiz_service.session import _StoredQuestion
+from app.services.quiz_service.cache import quiz_cache, gemini_limiter
+from app.services.quiz_service.compressor import clean_and_compress_text
 
 _PROMPT = """\
 You are a strict educational quiz generator. Your task is to create exactly 10 \
@@ -37,6 +39,36 @@ Return ONLY valid JSON in this exact format, nothing else:
 }
 
 LECTURE CONTENT:
+"""
+
+
+def _build_prompt(text: str, num_questions: int = 10, difficulty: str = "medium") -> str:
+    """Build a compact, token-efficient quiz generation prompt."""
+    return f"""You are a strict educational quiz generator. Create exactly {num_questions} multiple-choice questions (difficulty: {difficulty.upper()}) from the lecture content below.
+
+STRICT RULES:
+1. Use ONLY information from the lecture content. Do NOT add outside knowledge.
+2. Ignore author names, dates, course codes, file names, headers, footers, watermarks.
+3. Focus on key definitions, core concepts, processes, and learning objectives.
+4. Generate exactly {num_questions} questions. Each question has exactly 4 options: A, B, C, D with plausible distractors.
+5. Distribute correct answers across A, B, C, D.
+6. Keep each explanation concise (1 clear sentence referencing the content).
+
+Return strictly valid JSON with this exact schema:
+{{
+  "questions": [
+    {{
+      "id": 1,
+      "question": "...",
+      "options": {{"A": "...", "B": "...", "C": "...", "D": "..."}},
+      "correct": "A",
+      "explanation": "..."
+    }}
+  ]
+}}
+
+LECTURE CONTENT:
+{text}
 """
 
 
@@ -167,15 +199,34 @@ def _parse_questions(raw: str) -> list[_StoredQuestion]:
     return questions
 
 
-async def generate_quiz(text: str) -> list[_StoredQuestion]:
+async def generate_quiz(
+    text: str,
+    num_questions: int = 10,
+    difficulty: str = "medium",
+    force_refresh: bool = False,
+    file_id: int | None = None,
+) -> list[_StoredQuestion]:
+    """Generates MCQs with strict token compression, intelligent caching, and free-tier rate protection."""
     if len(text) < 200:
         raise HTTPException(
             status_code=422,
             detail="The file contains too little extractable text to generate a quiz.",
         )
 
-    trimmed = text[:12_000]
-    prompt = _PROMPT + trimmed
+    # ── 1. Check in-memory cache if file_id is provided ────────────────────────
+    if file_id and file_id > 0 and not force_refresh and getattr(settings, "GEMINI_CACHE_ENABLED", True):
+        cached = quiz_cache.get(file_id=file_id)
+        if cached and len(cached) >= 5:
+            return cached[:num_questions]
+
+    # ── 2. Compress and clean lecture text to strictly minimize tokens ─────────
+    max_chars = getattr(settings, "GEMINI_INPUT_MAX_CHARS", 3800)
+    trimmed = clean_and_compress_text(text, max_chars=max_chars)
+    if len(trimmed) < 150:
+        trimmed = text[:max_chars]
+
+    # ── 3. Build token-efficient prompt ────────────────────────────────────────
+    prompt = _build_prompt(trimmed, num_questions=num_questions, difficulty=difficulty)
 
     from app.services.neon_ai_gateway import neon_ai
 
@@ -187,50 +238,74 @@ async def generate_quiz(text: str) -> list[_StoredQuestion]:
                 model="gemini-2.5-flash",
             )
             if raw and raw.strip():
-                return _parse_questions(raw)
+                questions = _parse_questions(raw)
+                if file_id and file_id > 0 and len(questions) >= 5:
+                    quiz_cache.set(questions, file_id=file_id)
+                return questions[:num_questions]
         except Exception:
             pass
 
     from google.genai import types
 
     client = _make_client()
-
     loop = asyncio.get_running_loop()
 
-    # Attempt up to 2 times — Gemini occasionally returns empty/blocked responses.
+    # Model resolution: candidate models ordered by priority
+    configured_model = getattr(settings, "GEMINI_MODEL", "gemini-1.5-flash-8b") or "gemini-1.5-flash-8b"
+    model_candidates = [configured_model, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-flash"]
+    models: list[str] = []
+    for m in model_candidates:
+        if m and m not in models:
+            models.append(m)
+
     last_error = HTTPException(
         status_code=502,
         detail="AI returned an empty or blocked response. Please try again.",
     )
 
-    for attempt in range(2):
-        try:
-            response = await loop.run_in_executor(
-                None,
-                lambda: client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        temperature=0.7,
-                    ),
-                ),
-            )
-        except HTTPException:
-            raise
-        except Exception as exc:
-            _handle_error(exc)
+    # ── 4. Concurrency & Rate Limiter Guard (guarantees <= 12 RPM, max 2 concurrent)
+    await gemini_limiter.acquire()
+    try:
+        for model_name in models:
+            for attempt in range(2):
+                try:
+                    response = await loop.run_in_executor(
+                        None,
+                        lambda m=model_name: client.models.generate_content(
+                            model=m,
+                            contents=prompt,
+                            config=types.GenerateContentConfig(
+                                response_mime_type="application/json",
+                                temperature=0.7,
+                                max_output_tokens=1500,
+                            ),
+                        ),
+                    )
+                except HTTPException:
+                    raise
+                except Exception as exc:
+                    exc_msg = str(exc).lower()
+                    # If model not found on Google endpoint (404), fallback to next model
+                    if "not found" in exc_msg or "404" in exc_msg or "is not supported" in exc_msg:
+                        break
+                    _handle_error(exc)
 
-        try:
-            raw = response.text # safety-blocked
-        except Exception:
-            raw = None
+                try:
+                    raw = response.text
+                except Exception:
+                    raw = None
 
-        if raw and raw.strip(): # JSON not none
-            try:
-                return _parse_questions(raw)
-            except HTTPException as parse_err:
-                last_error = parse_err
-                continue  # retry on parse failure
+                if raw and raw.strip():
+                    try:
+                        questions = _parse_questions(raw)
+                        # Cache questions for this file to save 100% of tokens for future students
+                        if file_id and file_id > 0 and len(questions) >= 5:
+                            quiz_cache.set(questions, file_id=file_id)
+                        return questions[:num_questions]
+                    except HTTPException as parse_err:
+                        last_error = parse_err
+                        continue
+    finally:
+        gemini_limiter.release()
 
-    raise last_error # or HTTPException(status_code=502, detail="Quiz generation failed.")
+    raise last_error

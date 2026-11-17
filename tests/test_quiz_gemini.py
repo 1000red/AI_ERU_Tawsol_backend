@@ -341,8 +341,14 @@ class TestGeminiLiveInvocation(unittest.TestCase):
             self.assertIn("VERIFIED", response.text.upper())
         except Exception as exc:
             exc_str = str(exc).lower()
-            # If running in strictly air-gapped environment without internet access
-            if "getaddrinfo failed" in exc_str or "connecterror" in exc_str:
+            # If running in strictly air-gapped environment without internet access or network drops
+            if (
+                "getaddrinfo failed" in exc_str
+                or "connecterror" in exc_str
+                or "remoteprotocolerror" in exc_str
+                or "server disconnected" in exc_str
+                or "protocolerror" in exc_str
+            ):
                 self.skipTest(f"Live network unavailable: {exc}")
             # If live API quota limit reached on shared development key
             elif "429" in exc_str or "resource_exhausted" in exc_str or "quota" in exc_str:

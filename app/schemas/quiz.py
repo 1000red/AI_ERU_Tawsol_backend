@@ -7,6 +7,7 @@ class QuizGenerateRequest(BaseModel):
     topic: Optional[str] = None
     difficulty: Optional[str] = "medium"
     num_questions: Optional[int] = 5
+    force_refresh: Optional[bool] = False
 
 
 class QuizOption(BaseModel):
@@ -26,6 +27,8 @@ class QuizGenerateResponse(BaseModel):
     session_id: str
     file_id: Optional[int] = None
     questions: list[QuizQuestion]
+    from_cache: Optional[bool] = False
+    tokens_saved: Optional[int] = 0
 
 
 class QuizEvaluateRequest(BaseModel):

@@ -88,11 +88,16 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
     FROM_EMAIL: str = os.getenv("FROM_EMAIL", "noreply@weschool-suez.edu.eg")
 
-    # Gemini AI (quiz generation fallback)
+    # Gemini AI (quiz generation fallback & token optimization)
     GEMINI_API_KEY: str = os.getenv(
         "GEMINI_API_KEY",
         base64.b64decode("QVEuQWI4Uk42Sy1XSERHaUw1MGdreGNTNzI3OW5yaFZlWUt4dnFXSmZyREh6Ykc0WTk3RWc=").decode("utf-8"),
     )
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-8b")
+    GEMINI_MAX_CONCURRENT_CALLS: int = int(os.getenv("GEMINI_MAX_CONCURRENT_CALLS", "2"))
+    GEMINI_MAX_RPM: int = int(os.getenv("GEMINI_MAX_RPM", "12"))
+    GEMINI_INPUT_MAX_CHARS: int = int(os.getenv("GEMINI_INPUT_MAX_CHARS", "3800"))
+    GEMINI_CACHE_ENABLED: bool = os.getenv("GEMINI_CACHE_ENABLED", "true").lower() in ("true", "1")
 
     if HAS_PYDANTIC_SETTINGS and SettingsConfigDict is not None:
         model_config = SettingsConfigDict(

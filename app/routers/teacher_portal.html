@@ -1673,6 +1673,7 @@
     async function handleQuizGeneratedSuccess(data) {
       currentQuizState.sessionId = data.session_id;
       currentQuizState.questions = data.questions || [];
+      currentQuizState.fromCache = !!data.from_cache;
 
       // Fetch all answers cache in background for instantaneous click-to-reveal
       try {
@@ -1692,7 +1693,14 @@
     function renderQuizQuestions() {
       const contentArea = document.getElementById('quiz-content-area');
       const questions = currentQuizState.questions;
-      document.getElementById('quiz-count-badge').innerText = `${questions.length} أسئلة`;
+      const countBadge = document.getElementById('quiz-count-badge');
+      if (countBadge) {
+        if (currentQuizState.fromCache) {
+          countBadge.innerHTML = `${questions.length} أسئلة <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">⚡ كاش موفر للتوكنز</span>`;
+        } else {
+          countBadge.innerText = `${questions.length} أسئلة`;
+        }
+      }
 
       if (!questions || questions.length === 0) {
         contentArea.innerHTML = '<p class="text-center text-xs text-slate-400 py-8">لم يتم استرجاع أسئلة.</p>';

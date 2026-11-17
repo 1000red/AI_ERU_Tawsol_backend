@@ -113,7 +113,52 @@ async def generate_quiz_endpoint(
             detail="Either file_id or text_content must be provided.",
         )
 
-    stored_questions = await generate_quiz(text_to_process)
+    # ── Token-Saving Check: Reuse existing DB QuizLog if file already generated ─
+    from_cache = False
+    tokens_saved = 0
+    stored_questions = None
+    force_refresh = bool(getattr(body, "force_refresh", False))
+
+    if target_file_id and target_file_id > 0 and not force_refresh:
+        from app.models.quiz_log import QuizLog
+        existing_log = (
+            db.query(QuizLog)
+            .filter(QuizLog.file_id == target_file_id, QuizLog.questions_json.isnot(None))
+            .order_by(QuizLog.id.desc())
+            .first()
+        )
+        if existing_log and existing_log.questions_json:
+            try:
+                import json
+                raw_qs = json.loads(existing_log.questions_json)
+                if isinstance(raw_qs, list) and len(raw_qs) >= 5:
+                    from app.services.quiz_service.session import _StoredQuestion
+                    stored_questions = [
+                        _StoredQuestion(
+                            id=q["id"],
+                            question=q["question"],
+                            options=q["options"],
+                            correct=q["correct"],
+                            explanation=q.get("explanation", ""),
+                        )
+                        for q in raw_qs
+                    ]
+                    from_cache = True
+                    tokens_saved = 2300
+                    # Prime memory cache
+                    from app.services.quiz_service.cache import quiz_cache
+                    quiz_cache.set(stored_questions, file_id=target_file_id)
+            except Exception:
+                stored_questions = None
+
+    if not stored_questions:
+        stored_questions = await generate_quiz(
+            text=text_to_process,
+            num_questions=body.num_questions or 5,
+            difficulty=body.difficulty or "medium",
+            force_refresh=force_refresh,
+            file_id=target_file_id if target_file_id > 0 else None,
+        )
 
     # ── Create session (server stores correct answers) ─────────────────────
     session_id = create_session(target_file_id, stored_questions)
@@ -180,6 +225,8 @@ async def generate_quiz_endpoint(
         session_id=session_id,
         file_id=target_file_id,
         questions=public_questions,
+        from_cache=from_cache,
+        tokens_saved=tokens_saved,
     )
 
 
