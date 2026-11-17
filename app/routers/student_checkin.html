@@ -67,6 +67,30 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-full flex flex-col justify-between selection:bg-purple-600 selection:text-white">
 
+  <!-- PLATFORM STOPPED / MAINTENANCE LOCKOUT OVERLAY -->
+  <div id="platform-stopped-overlay" class="fixed inset-0 z-[100] hidden items-center justify-center p-5 bg-slate-950/95 backdrop-blur-md">
+    <div class="max-w-md w-full rounded-3xl bg-slate-900 border border-rose-500/40 p-7 text-center text-white shadow-2xl space-y-4">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-extrabold">
+        <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+        <span>المنصة متوقفة مؤقتاً (503)</span>
+      </div>
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-rose-600 to-purple-700 mx-auto flex items-center justify-center text-2xl shadow-lg shadow-rose-600/30">
+        <i class="fa-solid fa-power-off"></i>
+      </div>
+      <div>
+        <h2 class="text-xl font-black text-white">عذراً، المنصة متوقفة حالياً</h2>
+        <p class="text-xs font-bold text-purple-300 mt-1">مدرسة WE للتكنولوجيا التطبيقية بالسويس</p>
+      </div>
+      <div id="platform-stopped-overlay-msg" class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line">
+        المنصة متوقفة مؤقتاً من قبل إدارة المدرسة للصيانة والتحديث.
+      </div>
+      <button type="button" onclick="checkPlatformOperationalStatus(true)" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-rotate-right"></i>
+        <span>إعادة الفحص الآن</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Top Ambient Banner -->
   <div class="w-full bg-gradient-to-r from-brand-950 via-purple-950 to-slate-950 border-b border-purple-900/40 px-4 py-3 shrink-0">
     <div class="max-w-md mx-auto flex items-center justify-between">
@@ -297,6 +321,9 @@
     };
 
     window.addEventListener('DOMContentLoaded', () => {
+      checkPlatformOperationalStatus();
+      setInterval(() => checkPlatformOperationalStatus(), 30000);
+
       // 1. Auto detect token from URL (?token=... or ?t=...)
       const urlParams = new URLSearchParams(window.location.search);
       const tokenFromUrl = urlParams.get('token') || urlParams.get('t');
@@ -521,6 +548,58 @@
       document.getElementById('lbl-checkin-another').innerText = texts.checkinAnother;
       document.getElementById('lbl-footer-note').innerText = texts.footerNote;
       document.getElementById('subtitles-text').innerText = texts.subtitles;
+    }
+
+    function showPlatformStoppedOverlay(message) {
+      try { stopCameraScanner(); } catch (e) {}
+      const overlay = document.getElementById('platform-stopped-overlay');
+      const msgEl = document.getElementById('platform-stopped-overlay-msg');
+      if (!overlay) return;
+      if (msgEl && message) {
+        msgEl.innerText = message;
+      }
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+    }
+
+    // Intercept any 503 platform_stopped API response immediately (zero polling delay)
+    (function installPlatformMaintenanceInterceptor() {
+      if (window.__weMaintenanceFetchInstalled) return;
+      window.__weMaintenanceFetchInstalled = true;
+      const nativeFetch = window.fetch.bind(window);
+      window.fetch = async function(...args) {
+        const res = await nativeFetch(...args);
+        if (res && res.status === 503) {
+          try {
+            const body = await res.clone().json();
+            if (body && (body.maintenance_mode === true || body.error === 'platform_stopped')) {
+              showPlatformStoppedOverlay(body.detail || body.maintenance_message);
+            }
+          } catch (e) {}
+        }
+        return res;
+      };
+    })();
+
+    async function checkPlatformOperationalStatus(manualRetry = false) {
+      try {
+        const res = await fetch(`${API_BASE}/platform/status`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const overlay = document.getElementById('platform-stopped-overlay');
+        if (!overlay) return;
+
+        if (data.is_active === false || data.maintenance_mode === true) {
+          showPlatformStoppedOverlay(data.maintenance_message);
+        } else {
+          const wasHidden = overlay.classList.contains('hidden');
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
+          if (!wasHidden && manualRetry) {
+            window.location.reload();
+          }
+        }
+      } catch (e) {}
     }
 
     // ── TOAST NOTIFICATIONS ───────────────────────────────────────────────────

@@ -63,6 +63,14 @@ def login_user(db: Session, email: str, password: str) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
+    if user.type_code != "ADM":
+        from app.services.platform_service import PlatformStoppedError, get_platform_status
+        platform_state = get_platform_status(db)
+        if not platform_state.get("is_active", True):
+            raise PlatformStoppedError(
+                platform_state["maintenance_message"],
+                platform_state.get("stopped_at"),
+            )
     token = create_access_token({"sub": str(user.user_id), "type": user.type_code})
     return {"access_token": token, "token_type": "bearer", "user": user}
 

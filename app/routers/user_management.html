@@ -101,12 +101,18 @@
           </div>
         </div>
 
-        <!-- Center: Live Backend Indicator -->
-        <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
-          <span id="backend-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span id="backend-status-text" class="font-medium text-slate-600 dark:text-slate-300">
-            السيرفر السحابي: متصل
-          </span>
+        <!-- Center: Live Backend & Platform Power Indicator -->
+        <div class="hidden md:flex items-center gap-2">
+          <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+            <span id="backend-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="backend-status-text" class="font-medium text-slate-600 dark:text-slate-300">
+              السيرفر السحابي: متصل
+            </span>
+          </div>
+          <button id="header-killswitch-btn" onclick="openPlatformControlModal()" class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold transition" title="مفتاح إيقاف وتشغيل المنصة">
+            <i id="header-killswitch-icon" class="fa-solid fa-power-off text-[11px]"></i>
+            <span id="header-killswitch-label">المنصة تعمل</span>
+          </button>
         </div>
 
         <!-- Right Controls: Admin Profile, Dark Mode, Voice-Over & Portals -->
@@ -180,6 +186,75 @@
         <i class="fa-solid fa-key"></i>
         <span>تسجيل دخول مسؤول</span>
       </button>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- PLATFORM MASTER KILL-SWITCH CONTROL CARD                                -->
+    <!-- ======================================================================= -->
+    <div id="platform-killswitch-card" class="rounded-2xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/70 p-4 sm:p-5 shadow-sm transition-all duration-300">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="flex items-start gap-3.5">
+          <div id="platform-power-icon-box" class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0 shadow-sm">
+            <i id="platform-power-icon" class="fa-solid fa-power-off"></i>
+          </div>
+          <div class="space-y-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
+                مفتاح التحكم الرئيسي في عمل المنصة (Platform Kill-Switch)
+              </h3>
+              <span id="platform-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>المنصة تعمل الآن</span>
+              </span>
+            </div>
+            <p id="platform-status-desc" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              عند إيقاف المنصة يتم منع دخول الطلاب والمعلمين وإيقاف المحادثات والاختبارات وبوابة الحضور فوراً، مع بقاء لوحة التحكم متاحة لك لإعادة التشغيل في أي وقت.
+            </p>
+            <p id="platform-status-meta" class="hidden text-[11px] font-semibold text-slate-400 dark:text-slate-500"></p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 shrink-0 self-end lg:self-center">
+          <!-- Visual Power Toggle Switch -->
+          <button
+            type="button"
+            id="platform-toggle-switch"
+            role="switch"
+            aria-checked="true"
+            aria-label="تبديل حالة تشغيل وإيقاف المنصة"
+            onclick="openPlatformControlModal()"
+            class="relative inline-flex h-8 w-16 items-center rounded-full bg-emerald-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 shadow-inner cursor-pointer"
+            title="تشغيل / إيقاف المنصة"
+          >
+            <span id="platform-toggle-knob" class="inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 -translate-x-1"></span>
+          </button>
+
+          <!-- Explicit Action Button -->
+          <button
+            type="button"
+            id="btn-platform-power-action"
+            onclick="openPlatformControlModal()"
+            class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-500/25 transition flex items-center gap-2 shrink-0"
+          >
+            <i class="fa-solid fa-power-off"></i>
+            <span>إيقاف عمل المنصة</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Current Maintenance Message Preview (visible when stopped) -->
+      <div id="platform-stopped-msg-bar" class="hidden mt-3 pt-3 border-t border-rose-200 dark:border-rose-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+        <div class="flex items-start gap-2 text-rose-800 dark:text-rose-200">
+          <i class="fa-solid fa-bullhorn mt-0.5 text-rose-500"></i>
+          <div>
+            <span class="font-bold">رسالة التوقف الظاهرة للمستخدمين:</span>
+            <span id="platform-stopped-msg-text" class="mr-1"></span>
+          </div>
+        </div>
+        <button type="button" onclick="openPlatformControlModal(true)" class="px-3 py-1.5 rounded-lg bg-white/80 dark:bg-slate-800 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-700 font-bold text-[11px] hover:bg-white transition shrink-0">
+          <i class="fa-solid fa-pen"></i> تعديل الرسالة
+        </button>
+      </div>
     </div>
 
     <!-- SMART AI EARLY-WARNING INSIGHT CARD (Linked to Pitch Slide 10) -->
@@ -1917,6 +1992,64 @@
 
 
   <!-- ========================================================================= -->
+  <!-- MODAL: PLATFORM KILL-SWITCH CONFIRMATION & MAINTENANCE MESSAGE            -->
+  <!-- ========================================================================= -->
+  <div id="modal-platform-killswitch" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div id="ks-modal-icon-box" class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400 flex items-center justify-center text-lg">
+            <i id="ks-modal-icon" class="fa-solid fa-power-off"></i>
+          </div>
+          <div>
+            <h3 id="ks-modal-title" class="font-extrabold text-base text-slate-900 dark:text-white">إيقاف عمل المنصة مؤقتاً</h3>
+            <p id="ks-modal-subtitle" class="text-xs text-slate-500 dark:text-slate-400">مدرسة WE للتكنولوجيا التطبيقية بالسويس</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('modal-platform-killswitch')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-4 text-xs sm:text-sm">
+        <div id="ks-modal-warning-box" class="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 leading-relaxed">
+          <p class="font-bold flex items-center gap-1.5 mb-1">
+            <i class="fa-solid fa-triangle-exclamation text-rose-600 dark:text-rose-400"></i>
+            <span>تنبيه هام قبل الإيقاف:</span>
+          </p>
+          <p class="text-xs">
+            سيتم منع جميع الطلاب والمعلمين من تسجيل الدخول أو استخدام التطبيق وبوابة المعلمين وبوابة الحضور والمحادثات فوراً. ستظل لوحة تحكم الإدارة هذه مفتوحة لك فقط لإعادة التشغيل متى شئت.
+          </p>
+        </div>
+
+        <div>
+          <label for="ks-maintenance-message" class="block font-bold mb-1.5 text-slate-700 dark:text-slate-300 text-xs">
+            رسالة الصيانة التي ستظهر للمستخدمين:
+          </label>
+          <textarea
+            id="ks-maintenance-message"
+            rows="3"
+            maxlength="1000"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs sm:text-sm leading-relaxed focus:ring-2 focus:ring-brand-500 outline-none"
+            placeholder="المنصة متوقفة مؤقتاً من قبل إدارة مدرسة WE للتكنولوجيا التطبيقية بالسويس..."
+          ></textarea>
+        </div>
+
+        <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" onclick="closeModal('modal-platform-killswitch')" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-semibold transition text-xs sm:text-sm">
+            إلغاء
+          </button>
+          <button type="button" id="btn-confirm-killswitch" onclick="submitPlatformStatusChange()" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold shadow-md shadow-rose-500/25 transition flex items-center gap-2 text-xs sm:text-sm">
+            <i class="fa-solid fa-power-off"></i>
+            <span>تأكيد إيقاف المنصة الآن</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
   <!-- TOAST NOTIFICATIONS CONTAINER                                             -->
   <!-- ========================================================================= -->
   <div id="toast" class="fixed bottom-5 left-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
@@ -1949,6 +2082,13 @@
       initTheme();
       updateAuthUI();
       checkBackendHealth();
+      fetchPlatformStatus();
+      setInterval(() => {
+        const modal = document.getElementById('modal-platform-killswitch');
+        if (!modal || modal.classList.contains('hidden')) {
+          fetchPlatformStatus();
+        }
+      }, 30000);
       fetchUsers();
       fetchStats();
     });
@@ -2134,9 +2274,230 @@
     function refreshData() {
       const icon = document.getElementById('refresh-icon');
       if (icon) icon.classList.add('fa-spin');
-      Promise.all([fetchUsers(), fetchStats()]).finally(() => {
+      Promise.all([fetchPlatformStatus(), fetchUsers(), fetchStats()]).finally(() => {
         if (icon) icon.classList.remove('fa-spin');
       });
+    }
+
+    // ── PLATFORM MASTER KILL-SWITCH (STOP / START PLATFORM) ──────────────────
+    let platformStatusState = {
+      is_active: true,
+      maintenance_mode: false,
+      maintenance_message: 'المنصة متوقفة مؤقتاً من قبل إدارة مدرسة WE للتكنولوجيا التطبيقية بالسويس لأغراض الصيانة والتحديث. نعتذر عن الإزعاج وسنعود للعمل قريباً.',
+      stopped_at: null,
+      updated_at: null,
+      updated_by_name: null,
+    };
+    let platformModalEditMessageOnly = false;
+
+    async function fetchPlatformStatus() {
+      try {
+        const hasAdminToken = !!getAdminToken();
+        const url = hasAdminToken
+          ? `${API_BASE}/admin/api/platform/status`
+          : `${API_BASE}/platform/status`;
+        const opts = hasAdminToken
+          ? { headers: getAuthHeaders(), cache: 'no-store' }
+          : { cache: 'no-store' };
+
+        let res = await fetch(url, opts);
+        if (!res.ok && hasAdminToken) {
+          // Fallback to public status if token expired
+          res = await fetch(`${API_BASE}/platform/status`, { cache: 'no-store' });
+        }
+        if (!res.ok) return;
+        const data = await res.json();
+        platformStatusState = {
+          ...platformStatusState,
+          ...data,
+          updated_by: data.updated_by ?? null,
+          updated_by_name: data.updated_by_name ?? null,
+        };
+        applyPlatformControlUI(platformStatusState);
+      } catch (err) {
+        console.warn('Could not fetch platform status:', err);
+      }
+    }
+
+    function applyPlatformControlUI(state) {
+      const isActive = state.is_active !== false;
+      const card = document.getElementById('platform-killswitch-card');
+      const iconBox = document.getElementById('platform-power-icon-box');
+      const badge = document.getElementById('platform-status-badge');
+      const meta = document.getElementById('platform-status-meta');
+      const toggleSwitch = document.getElementById('platform-toggle-switch');
+      const toggleKnob = document.getElementById('platform-toggle-knob');
+      const actionBtn = document.getElementById('btn-platform-power-action');
+      const stoppedBar = document.getElementById('platform-stopped-msg-bar');
+      const stoppedMsgText = document.getElementById('platform-stopped-msg-text');
+      const headerBtn = document.getElementById('header-killswitch-btn');
+      const headerLabel = document.getElementById('header-killswitch-label');
+
+      if (isActive) {
+        if (card) card.className = 'rounded-2xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/70 p-4 sm:p-5 shadow-sm transition-all duration-300';
+        if (iconBox) iconBox.className = 'w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0 shadow-sm';
+        if (badge) {
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
+          badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>المنصة تعمل الآن</span>';
+        }
+        if (toggleSwitch) {
+          toggleSwitch.setAttribute('aria-checked', 'true');
+          toggleSwitch.className = 'relative inline-flex h-8 w-16 items-center rounded-full bg-emerald-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 shadow-inner cursor-pointer';
+        }
+        if (toggleKnob) {
+          // RTL: -translate-x-1 sits near the right (ON), -translate-x-9 sits near the left (OFF)
+          toggleKnob.className = 'inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 -translate-x-1';
+        }
+        if (actionBtn) {
+          actionBtn.className = 'px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-rose-500/25 transition flex items-center gap-2 shrink-0';
+          actionBtn.innerHTML = '<i class="fa-solid fa-power-off"></i><span>إيقاف عمل المنصة</span>';
+        }
+        if (stoppedBar) stoppedBar.classList.add('hidden');
+        if (headerBtn) {
+          headerBtn.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold transition';
+        }
+        if (headerLabel) headerLabel.innerText = 'المنصة تعمل';
+      } else {
+        if (card) card.className = 'rounded-2xl bg-rose-50/90 dark:bg-rose-950/40 border-2 border-rose-400 dark:border-rose-700 p-4 sm:p-5 shadow-lg shadow-rose-500/10 transition-all duration-300';
+        if (iconBox) iconBox.className = 'w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center text-xl shrink-0 shadow-md shadow-rose-500/40 animate-pulse';
+        if (badge) {
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-600 text-white border border-rose-500 shadow-sm';
+          badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-white animate-ping"></span><span>المنصة متوقفة حالياً (وضع الصيانة)</span>';
+        }
+        if (toggleSwitch) {
+          toggleSwitch.setAttribute('aria-checked', 'false');
+          toggleSwitch.className = 'relative inline-flex h-8 w-16 items-center rounded-full bg-rose-500 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 shadow-inner cursor-pointer';
+        }
+        if (toggleKnob) {
+          toggleKnob.className = 'inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 -translate-x-9';
+        }
+        if (actionBtn) {
+          actionBtn.className = 'px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-500/25 transition flex items-center gap-2 shrink-0';
+          actionBtn.innerHTML = '<i class="fa-solid fa-play"></i><span>إعادة تشغيل المنصة</span>';
+        }
+        if (stoppedBar) stoppedBar.classList.remove('hidden');
+        if (stoppedMsgText) stoppedMsgText.innerText = state.maintenance_message || '';
+        if (headerBtn) {
+          headerBtn.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white border border-rose-500 text-xs font-extrabold shadow-sm animate-pulse transition';
+        }
+        if (headerLabel) headerLabel.innerText = 'المنصة متوقفة';
+      }
+
+      if (meta) {
+        const parts = [];
+        if (state.updated_at) {
+          try {
+            const dt = new Date(state.updated_at);
+            parts.push('آخر تحديث: ' + dt.toLocaleString('ar-EG'));
+          } catch (e) {}
+        }
+        if (state.updated_by_name) {
+          parts.push('بواسطة: ' + state.updated_by_name);
+        }
+        if (parts.length > 0) {
+          meta.innerText = parts.join(' • ');
+          meta.classList.remove('hidden');
+        } else {
+          meta.classList.add('hidden');
+        }
+      }
+    }
+
+    function openPlatformControlModal(editMessageOnly = false) {
+      if (!getAdminToken()) {
+        showToast('يرجى تسجيل الدخول بحساب مسؤول أولاً للتحكم في إيقاف أو تشغيل المنصة', 'warning');
+        openLoginModal();
+        return;
+      }
+
+      platformModalEditMessageOnly = !!editMessageOnly;
+      const isCurrentlyActive = platformStatusState.is_active !== false;
+      const iconBox = document.getElementById('ks-modal-icon-box');
+      const icon = document.getElementById('ks-modal-icon');
+      const title = document.getElementById('ks-modal-title');
+      const warningBox = document.getElementById('ks-modal-warning-box');
+      const msgArea = document.getElementById('ks-maintenance-message');
+      const confirmBtn = document.getElementById('btn-confirm-killswitch');
+
+      if (msgArea) {
+        msgArea.value = platformStatusState.maintenance_message || '';
+      }
+
+      if (editMessageOnly) {
+        iconBox.className = 'w-10 h-10 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 flex items-center justify-center text-lg';
+        icon.className = 'fa-solid fa-pen-to-square';
+        title.innerText = 'تعديل رسالة إيقاف المنصة';
+        warningBox.classList.add('hidden');
+        confirmBtn.className = 'px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold shadow-md transition flex items-center gap-2 text-xs sm:text-sm';
+        confirmBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i><span>حفظ الرسالة</span>';
+      } else if (isCurrentlyActive) {
+        iconBox.className = 'w-10 h-10 rounded-xl bg-rose-100 text-rose-600 dark:bg-rose-950 dark:text-rose-400 flex items-center justify-center text-lg';
+        icon.className = 'fa-solid fa-power-off';
+        title.innerText = 'تأكيد إيقاف عمل المنصة بالكامل';
+        warningBox.className = 'p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 leading-relaxed';
+        warningBox.innerHTML = '<p class="font-bold flex items-center gap-1.5 mb-1"><i class="fa-solid fa-triangle-exclamation text-rose-600 dark:text-rose-400"></i><span>تنبيه هام قبل الإيقاف:</span></p><p class="text-xs">سيتم منع جميع الطلاب والمعلمين من تسجيل الدخول أو استخدام التطبيق وبوابة المعلمين وبوابة الحضور والمحادثات فوراً. ستظل لوحة تحكم الإدارة هذه مفتوحة لك فقط لإعادة التشغيل متى شئت.</p>';
+        warningBox.classList.remove('hidden');
+        confirmBtn.className = 'px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold shadow-md shadow-rose-500/25 transition flex items-center gap-2 text-xs sm:text-sm';
+        confirmBtn.innerHTML = '<i class="fa-solid fa-power-off"></i><span>تأكيد إيقاف المنصة الآن</span>';
+      } else {
+        iconBox.className = 'w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 flex items-center justify-center text-lg';
+        icon.className = 'fa-solid fa-play';
+        title.innerText = 'إعادة تشغيل المنصة';
+        warningBox.className = 'p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 leading-relaxed';
+        warningBox.innerHTML = '<p class="font-bold flex items-center gap-1.5 mb-1"><i class="fa-solid fa-circle-check text-emerald-600 dark:text-emerald-400"></i><span>إعادة فتح المنصة:</span></p><p class="text-xs">سيتم إتاحة المنصة وجميع خدماتها فوراً لجميع الطلاب والمعلمين وبوابة الحضور.</p>';
+        warningBox.classList.remove('hidden');
+        confirmBtn.className = 'px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold shadow-md shadow-emerald-500/25 transition flex items-center gap-2 text-xs sm:text-sm';
+        confirmBtn.innerHTML = '<i class="fa-solid fa-play"></i><span>تأكيد إعادة تشغيل المنصة</span>';
+      }
+
+      openModal('modal-platform-killswitch');
+    }
+
+    async function submitPlatformStatusChange() {
+      const btn = document.getElementById('btn-confirm-killswitch');
+      const msg = (document.getElementById('ks-maintenance-message')?.value || '').trim();
+      const targetActive = platformModalEditMessageOnly
+        ? (platformStatusState.is_active !== false)
+        : !(platformStatusState.is_active !== false);
+
+      btn.disabled = true;
+      const prevHtml = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>جاري التطبيق...</span>';
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/platform/status`, {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            is_active: targetActive,
+            maintenance_message: (platformModalEditMessageOnly || !targetActive) ? msg : (msg || null),
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) {
+            throw new Error('صلاحية المسؤول مطلوبة. يرجى إعادة تسجيل الدخول.');
+          }
+          throw new Error(data.detail || 'تعذر تحديث حالة المنصة');
+        }
+
+        platformStatusState = { ...platformStatusState, ...data };
+        applyPlatformControlUI(platformStatusState);
+        closeModal('modal-platform-killswitch');
+
+        if (platformModalEditMessageOnly) {
+          showToast('تم حفظ رسالة التوقف بنجاح ✅', 'success');
+        } else if (targetActive) {
+          showToast('تم إعادة تشغيل المنصة وإتاحتها للجميع بنجاح ✅', 'success');
+        } else {
+          showToast('تم إيقاف عمل المنصة بنجاح. المنصة الآن في وضع الصيانة ⛔', 'warning');
+        }
+      } catch (err) {
+        showToast(err.message || 'حدث خطأ أثناء تحديث حالة المنصة', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = prevHtml;
+      }
     }
 
     // ── FILTERING & SEARCHING ────────────────────────────────────────────────

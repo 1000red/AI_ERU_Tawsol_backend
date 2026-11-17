@@ -15,8 +15,10 @@ from app.schemas.user import (
     TeacherAssignmentUpdate,
 )
 from app.schemas.material import MaterialOut, MaterialCreate
+from app.schemas.platform import PlatformStatusOut, PlatformStatusUpdate
 from app.services import user_service as user_svc
 from app.services import material_service as mat_svc
+from app.services import platform_service as platform_svc
 
 router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
 
@@ -59,6 +61,40 @@ def require_admin_access(request: Request, db: Session = Depends(get_db)) -> int
 
 
 # ── API Endpoints ─────────────────────────────────────────────────────────────
+
+@router.get("/api/platform/status", response_model=PlatformStatusOut)
+def get_platform_status_admin(
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Get current global platform operational state (on/off kill-switch)."""
+    return platform_svc.get_platform_status(db, bypass_cache=True)
+
+
+@router.put("/api/platform/status", response_model=PlatformStatusOut)
+@router.post("/api/platform/status", response_model=PlatformStatusOut)
+async def update_platform_status_admin(
+    data: PlatformStatusUpdate,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Stop or resume the entire platform globally from the Admin Panel."""
+    result = platform_svc.set_platform_status(
+        db,
+        is_active=data.is_active,
+        maintenance_message=data.maintenance_message,
+        admin_id=admin_id,
+    )
+    if not data.is_active:
+        try:
+            from app.services.chat_service import ws_manager
+            from app.websockets import announcement_manager
+            await ws_manager.disconnect_all(maintenance_message=result["maintenance_message"])
+            await announcement_manager.disconnect_all(maintenance_message=result["maintenance_message"])
+        except Exception:
+            pass
+    return result
+
 
 @router.get("/api/stats")
 def get_stats(
@@ -979,7 +1015,8 @@ def get_admin_overview(
         "attendance": {
             "total_sessions": total_sessions,
             "active_sessions": active_sessions,
-        }
+        },
+        "platform": platform_svc.get_platform_status(db),
     }
 
 
@@ -1169,6 +1206,33 @@ DASHBOARD_HTML = """<!DOCTYPE html>
           <p class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400">الرسائل والمحادثات</p>
           <p id="stat-messages" class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-0.5 sm:mt-1">-</p>
           <span class="text-[10px] sm:text-[11px] text-slate-500">رسائل الشات</span>
+        </div>
+      </div>
+
+      <!-- Platform Kill-Switch Control Card -->
+      <div id="platform-control-card" class="rounded-2xl border border-emerald-200 dark:border-emerald-900 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-sm transition">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-start gap-3">
+            <div id="platform-control-icon" class="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0">
+              ⏻
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">مفتاح التحكم في عمل المنصة (Kill-Switch)</h3>
+                <span id="platform-status-pill" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">المنصة تعمل الآن</span>
+              </div>
+              <p id="platform-status-meta" class="text-xs text-slate-500 dark:text-slate-400 mt-1">يمكنك إيقاف المنصة مؤقتاً عن جميع الطلاب والمعلمين مع بقاء لوحة التحكم متاحة للمسؤول.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button id="btn-toggle-platform" onclick="togglePlatformStatus()" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm shadow-md transition">
+              ⏻ إيقاف عمل المنصة
+            </button>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-2">
+          <input type="text" id="input-maintenance-msg" placeholder="رسالة الصيانة التي ستظهر للمستخدمين عند إيقاف المنصة..." class="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <button onclick="saveMaintenanceMessage()" class="px-3.5 py-2 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 text-white text-xs font-bold shrink-0 transition">حفظ الرسالة</button>
         </div>
       </div>
 
@@ -1503,8 +1567,10 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 
   <!-- ── JAVASCRIPT LOGIC ─────────────────────────────────────────────────────── -->
   <script>
-    // Universal API base - works both hosted on Vercel and local HTML file
-    const API_BASE = (window.location.origin.startsWith('http') && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1')) ? '' : 'https://ai-eru-tawsol-backend-weschool.vercel.app';
+    // Universal API base - works both hosted (Vercel/localhost) and local file:// HTML
+    const API_BASE = window.location.protocol.startsWith('http')
+      ? window.location.origin
+      : 'https://ai-eru-tawsol-backend-weschool.vercel.app';
 
     let currentUsers = [];
     let currentCourses = [];
@@ -1935,13 +2001,6 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         if (mobileContainer) mobileContainer.innerHTML = `<div class="text-center py-6 text-rose-500 font-bold bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900">فشل تحميل الكورسات: ${e.message}</div>`;
       }
     }
-        currentCourses = await res.json();
-        renderCoursesTable(currentCourses);
-      } catch (e) {
-        if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-rose-500 font-bold">فشل تحميل الكورسات: ${e.message}</td></tr>`;
-        if (mobileContainer) mobileContainer.innerHTML = `<div class="text-center py-6 text-rose-500 font-bold bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900">فشل تحميل الكورسات: ${e.message}</div>`;
-      }
-    }
 
     function renderCoursesTable(courses) {
       const tbody = document.getElementById('courses-tbody');
@@ -2094,8 +2153,109 @@ ${JSON.stringify(data, null, 2)}`;
       }
     }
 
+    // ── PLATFORM KILL-SWITCH ─────────────────────────────────────────────────
+    let currentPlatformActive = true;
+
+    async function loadPlatformStatus() {
+      try {
+        const res = await fetch(`${API_BASE}/platform/status`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        applyPlatformStatusUI(data);
+      } catch (e) {
+        console.warn('Platform status check error:', e);
+      }
+    }
+
+    function applyPlatformStatusUI(data) {
+      currentPlatformActive = data.is_active !== false;
+      const card = document.getElementById('platform-control-card');
+      const icon = document.getElementById('platform-control-icon');
+      const pill = document.getElementById('platform-status-pill');
+      const btn = document.getElementById('btn-toggle-platform');
+      const msgInput = document.getElementById('input-maintenance-msg');
+      const badge = document.getElementById('system-badge');
+
+      if (msgInput && data.maintenance_message && document.activeElement !== msgInput) {
+        msgInput.value = data.maintenance_message;
+      }
+
+      if (currentPlatformActive) {
+        if (card) card.className = 'rounded-2xl border border-emerald-200 dark:border-emerald-900 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-sm transition';
+        if (icon) icon.className = 'w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0';
+        if (pill) {
+          pill.innerText = 'المنصة تعمل الآن';
+          pill.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300';
+        }
+        if (btn) {
+          btn.innerText = '⏻ إيقاف عمل المنصة';
+          btn.className = 'px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm shadow-md transition';
+        }
+        if (badge) {
+          badge.className = 'inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 shrink-0';
+          badge.innerHTML = '<span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="hidden sm:inline">المنصة تعمل بشكل طبيعي</span><span class="sm:hidden">تعمل</span>';
+        }
+      } else {
+        if (card) card.className = 'rounded-2xl border-2 border-rose-400 dark:border-rose-700 bg-rose-50/70 dark:bg-rose-950/40 p-4 sm:p-5 shadow-md transition';
+        if (icon) icon.className = 'w-11 h-11 rounded-xl bg-rose-600 text-white flex items-center justify-center text-xl shrink-0 animate-pulse';
+        if (pill) {
+          pill.innerText = 'المنصة متوقفة حالياً (وضع الصيانة)';
+          pill.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-600 text-white';
+        }
+        if (btn) {
+          btn.innerText = '▶ إعادة تشغيل المنصة';
+          btn.className = 'px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md transition';
+        }
+        if (badge) {
+          badge.className = 'inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-semibold bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 shrink-0';
+          badge.innerHTML = '<span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-rose-500 animate-pulse"></span><span class="hidden sm:inline">المنصة متوقفة (صيانة)</span><span class="sm:hidden">متوقفة</span>';
+        }
+      }
+    }
+
+    async function togglePlatformStatus() {
+      const nextActive = !currentPlatformActive;
+      const msg = (document.getElementById('input-maintenance-msg')?.value || '').trim();
+      const confirmText = nextActive
+        ? 'هل تريد إعادة تشغيل المنصة وإتاحتها لجميع الطلاب والمعلمين الآن؟'
+        : 'تحذير: هل أنت متأكد من إيقاف عمل المنصة بالكامل؟ سيتم منع جميع الطلاب والمعلمين من الدخول حتى تعيد تشغيلها.';
+      if (!confirm(confirmText)) return;
+
+      try {
+        const res = await authFetch(`${API_BASE}/admin/api/platform/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_active: nextActive, maintenance_message: nextActive ? (msg || null) : msg })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'فشل تحديث حالة المنصة');
+        applyPlatformStatusUI(data);
+        showToast(nextActive ? 'تم إعادة تشغيل المنصة بنجاح ✅' : 'تم إيقاف عمل المنصة بنجاح ⛔');
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    }
+
+    async function saveMaintenanceMessage() {
+      const msg = (document.getElementById('input-maintenance-msg')?.value || '').trim();
+      try {
+        const res = await authFetch(`${API_BASE}/admin/api/platform/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_active: currentPlatformActive, maintenance_message: msg })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'فشل حفظ رسالة الصيانة');
+        applyPlatformStatusUI(data);
+        showToast('تم حفظ رسالة الصيانة بنجاح');
+      } catch (err) {
+        showToast(err.message, true);
+      }
+    }
+
     // Refresh everything
     function refreshAll() {
+      loadPlatformStatus();
       loadStats();
       loadUsers();
       loadCourses();

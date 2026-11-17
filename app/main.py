@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, HTTPException, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -9,7 +9,7 @@ from app.core.config import settings
 from app.db.database import engine, get_db
 from app.db import base  # noqa: F401 
 
-from app.models import user, material, chat, content, attendance, password_reset_otp  # noqa: F401
+from app.models import user, material, chat, content, attendance, password_reset_otp, platform_control  # noqa: F401
 
 # Create all tables on startup only when explicitly requested. Alembic
 # (alembic upgrade head) is the source of truth for the schema; silently
@@ -35,7 +35,29 @@ app = FastAPI(
 
 # ── Middleware ────────────────────────────────────────────────────────────────
 
-from app.core.middleware import SecurityHeadersMiddleware, RateLimitMiddleware
+from app.core.middleware import (
+    SecurityHeadersMiddleware,
+    RateLimitMiddleware,
+    PlatformMaintenanceMiddleware,
+)
+from app.services.platform_service import (
+    MAINTENANCE_HEADERS,
+    PlatformStoppedError,
+    build_maintenance_json_payload,
+)
+
+
+@app.exception_handler(PlatformStoppedError)
+async def platform_stopped_exception_handler(request: Request, exc: PlatformStoppedError):
+    return JSONResponse(
+        status_code=503,
+        content=build_maintenance_json_payload(exc.maintenance_message, exc.stopped_at),
+        headers=MAINTENANCE_HEADERS,
+    )
+
+# Registered before vercel_routing_middleware so Vercel path rewriting runs FIRST,
+# and CORS + SecurityHeaders wrap 503 maintenance responses cleanly.
+app.add_middleware(PlatformMaintenanceMiddleware)
 
 @app.middleware("http")
 async def vercel_routing_middleware(request: Request, call_next):
@@ -174,6 +196,16 @@ def root():
         "status":  "running",
         "docs":    "/docs",
     }
+
+
+@app.get("/platform/status", tags=["Health"])
+@app.get("/api/platform/status", tags=["Health"], include_in_schema=False)
+def public_platform_status(db: Session = Depends(get_db)):
+    from app.services.platform_service import get_public_platform_status
+    return JSONResponse(
+        content=get_public_platform_status(db),
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.get("/health", tags=["Health"])

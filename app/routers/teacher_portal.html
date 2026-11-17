@@ -58,6 +58,32 @@
 </head>
 <body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200">
 
+  <!-- PLATFORM STOPPED / MAINTENANCE LOCKOUT OVERLAY -->
+  <div id="platform-stopped-overlay" class="fixed inset-0 z-[100] hidden items-center justify-center p-6 bg-slate-950/95 backdrop-blur-md">
+    <div class="max-w-lg w-full rounded-3xl bg-slate-900 border border-rose-500/40 p-8 text-center text-white shadow-2xl space-y-5">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-extrabold">
+        <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+        <span>المنصة متوقفة مؤقتاً (503)</span>
+      </div>
+      <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-rose-600 to-purple-700 mx-auto flex items-center justify-center text-3xl shadow-lg shadow-rose-600/30">
+        <i class="fa-solid fa-power-off"></i>
+      </div>
+      <div>
+        <h2 class="text-2xl font-black text-white">عذراً، المنصة متوقفة حالياً</h2>
+        <p class="text-xs font-bold text-purple-300 mt-1">مدرسة WE للتكنولوجيا التطبيقية بالسويس</p>
+      </div>
+      <div id="platform-stopped-overlay-msg" class="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 text-sm text-slate-200 leading-relaxed whitespace-pre-line">
+        المنصة متوقفة مؤقتاً من قبل إدارة المدرسة للصيانة والتحديث.
+      </div>
+      <div class="flex items-center justify-center gap-3 pt-1">
+        <button type="button" onclick="checkPlatformOperationalStatus(true)" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:opacity-95 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center gap-2">
+          <i class="fa-solid fa-rotate-right"></i>
+          <span>إعادة الفحص الآن</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ========================================================================= -->
   <!-- TOP NAVIGATION HEADER                                                     -->
   <!-- ========================================================================= -->
@@ -1958,6 +1984,8 @@
       initTheme();
       renderTeacherQuickCards();
       checkBackendHealth();
+      checkPlatformOperationalStatus();
+      setInterval(() => checkPlatformOperationalStatus(), 30000);
       checkExistingSession();
       initModalsClickOutside();
       initFileTypeAutoDetect();
@@ -5101,6 +5129,16 @@
       });
     }
 
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     function showToast(message, type = 'info') {
       if (typeof message === 'object') {
         message = formatApiError(message);
@@ -5394,17 +5432,80 @@
       window.speechSynthesis.speak(utterance);
     }
 
+    let isPlatformStopped = false;
+
+    function showPlatformStoppedOverlay(message) {
+      isPlatformStopped = true;
+      const overlay = document.getElementById('platform-stopped-overlay');
+      const msgEl = document.getElementById('platform-stopped-overlay-msg');
+      if (!overlay) return;
+      if (msgEl && message) {
+        msgEl.innerText = message;
+      }
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+      const dot = document.getElementById('backend-status-dot');
+      const txt = document.getElementById('backend-status-text');
+      if (dot) dot.className = 'w-2 h-2 rounded-full bg-rose-500 animate-pulse';
+      if (txt) txt.innerText = 'المنصة متوقفة حالياً';
+    }
+
+    // Intercept any 503 platform_stopped API response immediately (zero polling delay)
+    (function installPlatformMaintenanceInterceptor() {
+      if (window.__weMaintenanceFetchInstalled) return;
+      window.__weMaintenanceFetchInstalled = true;
+      const nativeFetch = window.fetch.bind(window);
+      window.fetch = async function(...args) {
+        const res = await nativeFetch(...args);
+        if (res && res.status === 503) {
+          try {
+            const body = await res.clone().json();
+            if (body && (body.maintenance_mode === true || body.error === 'platform_stopped')) {
+              showPlatformStoppedOverlay(body.detail || body.maintenance_message);
+            }
+          } catch (e) {}
+        }
+        return res;
+      };
+    })();
+
+    async function checkPlatformOperationalStatus(manualRetry = false) {
+      try {
+        const res = await fetch(`${API_BASE}/platform/status`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const overlay = document.getElementById('platform-stopped-overlay');
+        if (!overlay) return;
+
+        if (data.is_active === false || data.maintenance_mode === true) {
+          showPlatformStoppedOverlay(data.maintenance_message);
+        } else {
+          isPlatformStopped = false;
+          const wasHidden = overlay.classList.contains('hidden');
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
+          if (!wasHidden && manualRetry) {
+            window.location.reload();
+          }
+        }
+      } catch (e) {
+        // Ignore transient network errors
+      }
+    }
+
     async function checkBackendHealth() {
       try {
         const res = await fetch(`${API_BASE}/health`, { cache: 'no-store' });
         const data = await res.json();
-        if (res.ok && data.status === 'ok') {
+        if (res.ok && data.status === 'ok' && !isPlatformStopped) {
           document.getElementById('backend-status-dot').className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
           document.getElementById('backend-status-text').innerText = 'السيرفر السحابي: متصل';
         }
       } catch (e) {
-        document.getElementById('backend-status-dot').className = 'w-2 h-2 rounded-full bg-rose-500';
-        document.getElementById('backend-status-text').innerText = 'جاري الاتصال بالسيرفر...';
+        if (!isPlatformStopped) {
+          document.getElementById('backend-status-dot').className = 'w-2 h-2 rounded-full bg-rose-500';
+          document.getElementById('backend-status-text').innerText = 'جاري الاتصال بالسيرفر...';
+        }
       }
     }
   </script>

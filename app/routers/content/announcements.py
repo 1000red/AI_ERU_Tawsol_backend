@@ -156,19 +156,56 @@ async def announcements_ws(
 ):
     await websocket.accept()
 
+    is_admin_ws = False
     try:
         token_user_id = get_current_user_id_ws(token)
         if token_user_id != user_id:
             await websocket.close(code=4001, reason="Unauthorized")
             return
+        from app.core.security import decode_token
+        is_admin_ws = decode_token(token).get("type") == "ADM"
     except Exception:
         await websocket.close(code=4001, reason="Invalid token")
         return
 
-    announcement_manager.connect(user_id, websocket)
+    from app.services.platform_service import get_platform_status, resolve_db_session_for_app
+
+    if not is_admin_ws:
+        try:
+            with resolve_db_session_for_app(websocket.app) as check_db:
+                p_status = get_platform_status(check_db)
+            if not p_status.get("is_active", True):
+                await websocket.send_json({
+                    "type": "error",
+                    "error": "platform_stopped",
+                    "maintenance_mode": True,
+                    "detail": p_status["maintenance_message"],
+                })
+                await websocket.close(code=1013, reason="Platform temporarily stopped")
+                return
+        except Exception:
+            pass
+
+    announcement_manager.connect(user_id, websocket, is_admin=is_admin_ws)
     try:
         while True:
             data = await websocket.receive_text()
+            if not is_admin_ws:
+                p_status = None
+                try:
+                    with resolve_db_session_for_app(websocket.app) as check_db:
+                        p_status = get_platform_status(check_db)
+                except Exception:
+                    p_status = None
+                if p_status and not p_status.get("is_active", True):
+                    await websocket.send_json({
+                        "type": "error",
+                        "error": "platform_stopped",
+                        "maintenance_mode": True,
+                        "detail": p_status["maintenance_message"],
+                    })
+                    await websocket.close(code=1013, reason="Platform temporarily stopped")
+                    break
             if data == "ping":
                 await websocket.send_text("pong")
     except WebSocketDisconnect:

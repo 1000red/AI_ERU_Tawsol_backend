@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, Query, H
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db, SessionLocal
-from app.core.security import get_current_user_id, get_current_user_id_ws
+from app.core.security import get_current_user_id, get_current_user_id_ws, decode_token
 from app.schemas.chat import MessageSend, MessageEdit, MessageOut, ConversationOut, ConversationUserOut
 from app.services.chat_service import (
     ws_manager,
@@ -268,16 +268,37 @@ async def websocket_chat(
     # accept()
     await websocket.accept()
 
+    is_admin_ws = False
     try:
         token_user_id = get_current_user_id_ws(token)
         if token_user_id != user_id:
             await websocket.close(code=4001, reason="Unauthorized")
             return
+        payload_meta = decode_token(token)
+        is_admin_ws = payload_meta.get("type") == "ADM"
     except Exception:
         await websocket.close(code=4001, reason="Invalid token")
         return
 
-    ws_manager.connect(user_id, websocket)
+    from app.services.platform_service import get_platform_status, resolve_db_session_for_app
+
+    if not is_admin_ws:
+        try:
+            with resolve_db_session_for_app(websocket.app) as check_db:
+                p_status = get_platform_status(check_db)
+            if not p_status.get("is_active", True):
+                await websocket.send_json({
+                    "type": "error",
+                    "error": "platform_stopped",
+                    "maintenance_mode": True,
+                    "detail": p_status["maintenance_message"],
+                })
+                await websocket.close(code=1013, reason="Platform temporarily stopped")
+                return
+        except Exception:
+            pass
+
+    ws_manager.connect(user_id, websocket, is_admin=is_admin_ws)
 
     db: Session = SessionLocal()
     try:
@@ -297,6 +318,22 @@ async def websocket_chat(
         # receive_json | receive_text
         while True:
             raw = await websocket.receive_text()
+            if not is_admin_ws:
+                p_status = None
+                try:
+                    with resolve_db_session_for_app(websocket.app) as check_db:
+                        p_status = get_platform_status(check_db)
+                except Exception:
+                    p_status = None
+                if p_status and not p_status.get("is_active", True):
+                    await websocket.send_json({
+                        "type": "error",
+                        "error": "platform_stopped",
+                        "maintenance_mode": True,
+                        "detail": p_status["maintenance_message"],
+                    })
+                    await websocket.close(code=1013, reason="Platform temporarily stopped")
+                    break
             try:
                 data = json.loads(raw)
             except json.JSONDecodeError:

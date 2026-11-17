@@ -20,9 +20,12 @@ from app.models.user import User
 class ConnectionManager:
     def __init__(self):
         self.active: dict[int, list[WebSocket]] = {}
+        self._admin_users: set[int] = set()
 
-    def connect(self, user_id: int, ws: WebSocket) -> None:
+    def connect(self, user_id: int, ws: WebSocket, *, is_admin: bool = False) -> None:
         self.active.setdefault(user_id, []).append(ws)
+        if is_admin:
+            self._admin_users.add(user_id)
 
     def disconnect(self, user_id: int, ws: WebSocket) -> None:
         conns = self.active.get(user_id, [])
@@ -30,6 +33,7 @@ class ConnectionManager:
             conns.remove(ws)
         if not conns:
             self.active.pop(user_id, None)
+            self._admin_users.discard(user_id)
 
     async def send_to_user(self, user_id: int, payload: dict) -> None:
         for ws in list(self.active.get(user_id, [])):
@@ -43,6 +47,36 @@ class ConnectionManager:
 
     def online_users(self) -> list[int]:
         return list(self.active.keys())
+
+    async def disconnect_all(
+        self,
+        reason: str = "Platform temporarily stopped",
+        *,
+        maintenance_message: Optional[str] = None,
+        exclude_admins: bool = True,
+    ) -> int:
+        closed = 0
+        payload = {
+            "type": "error",
+            "error": "platform_stopped",
+            "maintenance_mode": True,
+            "detail": maintenance_message or reason,
+        }
+        for uid, conns in list(self.active.items()):
+            if exclude_admins and uid in self._admin_users:
+                continue
+            for ws in list(conns):
+                try:
+                    await ws.send_json(payload)
+                except Exception:
+                    pass
+                try:
+                    await ws.close(code=1013, reason=reason)
+                    closed += 1
+                except Exception:
+                    pass
+                self.disconnect(uid, ws)
+        return closed
 
 
 ws_manager = ConnectionManager()
