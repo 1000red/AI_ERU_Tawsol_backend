@@ -208,10 +208,10 @@
           <span class="hidden xl:inline">فيديوهات حية</span>
         </button>
 
-        <!-- Arabic Voice-Over Toggle Button -->
-        <button onclick="toggleVoiceOver()" id="btn-voiceover" class="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-we-borderDark text-xs font-bold transition flex items-center gap-1.5" title="تشغيل / إيقاف التعليق الصوتي العربي (Arabic Voice-Over)">
+        <!-- Egyptian Arabic Neural Voice-Over Toggle Button -->
+        <button onclick="toggleVoiceOver()" id="btn-voiceover" class="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-we-borderDark text-xs font-bold transition flex items-center gap-1.5" title="تشغيل / إيقاف التعليق الصوتي بالعامية المصرية الطبيعية (V)">
           <i class="fa-solid fa-volume-high text-purple-400" id="icon-voiceover"></i>
-          <span class="hidden lg:inline">تعليق صوتي</span>
+          <span class="hidden lg:inline">تعليق مصري 🇪🇬</span>
         </button>
 
         <!-- English Subtitles (CC) Toggle Button -->
@@ -1309,17 +1309,33 @@
           </strong>
           <span id="speaker-slide-title" class="text-slate-300 font-semibold">الشريحة 1</span>
         </div>
-        <div class="flex items-center gap-3">
-          <!-- Voice-over Control in Drawer -->
-          <button onclick="speakCurrentSlide()" class="px-2 py-0.5 rounded-md bg-purple-900/60 hover:bg-purple-800 text-purple-200 text-[11px] font-bold transition flex items-center gap-1 border border-purple-700/40">
-            <i class="fa-solid fa-play text-we-gold text-[10px]"></i>
-            <span>نطق الشريحة</span>
+        <div class="flex items-center gap-2 sm:gap-3">
+          <span id="voiceover-engine-badge" class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-700/40 text-[10px] font-bold">
+            <i class="fa-solid fa-waveform-lines text-we-gold"></i>
+            <span>عامية مصرية طبيعية 🇪🇬</span>
+          </span>
+          <!-- Playback Speed Control -->
+          <button onclick="cycleVoiceRate()" id="btn-voice-rate" class="px-2 py-0.5 rounded-md bg-slate-800/80 hover:bg-slate-700 text-we-gold text-[11px] font-mono font-bold transition border border-we-borderDark" title="تغيير سرعة التعليق الصوتي">
+            1.0x
           </button>
-          <span class="text-[11px] text-slate-400">الوقت: <strong id="notes-target-time" class="text-we-gold font-mono">20 ثانية</strong></span>
+          <!-- Voice-over Control in Drawer -->
+          <button onclick="speakCurrentSlide()" class="px-2.5 py-0.5 rounded-md bg-purple-900/60 hover:bg-purple-800 text-purple-200 text-[11px] font-bold transition flex items-center gap-1 border border-purple-700/40">
+            <i class="fa-solid fa-play text-we-gold text-[10px]"></i>
+            <span>تشغيل الشريحة</span>
+          </button>
+          <button onclick="stopVoiceOver()" class="px-2 py-0.5 rounded-md bg-slate-800/80 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 text-[11px] font-bold transition border border-we-borderDark" title="إيقاف الصوت">
+            <i class="fa-solid fa-stop text-[10px]"></i>
+          </button>
+          <span class="text-[11px] text-slate-400 hidden sm:inline">الوقت: <strong id="notes-target-time" class="text-we-gold font-mono">20 ثانية</strong></span>
           <button onclick="toggleSpeakerNotes()" class="text-slate-400 hover:text-white transition text-xs" title="تصغير / إخفاء">
             <i class="fa-solid fa-chevron-down" id="notes-toggle-icon"></i>
           </button>
         </div>
+      </div>
+
+      <!-- Mini Voice-Over Progress Bar -->
+      <div class="w-full h-1 bg-slate-800/80 rounded-full overflow-hidden">
+        <div id="voiceover-progress-bar" class="h-full bg-gradient-to-r from-we-electric via-purple-400 to-we-gold transition-all duration-200" style="width: 0%"></div>
       </div>
 
       <!-- Spoken Script Text Content -->
@@ -1433,85 +1449,85 @@
         id: 1,
         title: "العنوان والخطاف الدرامي",
         targetSec: 20,
-        script: "بسم الله الرحمن الرحيم. مع لجنة التحكيم الموقرة، يسعدنا أن نقدم لكم منصة SQBS من مدرسة WE للتكنولوجيا التطبيقية بالسويس. دعوني أبدأ بقصة حقيقية من فصل C2: 14 طالباً كان 5 منهم فقط يجرؤون على المشاركة، بينما يقبع 9 طلاب في صمت تام خوفاً من الوقوع في الخطأ أو التعرض للإحراج. SQBS جاء ليحول المعادلة بالكامل لأن كل طالب يهم.",
-        subtitleEn: "In the name of Allah, Most Gracious, Most Merciful. Esteemed Judging Panel, we proudly present SQBS from WE Applied Technology School - Suez. Out of 14 students in Class C2, only 5 dared to participate, while 9 sat in complete silence fearing reprimand. SQBS transformed this equation because every single student matters."
+        script: "أهلاً بحضراتكم، لجنة التحكيم الموقرة. يسعدنا جداً نقدم لكم النهاردة منصة SQBS، من مدرسة WE للتكنولوجيا التطبيقية بالسويس. خليني أبدأ معاكم بقصة حقيقية حصلت قدام عينينا في فصل C2: 14 طالب، 5 بس منهم اللي كانوا بيتشجعوا ويشاركوا، و9 طلاب قاعدين ساكتين طول الحصة عشان خايفين يغلطوا أو يتحرجوا قدام زمايلهم. SQBS جت عشان تقلب المعادلة دي بالكامل، لأن كل طالب فعلاً يهم.",
+        subtitleEn: "Welcome, Esteemed Judging Panel. We are delighted to present SQBS from WE Applied Technology School - Suez. Let me begin with a real story from Class C2: out of 14 students, only 5 dared to participate while 9 sat silent fearing mistakes or embarrassment. SQBS came to flip this equation completely—because every student truly matters."
       },
       {
         id: 2,
         title: "نظرية العمل وتحدي السرعة",
         targetSec: 25,
-        script: "المعلم كان يقضي 3 دقائق كاملة، أي 180 ثانية، يبحث عن الدفتر ويكتب الملاحظة يدوياً وسط إيقاف الشرح وتشتيت الفصل ووصم الطالب علناً. مع SQBS، بمسحة QR واحدة بهاتف المعلم في 15 ثانية فقط، يُرصد السلوك مؤرخاً بالدقيقة والثانية. وفرنا 92% من الوقت وحافظنا على تركيز الفصل وكرامة الطالب كاملة.",
-        subtitleEn: "Teachers previously spent 3 full minutes (180 seconds) searching for paper logbooks, interrupting the lecture, and publicly stigmatizing students. With SQBS, a single 15-second QR scan records authenticated behavior instantly. We saved 92% of class time and fully protected student dignity."
+        script: "قبل كده، المدرس كان بيضيع 3 دقايق كاملة، يعني 180 ثانية من وقت الحصة، بيدور على الدفتر الورقي ويكتب الملاحظة بإيده، وده كان بيوقف الشرح ويشتت الفصل ويحرج الطالب قدام الكل. لكن مع SQBS، بمسحة QR واحدة بموبايل المدرس في 15 ثانية بس، السلوك بيتسجل بالتاريخ والثانية. كده وفرنا 92% من الوقت، وحافظنا على تركيز الفصل وكرامة الطالب بالكامل.",
+        subtitleEn: "Previously, teachers wasted 3 full minutes (180 seconds) searching for paper logbooks and writing notes by hand—interrupting class and embarrassing students. With SQBS, a single 15-second QR scan logs behavior with an exact timestamp, saving 92% of class time while protecting focus and student dignity."
       },
       {
         id: 3,
         title: "خريطة العمليات والهندسة",
         targetSec: 25,
-        script: "خريطة العمليات مبنية بست خطوات قياسية تبدأ بطباعة بطاقة QR وتنتهي بالاعتماد البشري. والأهم أن التكلفة التأسيسية للمدرسة حالياً هي 0 جنيه، لأننا اعتمدنا على البنية السحابية لـ Supabase وLovable مع تفعيل سياسات الأمان RLS، مما يتيح تشغيل أي مدرسة في مصر خلال 48 ساعة فقط.",
-        subtitleEn: "Our 6-step standardized workflow ranges from instant QR generation to social worker validation. Crucially, the initial school setup cost is currently $0 (0 EGP), built on Supabase cloud and Lovable with enterprise RLS security policies, deployable across any school within 48 hours."
+        script: "المنظومة شغالة بخطوات بسيطة ومنظمة، 6 خطوات بالظبط بتبدأ من طباعة كارت الـ QR وبتنتهي باعتماد الأخصائي الاجتماعي. والأجمل إن تكلفة التأسيس لأي مدرسة دلوقتي 0 جنيه، لأننا بنينا المنصة على بنية سحابية حديثة بـ Supabase و Lovable مع حماية كاملة للبيانات RLS، وده بيخلينا نقدر نشغّل أي مدرسة جديدة في مصر في 48 ساعة بس.",
+        subtitleEn: "Our workflow runs in 6 simple standardized steps—from printing QR cards to social worker sign-off. Best of all, initial school setup cost is 0 EGP, powered by Supabase and Lovable with RLS security, ready to deploy at any school across Egypt in just 48 hours."
       },
       {
         id: 4,
         title: "منهجية القياس في فصل C2",
         targetSec: 25,
-        script: "لم نعتمد على الانطباعات، بل طبقنا منهجية علمية في فصل C2 بالسويس: 14 طالباً تحت إشراف 6 معلمين لقياس 8 مؤشرات دقيقة (4 كمية و4 نوعية). سجلنا كثافة رصد عالية بلغت 810 عمليات رصد حقيقية خلال أسبوعين، مما يمنح هذه الأرقام مصداقية ميدانية بنسبة 100%.",
-        subtitleEn: "Rejecting vague impressions, we applied rigorous empirical metrics in Class C2 (Suez): 14 students under 6 teachers measuring 8 distinct KPIs (4 quantitative + 4 qualitative). We recorded 810 authenticated field logs in just two weeks, providing 100% statistical confidence."
+        script: "إحنا ما اشتغلناش بالكلام ولا بالانطباعات، إحنا طبقنا تجربة علمية حقيقية على أرض الواقع في فصل C2 بالسويس: 14 طالب، تحت إشراف 6 مدرسين، قيسنا بيهم 8 مؤشرات دقيقة، 4 كمية و4 نوعية. وسجلنا 810 عمليات رصد حقيقية في أسبوعين بس، عشان كل رقم تشوفوه النهاردة يكون موثق ومؤكد 100%.",
+        subtitleEn: "We didn't rely on impressions—we ran a rigorous real-world pilot in Class C2 (Suez): 14 students under 6 teachers measuring 8 KPIs (4 quantitative and 4 qualitative). We captured 810 real authenticated logs in two weeks so every single number here is 100% verified."
       },
       {
         id: 5,
         title: "النتائج الكمية 1: السرعة والمشاركة",
         targetSec: 25,
-        script: "النتائج جاءت قاطعة: زمن الرصد انخفض بنسبة 92% من 180 ثانية إلى 15 ثانية. والأهم هو قفزة المشاركة النشطة: من 36% فقط قبل التطبيق إلى 64% في الأسبوع الأول، ثم إلى 93% في الأسبوع الثاني، مما يعني استعادة 8 طلاب من الطلاب التسعة الصامتين إلى قلب المشاركة.",
-        subtitleEn: "Results were decisive: recording time plunged by 92% (180s to 15s). More importantly, active participation surged from 36% (5 students) to 64% in week 1, and 93% (13 students) in week 2—reclaiming 8 of the 9 previously silent students."
+        script: "شوفوا بقى الأرقام عملت إيه: وقت التسجيل نزل 92%، من 180 ثانية لـ 15 ثانية بس. والأهم من ده كله قفزة المشاركة في الفصل: من 36% بس قبل المنصة، نطت لـ 64% في الأسبوع الأول، ووصلت لـ 93% في الأسبوع التاني! يعني قدرنا نرجّع 8 طلاب من الـ 9 اللي كانوا ساكتين لقلب المشاركة والتفاعل.",
+        subtitleEn: "Look at what the numbers achieved: logging time dropped 92% (180s down to 15s). Even more importantly, active class participation jumped from 36% to 64% in Week 1 and hit 93% in Week 2—bringing 8 out of the 9 silent students back into active engagement."
       },
       {
         id: 6,
         title: "النتائج الكمية 2: توازن النقاط ومستويات الخطر",
         targetSec: 25,
-        script: "حققنا المعادلة الذهبية للتعزيز الإيجابي: 738 نقطة إيجابية مقابل 72 سلبية فقط، بمعدل 10 إلى 1! ومصفوفة تتبع الخطر أظهرت أن 13 من أصل 14 طالباً في تحسن مستمر، وسجلنا 0 حالات خطر مرتفع و0 تدخل فوري، مما أوقف المشكلات قبل تفاقمها.",
-        subtitleEn: "We achieved the Golden Positive Ratio: 738 positive points vs. only 72 negative (~10:1 ratio!). Risk tracking showed 13 of 14 students continuously improving, with 0 high-risk cases and 0 immediate emergency interventions, resolving behavioral friction preemptively."
+        script: "وحققنا المعادلة الذهبية للتحفيز الإيجابي: 738 نقطة إيجابية، قصاد 72 نقطة سلبية بس، يعني بمعدل 10 نقط إيجابية لكل نقطة سلبية! وكمان متابعة مستويات الخطر أثبتت إن 13 من أصل 14 طالب في تحسن مستمر، و0 حالات خطر مرتفع، و0 تدخل فوري، لأننا بنلحق أي مشكلة من بدري قبل ما تكبر.",
+        subtitleEn: "We achieved the Golden Positive Ratio: 738 positive points versus only 72 negative—roughly 10 positive points for every negative one! Risk tracking showed 13 of 14 students continuously improving, with 0 high-risk cases and 0 emergency interventions."
       },
       {
         id: 7,
         title: "النتائج النوعية 1: العدالة وثقة الطلاب",
         targetSec: 25,
-        script: "صوت الطلاب كان الإنجاز الأكبر: 93% يشعرون بعدالة التقييم لأن الرصد مؤرخ بالحقائق، و100% بإجماع كامل يثقون في المعلم والمنصة. الطلاب صرحوا بأنهم تحولوا تماماً من «الخوف من العقاب» إلى «الشغف بالتميز وصناعة القدوة».",
-        subtitleEn: "Student Voice was our pinnacle breakthrough: 93% perceive complete evaluation fairness, and 100% express absolute trust in teachers and the platform. Documented student testimonials revealed a profound shift: from 'Fear of Punishment' to 'Passion for Excellence'."
+        script: "وأكبر نجاح لينا كان رأي الطلاب نفسهم: 93% منهم حاسين بالعدالة التامة لأن التقييم كله موثق بالوقت والتاريخ، و100% بإجماع كامل واثقين في المدرس وفي المنصة. الطلاب نفسهم قالوا لنا إن إحساسهم اتغير تماماً: من «الخوف من العقاب»، لـ «الشغف بالتميز» وإنهم يبقوا قدوة لزمايلهم.",
+        subtitleEn: "Our biggest win was student feedback: 93% feel complete fairness thanks to timestamped facts, and 100% unanimously trust their teachers and the platform. Students told us their mindset shifted completely from 'Fear of Punishment' to 'Passion for Excellence'."
       },
       {
         id: 8,
         title: "النتائج النوعية 2: المعلمون وميثاق الكرامة",
         targetSec: 25,
-        script: "جميع المعلمين الستة بالسويس بنسبة 100% أجمعوا على انخفاض التوتر وسهولة الاستخدام بتقييم 4.8 من 5. وطبقنا محاكي الخصوصية الرباعي: لوحة الشرف فقط هي العلنية في الفصل، بينما المخالفات سرية مشفرة للمعلم وولي الأمر والأخصائي فقط، لمنع التنمر والوصم تماماً.",
-        subtitleEn: "100% of the 6 participating teachers confirmed classroom stress reduction with a 4.8/5 ease rating. Our 4-screen privacy matrix guarantees that only the Honor Roll is visible in class, while disciplinary notes remain strictly confidential between teacher, parent, and social worker."
+        script: "وعلى مستوى المدرسين، الـ 6 مدرسين المشاركين بنسبة 100% أكدوا إن التوتر في الفصل قل، وقيموا سهولة البرنامج بـ 4.8 من 5. وطبقنا نظام الخصوصية الرباعي: شاشة الفصل بتعرض لوحة الشرف والنقط الإيجابية بس، أما أي ملاحظة سلبية بتكون سرية تماماً بين المدرس وولي الأمر والأخصائي، عشان نمنع التنمر والإحراج نهائياً.",
+        subtitleEn: "All 6 participating teachers (100%) reported lower classroom stress and rated ease of use 4.8 out of 5. Our 4-screen privacy matrix displays only the Honor Roll in class while keeping negative notes strictly private among teacher, parent, and counselor—eliminating bullying and stigma."
       },
       {
         id: 9,
         title: "مصفوفة النتائج الشاملة",
         targetSec: 25,
-        script: "أمامكم الجدول التنفيذي الذي يلخص المؤشرات الثمانية: من 180 إلى 15 ثانية، من 36% إلى 93% مشاركة، 10 نقاط إيجابية لكل نقطة سلبية، و13 من 14 في تحسن مستمر، مع رضا المعلمين 4.8 وحماية تامة للكرامة. كل سطر هنا مدعوم بسجل زمني لا يقبل الشك.",
-        subtitleEn: "The executive dashboard summarizes all 8 KPIs: 180s down to 15s, participation up from 36% to 93%, 10 positive points per negative, 13 of 14 students improving, 4.8 teacher satisfaction, and total anti-bullying protection. Every row is backed by tamper-proof timestamps."
+        script: "الجدول اللي قدام حضراتكم بيلخص الـ 8 مؤشرات في نظرة واحدة: من 180 ثانية لـ 15 ثانية، والمشاركة من 36% لـ 93%، 10 نقط إيجابية قصاد كل نقطة سلبية، 13 من 14 طالب في تحسن، رضا المدرسين 4.8 من 5، وحماية كاملة لكرامة الطلاب. وكل سطر هنا وراه سجل زمني حقيقي.",
+        subtitleEn: "This executive matrix summarizes all 8 KPIs at a glance: 180s to 15s, participation from 36% to 93%, 10 positive points per negative, 13 of 14 students improving, 4.8/5 teacher satisfaction, and complete student dignity protection—every row backed by real timestamps."
       },
       {
         id: 10,
         title: "الرؤى الذكية Smart Insights",
         targetSec: 30,
-        script: "محرك Smart Insights يعمل بثلاث طبقات استباقية: اكتشف تلقائياً أن نصف المخالفات (7 من 14) تتركز يوم الخميس بسبب الإجهاد التراكمي، فأرسل إنذاراً مبكراً للأخصائي باقتراح حلول تربوية قبل الخميس التالي. ومع ذلك نطبق مبدأ Human-in-the-Loop الصارم: الذكاء الاصطناعي يقترح، والقرار النهائي دائماً للأخصائي البشري.",
-        subtitleEn: "Smart Insights operates in 3 predictive layers: it automatically discovered that 50% of infractions (7 of 14) clustered on Thursdays due to cumulative fatigue, sending early warnings with pedagogical remedies before next Thursday. Human-in-the-Loop is paramount: AI advises, humans decide."
+        script: "الذكاء الاصطناعي عندنا، Smart Insights، مش مجرد إحصائيات وخلاص، ده بيشتغل على 3 مراحل استباقية: اكتشف لوحده إن نص المخالفات (7 من أصل 14) بتحصل يوم الخميس بالذات بسبب إرهاق آخر الأسبوع، فبعت تنبيه بدري للأخصائي باقتراحات تربوية قبل الخميس اللي بعده. والأهم إننا ملتزمين بمبدأ Human-in-the-Loop: الذكاء الاصطناعي بيقترح بس، لكن القرار النهائي دايماً في إيد الأخصائي.",
+        subtitleEn: "Smart Insights goes beyond raw stats in 3 proactive layers: it automatically spotted that half of all infractions (7 of 14) happen on Thursdays from end-of-week fatigue, alerting the counselor with remedies ahead of next Thursday. Strictly Human-in-the-Loop: AI suggests, humans decide."
       },
       {
         id: 11,
         title: "التوسع الشامل والجدوى الاقتصادية",
         targetSec: 30,
-        script: "SQBS ليس مجرد تطبيق سلوك؛ بل هو نظام إدارة مدرسي شامل بـ 7 وحدات (وحدتان جُربتا و5 وحدات جاهزة للإطلاق في الكود). واقتصادياً: تكلفة تأسيس 0 جنيه، اشتراك شهري 1,500 جنيه للمدرسة، تشغيل 3,500 جنيه شهرياً، ونصل للتعادل عند 3 مدارس فقط، ونحقق فائضاً سنوياً 138 ألف جنيه عند 10 مدارس.",
-        subtitleEn: "SQBS is a comprehensive 7-module school ERP (2 piloted, 5 code-ready). Financially: $0 setup cost, 1,500 EGP monthly school subscription, ~3,500 EGP operating budget, breaking even at just 3 schools, and generating 138,000 EGP annual surplus at 10 schools (5,000 students)."
+        script: "المفاجأة بقى إن SQBS مش مجرد نظام سلوك، ده نظام إدارة مدرسية متكامل من 7 وحدات: وحدتين جربناهم فعلياً، و5 وحدات جاهزين للانطلاق في الكود. ومن ناحية الاقتصاد: تأسيس بـ 0 جنيه، اشتراك المدرسة 1,500 جنيه في الشهر، ومصاريف التشغيل 3,500 جنيه شهرياً، يعني بنوصل لنقطة التعادل عند 3 مدارس بس، ومع 10 مدارس بنحقق فائض 138 ألف جنيه في السنة.",
+        subtitleEn: "SQBS isn't just a behavior app—it's a full 7-module school ERP (2 piloted, 5 code-ready). Economically: 0 EGP setup, 1,500 EGP/month school subscription, 3,500 EGP monthly operating cost, breaking even at just 3 schools and generating 138,000 EGP annual surplus at 10 schools."
       },
       {
         id: 12,
         title: "الختام ورسالة الفريق",
         targetSec: 20,
-        script: "نختتم برسالتنا الخالدة: «تحويل البيانات إلى أفعال لأن كل طالب يهم». ندعو حضراتكم لمسح رمز QR أمامكم الآن بهواتفكم لتجربة المنصة حياً والتأكد بأنفسكم من أن مدرسة WE بالسويس تقدم اليوم نموذجاً رائداً يعيد تشكيل مستقبل التعليم في مصر. شكراً لكم.",
-        subtitleEn: "We conclude with our guiding mission: 'Turning Data into Action, Because Every Student Matters'. We invite the honorable judges to scan the QR code now to experience SQBS live, proving that WE Suez offers a pioneering model reshaping education. Thank you."
+        script: "في الختام، رسالتنا واضحة وبسيطة: «تحويل البيانات لأفعال، لأن كل طالب يهم». بندعو حضراتكم دلوقتي تمسحوا كود الـ QR اللي قدامكم بموبايلاتكم عشان تجربوا المنصة بنفسكم لايف، وتشوفوا إزاي مدرسة WE بالسويس بتقدم النهاردة نموذج عملي بيصنع مستقبل التعليم في مصر. شكراً جزيلاً لحضراتكم.",
+        subtitleEn: "In closing, our mission is clear: 'Turning Data into Action, Because Every Student Matters'. We invite you to scan the QR code right now to try SQBS live and see how WE Applied Technology School - Suez is building a practical model for the future of education in Egypt. Thank you."
       }
     ];
 
@@ -1781,14 +1797,56 @@
       }
     }
 
-    // ── ARABIC VOICE-OVER (WEB SPEECH API) ─────────────────────────────────────
+    // ── EGYPTIAN ARABIC NATURAL VOICE-OVER ENGINE (STUDIO NEURAL MP3 + ar-EG FALLBACK) ──
+    const CLOUD_AUDIO_BASE = 'https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/sqbs_audio';
+    const VOICE_RATES = [1.0, 1.1, 1.2, 0.9];
+    let currentVoiceRateIdx = 0;
+    let voicePlaybackRate = 1.0;
+    let currentAudioEl = null;
+    let preloadedAudioMap = {};
     let availableVoices = [];
+
     function initSpeechVoices() {
       if ('speechSynthesis' in window) {
+        availableVoices = window.speechSynthesis.getVoices();
         window.speechSynthesis.onvoiceschanged = () => {
           availableVoices = window.speechSynthesis.getVoices();
         };
       }
+      // Preload Slide 1 & Slide 2 Egyptian neural audio for instant playback
+      preloadSlideAudio(1);
+      preloadSlideAudio(2);
+    }
+
+    function getSlideAudioCandidates(slideNum) {
+      const cloudUrl = `${CLOUD_AUDIO_BASE}/slide_${slideNum}.mp3`;
+      const localUrl = `sqbs_audio/slide_${slideNum}.mp3`;
+      // When opened locally from Desktop (file://), try local folder first then cloud;
+      // when served over http(s) (Vercel), use Neon S3 cloud audio first then local.
+      if (window.location.protocol === 'file:') {
+        return [localUrl, cloudUrl];
+      }
+      return [cloudUrl, localUrl];
+    }
+
+    function preloadSlideAudio(slideNum) {
+      if (slideNum < 1 || slideNum > totalSlides || preloadedAudioMap[slideNum]) return;
+      const [primaryUrl] = getSlideAudioCandidates(slideNum);
+      const a = new Audio();
+      a.preload = 'auto';
+      a.src = primaryUrl;
+      preloadedAudioMap[slideNum] = a;
+    }
+
+    function cycleVoiceRate() {
+      currentVoiceRateIdx = (currentVoiceRateIdx + 1) % VOICE_RATES.length;
+      voicePlaybackRate = VOICE_RATES[currentVoiceRateIdx];
+      const btn = document.getElementById('btn-voice-rate');
+      if (btn) btn.innerText = `${voicePlaybackRate.toFixed(1)}x`;
+      if (currentAudioEl) {
+        currentAudioEl.playbackRate = voicePlaybackRate;
+      }
+      showToast(`سرعة التعليق الصوتي: ${voicePlaybackRate.toFixed(1)}x`, 'info');
     }
 
     function toggleVoiceOver() {
@@ -1800,19 +1858,88 @@
       if (isVoiceOverActive) {
         btn.className = 'px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-we-electric to-purple-600 text-white font-bold text-xs shadow-md shadow-purple-500/30 flex items-center gap-1.5 border border-purple-400';
         icon.className = 'fa-solid fa-volume-high text-we-gold animate-bounce';
-        pulse.className = 'w-2.5 h-2.5 rounded-full bg-we-gold animate-ping';
+        if (pulse) pulse.className = 'w-2.5 h-2.5 rounded-full bg-we-gold animate-ping';
         speakCurrentSlide();
-        showToast('تم تفعيل التعليق الصوتي العربي للمتحدث', 'success');
+        showToast('تم تفعيل التعليق الصوتي بالعامية المصرية الطبيعية 🇪🇬', 'success');
       } else {
         stopVoiceOver();
         btn.className = 'px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-we-borderDark text-xs font-bold transition flex items-center gap-1.5';
         icon.className = 'fa-solid fa-volume-xmark text-slate-400';
-        pulse.className = 'w-2.5 h-2.5 rounded-full bg-slate-600';
+        if (pulse) pulse.className = 'w-2.5 h-2.5 rounded-full bg-slate-600';
         showToast('تم إيقاف التعليق الصوتي', 'info');
       }
     }
 
+    function updateVoiceProgress(pct) {
+      const bar = document.getElementById('voiceover-progress-bar');
+      if (bar) bar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+    }
+
     function speakCurrentSlide() {
+      stopVoiceOver();
+
+      const slideNum = currentSlide;
+      const candidates = getSlideAudioCandidates(slideNum);
+      preloadSlideAudio(slideNum + 1);
+
+      let idx = 0;
+      function tryPlayCandidate() {
+        if (idx >= candidates.length) {
+          speakCurrentSlideFallbackTTS();
+          return;
+        }
+        const url = candidates[idx++];
+        const audio = new Audio(url);
+        audio.playbackRate = voicePlaybackRate;
+        currentAudioEl = audio;
+
+        audio.ontimeupdate = () => {
+          if (audio.duration && isFinite(audio.duration)) {
+            updateVoiceProgress((audio.currentTime / audio.duration) * 100);
+          }
+        };
+
+        audio.onended = () => {
+          updateVoiceProgress(100);
+          const pulse = document.getElementById('voiceover-pulse-dot');
+          if (pulse) pulse.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
+        };
+
+        audio.onerror = () => {
+          if (currentAudioEl === audio) {
+            tryPlayCandidate();
+          }
+        };
+
+        const playPromise = audio.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {
+            if (currentAudioEl === audio) {
+              tryPlayCandidate();
+            }
+          });
+        }
+      }
+
+      const pulse = document.getElementById('voiceover-pulse-dot');
+      if (pulse) pulse.className = 'w-2.5 h-2.5 rounded-full bg-we-gold animate-ping';
+      updateVoiceProgress(2);
+      tryPlayCandidate();
+    }
+
+    function pickBestEgyptianVoice(voices) {
+      if (!voices || !voices.length) return null;
+      // 1. Prefer Microsoft Neural / Natural Egyptian voices (Shakir / Salma / Hoda ar-EG)
+      return (
+        voices.find(v => /ar[-_]EG/i.test(v.lang) && /natural|neural|shakir|salma|online/i.test(v.name)) ||
+        voices.find(v => /ar[-_]EG/i.test(v.lang)) ||
+        voices.find(v => v.lang.startsWith('ar') && /natural|neural|online/i.test(v.name)) ||
+        voices.find(v => v.lang.startsWith('ar')) ||
+        null
+      );
+    }
+
+    function speakCurrentSlideFallbackTTS() {
       if (!('speechSynthesis' in window)) {
         showToast('المتصفح لا يدعم توليد الصوت المباشر', 'warning');
         return;
@@ -1821,23 +1948,34 @@
 
       const text = slidesData[currentSlide - 1].script;
       currentSpeechUtterance = new SpeechSynthesisUtterance(text);
-      currentSpeechUtterance.lang = 'ar-SA';
-      currentSpeechUtterance.rate = 0.95; // Clear presentation pacing
+      currentSpeechUtterance.lang = 'ar-EG';
+      currentSpeechUtterance.rate = Math.min(1.3, Math.max(0.85, voicePlaybackRate));
+      currentSpeechUtterance.pitch = 1.02;
 
-      // Attempt to pick an Arabic voice
       const voices = window.speechSynthesis.getVoices();
-      const arabicVoice = voices.find(v => v.lang.startsWith('ar'));
-      if (arabicVoice) {
-        currentSpeechUtterance.voice = arabicVoice;
+      const egVoice = pickBestEgyptianVoice(voices);
+      if (egVoice) {
+        currentSpeechUtterance.voice = egVoice;
       }
-
+      currentSpeechUtterance.onend = () => updateVoiceProgress(100);
       window.speechSynthesis.speak(currentSpeechUtterance);
     }
 
     function stopVoiceOver() {
+      if (currentAudioEl) {
+        try {
+          currentAudioEl.pause();
+          currentAudioEl.currentTime = 0;
+          currentAudioEl.onerror = null;
+          currentAudioEl.ontimeupdate = null;
+          currentAudioEl.onended = null;
+        } catch (e) {}
+        currentAudioEl = null;
+      }
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
+      updateVoiceProgress(0);
     }
 
     // ── SUBTITLES TOGGLE (ENGLISH CC) ─────────────────────────────────────────
