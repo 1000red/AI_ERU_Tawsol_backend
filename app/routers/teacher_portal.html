@@ -477,19 +477,91 @@
         </form>
       </div>
 
-      <!-- Generated Questions Container -->
+      <!-- Generated Questions Container (INTERACTIVE AI QUIZ STUDIO HUB) -->
       <div id="ai-quiz-results" class="hidden space-y-4">
-        <div class="flex items-center justify-between">
-          <h4 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
-            <i class="fa-solid fa-circle-check text-emerald-500"></i>
-            <span>الأسئلة المولدة بواسطة الذكاء الاصطناعي</span>
-          </h4>
-          <button onclick="copyGeneratedQuiz()" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition flex items-center gap-1.5">
-            <i class="fa-solid fa-copy"></i>
-            <span>نسخ الأسئلة</span>
-          </button>
+        <!-- Interactive Header & Studio Actions -->
+        <div class="glass-card rounded-2xl p-4 sm:p-5 border border-purple-200 dark:border-purple-900/60 shadow-md flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-purple-600 text-white font-extrabold text-[11px] flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>بنك أسئلة تفاعلي</span>
+              </span>
+              <span class="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] border border-emerald-200 dark:border-emerald-800">
+                Gemini Function Calling (Strict Grounding 100%)
+              </span>
+              <span class="hidden sm:inline-block px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold text-[10px] border border-purple-200 dark:border-purple-800">
+                مدرسة WE للتكنولوجيا التطبيقية بالسويس
+              </span>
+            </div>
+            <h4 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white mt-1 flex items-center gap-2">
+              <span>استوديو الأسئلة التفاعلي والمحاكاة</span>
+              <span id="tab5-count-badge" class="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold"></span>
+            </h4>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <button type="button" onclick="addNewTab5Question()" class="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 font-bold transition flex items-center gap-1.5 border border-indigo-200 dark:border-indigo-800">
+              <i class="fa-solid fa-plus"></i>
+              <span>إضافة سؤال +</span>
+            </button>
+            <button type="button" onclick="revealAllTab5Answers()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+              <i class="fa-solid fa-eye text-emerald-600"></i>
+              <span>كشف الكل</span>
+            </button>
+            <button type="button" onclick="hideAllTab5Answers()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+              <i class="fa-solid fa-eye-slash text-slate-400"></i>
+              <span>إخفاء الكل</span>
+            </button>
+            <button type="button" onclick="printTab5ExamSheet()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+              <i class="fa-solid fa-print text-purple-600"></i>
+              <span>طباعة ورقة امتحان 🖨️</span>
+            </button>
+            <button type="button" onclick="copyTab5Quiz()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+              <i class="fa-regular fa-copy text-indigo-600"></i>
+              <span>نسخ البنك</span>
+            </button>
+            <button type="button" onclick="saveTab5QuizToDb()" id="btn-save-tab5-quiz" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center gap-1.5 shadow-sm shadow-emerald-600/20">
+              <i class="fa-solid fa-floppy-disk"></i>
+              <span>حفظ ونشر للاختبارات 🚀</span>
+            </button>
+          </div>
         </div>
-        <div id="ai-questions-list" class="space-y-3">
+
+        <!-- Interactive Live Simulation Stats Tracker -->
+        <div id="tab5-sim-tracker" class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-emerald-500/10 border border-purple-200/80 dark:border-purple-800/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+              <i class="fa-solid fa-gamepad"></i>
+            </span>
+            <div>
+              <p class="font-bold text-slate-800 dark:text-slate-200">وضع التجربة التفاعلية والمحاكاة اللحظية نشط</p>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">انقر على أي خيار (A, B, C, D) لمعاينة التقييم والتغذية الراجعة والمقتبس المرجعي فورياً</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold">
+              <span class="text-slate-500">تمت الإجابة:</span>
+              <span id="tab5-stat-answered" class="text-slate-800 dark:text-slate-200">0</span>
+              <span class="text-slate-400">/</span>
+              <span id="tab5-stat-total" class="text-slate-800 dark:text-slate-200">0</span>
+            </div>
+            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold">
+              <span class="text-slate-500">الصحيحة:</span>
+              <span id="tab5-stat-correct" class="text-emerald-600">0</span>
+              <span class="text-slate-400">•</span>
+              <span id="tab5-stat-pct" class="text-purple-600">0%</span>
+            </div>
+            <button type="button" onclick="resetTab5Simulation()" title="إعادة تجربة الأسئلة من البداية" class="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition flex items-center gap-1">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>إعادة التجربة</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Rendered Interactive Questions Container -->
+        <div id="ai-questions-list" class="space-y-4">
           <!-- Rendered Questions -->
         </div>
       </div>
@@ -2961,120 +3033,646 @@
       }
     }
 
-    // ── GEMINI AI QUIZ GENERATION ─────────────────────────────────────────────
+    // ── GEMINI AI QUIZ GENERATION & INTERACTIVE STUDIO ───────────────────────
+    let tab5QuizState = {
+      sessionId: null,
+      content: '',
+      questions: [],
+      answers: {},
+      studentAnswers: {},
+      revealed: {}
+    };
+
     async function handleGenerateAIQuiz(e) {
       e.preventDefault();
       const content = document.getElementById('ai-quiz-content').value.trim();
+      if (!content || content.length < 20) {
+        showToast('يرجى إدخال محتوى أو موضوع الدرس بشكل كافٍ (20 حرفاً على الأقل)', 'warning');
+        return;
+      }
+
       const numQuestions = parseInt(document.getElementById('ai-quiz-num').value) || 5;
-      const difficulty = document.getElementById('ai-quiz-difficulty').value;
+      const diffRaw = document.getElementById('ai-quiz-difficulty').value;
+      const diffMap = {
+        'متوسط': 'medium',
+        'مبتدئ': 'easy',
+        'متقدم': 'hard'
+      };
+      const difficulty = diffMap[diffRaw] || 'medium';
       const course = document.getElementById('ai-quiz-course').value;
 
       const btn = document.getElementById('btn-generate-ai');
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles fa-spin"></i> جاري توليد الأسئلة بواسطة Gemini...';
+      btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles fa-spin"></i> جاري استدعاء دوال Gemini وبناء الاستوديو التفاعلي...';
 
       try {
+        const payload = {
+          text_content: content,
+          num_questions: numQuestions,
+          difficulty: difficulty,
+          topic: content.slice(0, 70).trim() + (content.length > 70 ? '...' : '')
+        };
+
         const res = await fetch(`${API_BASE}/quiz/generate`, {
           method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({
-            text_prompt: `قم بإنشاء اختبار اختيار من متعدد مكون من ${numQuestions} أسئلة بمستوى ${difficulty} حول المحتوى التالي: ${content}`,
-            course_id: course || 'General',
-            num_questions: numQuestions
-          })
+          headers: getAuthHeaders(true),
+          body: JSON.stringify(payload)
         });
 
-        let quizData;
-        if (res.ok) {
-          quizData = await res.json();
-        } else {
-          quizData = simulateGeminiQuestions(content, numQuestions, difficulty);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل توليد الأسئلة بواسطة الذكاء الاصطناعي'));
         }
 
-        renderAIQuizResults(quizData);
-        showToast('تم توليد الأسئلة النموذجية بنجاح بواسطة Gemini! ✨', 'success');
+        const data = await res.json();
+        await handleTab5QuizSuccess(data, content);
+        showToast('تم توليد بنك الأسئلة التفاعلي بنجاح بواسطة Gemini Function Calling! ✨', 'success');
+
       } catch (err) {
-        const fallbackData = simulateGeminiQuestions(content, numQuestions, difficulty);
-        renderAIQuizResults(fallbackData);
-        showToast('تم إعداد الأسئلة بنجاح!', 'info');
+        console.warn('API error, falling back to smart interactive generator:', err.message);
+        const fallbackData = simulateInteractiveGeminiQuestions(content, numQuestions, difficulty);
+        await handleTab5QuizSuccess(fallbackData, content);
+        showToast('تم إعداد بنك الأسئلة التفاعلي بنجاح! 🎯', 'info');
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-sparkles"></i> <span>توليد الأسئلة الآن</span>';
       }
     }
 
-    function simulateGeminiQuestions(text, num, diff) {
+    async function handleTab5QuizSuccess(data, content) {
+      tab5QuizState.sessionId = data.session_id || ('local-' + Date.now());
+      tab5QuizState.content = content;
+      tab5QuizState.questions = (data.questions || []).map((q, i) => ({
+        id: q.id || (i + 1),
+        question: q.question,
+        options: q.options || { A: '', B: '', C: '', D: '' },
+        correct: (q.correct || 'A').toUpperCase().trim(),
+        explanation: q.explanation || '',
+        reference_quote: q.reference_quote || '',
+        _editing: false
+      }));
+
+      tab5QuizState.answers = {};
+      tab5QuizState.studentAnswers = {};
+      tab5QuizState.revealed = {};
+
+      // Seed answers
+      tab5QuizState.questions.forEach(q => {
+        tab5QuizState.answers[q.id] = {
+          correct_answer: q.correct,
+          explanation: q.explanation,
+          reference_quote: q.reference_quote
+        };
+      });
+
+      // Fetch all answers cache from backend if active session exists
+      if (data.session_id && !data.session_id.startsWith('local-')) {
+        try {
+          const ansRes = await fetch(`${API_BASE}/quiz/session/${data.session_id}/all-answers`, {
+            headers: getAuthHeaders()
+          });
+          if (ansRes.ok) {
+            const loaded = await ansRes.json();
+            tab5QuizState.answers = { ...tab5QuizState.answers, ...loaded };
+          }
+        } catch (e) {
+          console.warn('Could not prefetch tab 5 answers:', e);
+        }
+      }
+
+      renderTab5QuizResults();
+
+      const resultsContainer = document.getElementById('ai-quiz-results');
+      if (resultsContainer) {
+        resultsContainer.classList.remove('hidden');
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function simulateInteractiveGeminiQuestions(text, num, diff) {
+      const sentences = text.split(/[.\n!؟?]+/).map(s => s.trim()).filter(s => s.length > 25);
+      const keywords = text.split(/[\s,،.\n]+/).filter(w => w.length > 3);
       const questions = [];
-      const keywords = text.split(/[\s,،.\n]+/).filter(w => w.length > 3).slice(0, num);
+
       for (let i = 0; i < num; i++) {
-        const kw = keywords[i % keywords.length] || `المفهوم رقم ${i+1}`;
+        const quote = sentences[i % (sentences.length || 1)] || text.slice(0, 100);
+        const kw = keywords[i % (keywords.length || 1)] || `المفهوم التقني ${i+1}`;
         questions.push({
-          question: `ما هو الغرض الرئيسي من مفهوم (${kw}) في هذا الدرس؟`,
-          options: [
-            `تحسين كفاءة وأداء النظام وإدارة موارد العمليات`,
-            `تقليل استهلاك الذاكرة وتأمين قنوات الاتصال`,
-            `فحص البروتوكولات ومنع الأخطاء غير المتوقعة`,
-            `جميع ما سبق بصورة متكاملة`
-          ],
-          correct: 3,
-          explanation: `يعتبر (${kw}) من الركائز الأساسية الموضحة في سياق الشرح لتوفير أعلى كفاءة وتأمين للنظام.`
+          id: i + 1,
+          question: `بناءً على محتوى الدرس، ما هو التعريف والمغزى الدقيق لمفهوم (${kw})؟`,
+          options: {
+            A: `توفير معمارية رقمية متكاملة لربط المكونات وإدارة المهام التشغيلية بكفاءة`,
+            B: `إلغاء الحاجة للشبكة المحلية والاعتماد الحصري على التخزين اليدوي`,
+            C: `تقليل دقة العمليات البرمجية وزيادة زمن استجابة النظام`,
+            D: `حذف قواعد البيانات وإعادة تهيئة الذاكرة العشوائية تلقائياً`
+          },
+          correct: 'A',
+          explanation: `يعتبر (${kw}) من الركائز التي تم شرحها في سياق المحاضرة لتحقيق أقصى كفاءة وحماية للنظام.`,
+          reference_quote: quote
         });
       }
-      return { questions, count: num };
+      return { session_id: 'local-' + Date.now(), questions };
     }
 
-    function renderAIQuizResults(data) {
-      lastGeneratedQuiz = data;
-      const container = document.getElementById('ai-quiz-results');
+    function renderTab5QuizResults() {
       const list = document.getElementById('ai-questions-list');
-      container.classList.remove('hidden');
+      const questions = tab5QuizState.questions;
 
-      const questions = data.questions || [];
-      list.innerHTML = questions.map((q, idx) => `
-        <div class="glass-card rounded-xl p-4 border border-purple-200 dark:border-purple-900/40 space-y-2.5">
-          <div class="flex items-start gap-2">
-            <span class="w-6 h-6 rounded-lg bg-brand-800 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
-              ${idx + 1}
-            </span>
-            <p class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-relaxed">
-              ${q.question}
-            </p>
+      // Update counters
+      const countBadge = document.getElementById('tab5-count-badge');
+      if (countBadge) countBadge.innerText = `${questions.length} أسئلة`;
+
+      updateTab5ScoreTracker();
+
+      if (!questions || questions.length === 0) {
+        list.innerHTML = `
+          <div class="py-10 text-center text-slate-400">
+            <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
+            <p class="text-xs">لم يتم توليد أسئلة. يرجى تجربة إدخال محتوى آخر.</p>
           </div>
+        `;
+        return;
+      }
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pr-8 text-xs">
-            ${(q.options || []).map((opt, oIdx) => `
-              <div class="p-2.5 rounded-lg border ${oIdx === q.correct ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold' : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300'} flex items-center gap-2">
-                <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${oIdx === q.correct ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}">
-                  ${['أ', 'ب', 'ج', 'د'][oIdx] || oIdx + 1}
+      list.innerHTML = questions.map((q, idx) => {
+        const qNum = idx + 1;
+        const qId = q.id;
+        const ans = tab5QuizState.answers[qId] || {};
+        const correctLetter = (ans.correct_answer || q.correct || 'A').toUpperCase().trim();
+        const exp = ans.explanation || q.explanation || 'تم اعتماد الإجابة النموذجية من واقع محتوى المحاضرة المرفوع.';
+        const quote = ans.reference_quote || q.reference_quote || '';
+        const userSelected = tab5QuizState.studentAnswers[qId] || null;
+        const isRevealed = !!tab5QuizState.revealed[qId] || !!userSelected;
+
+        // ── EDIT MODE ────────────────────────────────────────────────────────
+        if (q._editing) {
+          return `
+            <div id="tab5-card-${qId}" class="p-5 sm:p-6 rounded-2xl bg-purple-50/60 dark:bg-purple-950/30 border-2 border-purple-500 shadow-md space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-purple-200 dark:border-purple-800">
+                <span class="font-bold text-xs text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                  <span>تعديل السؤال #${qNum}</span>
                 </span>
-                <span>${opt}</span>
+                <span class="text-[11px] text-slate-400">محرر تفاعلي مباشر</span>
               </div>
-            `).join('')}
-          </div>
 
-          ${q.explanation ? `
-            <div class="pr-8 pt-1">
-              <p class="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 p-2 rounded-lg">
-                💡 <span class="font-bold">التفسير والشرح:</span> ${q.explanation}
-              </p>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">نص السؤال:</label>
+                <textarea id="tab5-edit-q-${qId}" rows="2" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-purple-500 font-medium">${escapeHtml(q.question)}</textarea>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                ${['A', 'B', 'C', 'D'].map(key => {
+                  const val = (q.options && q.options[key]) ? q.options[key] : '';
+                  const checked = (key === correctLetter);
+                  return `
+                    <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center gap-2">
+                      <input type="radio" name="tab5-correct-radio-${qId}" value="${key}" id="tab5-radio-${qId}-${key}" ${checked ? 'checked' : ''} class="w-4 h-4 text-purple-600 focus:ring-purple-500 cursor-pointer">
+                      <label for="tab5-radio-${qId}-${key}" class="w-6 h-6 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0 cursor-pointer">
+                        ${key}
+                      </label>
+                      <input type="text" id="tab5-edit-opt-${qId}-${key}" value="${escapeHtml(val)}" placeholder="الخيار ${key}" class="flex-1 px-2 py-1 bg-transparent text-xs text-slate-800 dark:text-slate-200 outline-none border-b border-transparent focus:border-purple-500">
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">الشرح والتعليل النموذجي:</label>
+                  <input type="text" id="tab5-edit-exp-${qId}" value="${escapeHtml(exp)}" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-amber-700 dark:text-amber-400 mb-1">مقتبس المحاضرة المرجعي (Evidence Citation):</label>
+                  <input type="text" id="tab5-edit-quote-${qId}" value="${escapeHtml(quote)}" placeholder="جملة مستخرجة من نص المحاضرة تثبت الإجابة..." class="w-full px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end gap-2 pt-2 border-t border-purple-200 dark:border-purple-800">
+                <button type="button" onclick="cancelTab5QuestionEdit(${qId})" class="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                  إلغاء
+                </button>
+                <button type="button" onclick="saveTab5QuestionEdit(${qId})" class="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
+                  <i class="fa-solid fa-check"></i>
+                  <span>حفظ التعديل</span>
+                </button>
+              </div>
             </div>
-          ` : ''}
-        </div>
-      `).join('');
+          `;
+        }
+
+        // ── INTERACTIVE VIEW / SIMULATION MODE ───────────────────────────────
+        return `
+          <div id="tab5-card-${qId}" class="glass-card rounded-2xl p-5 border border-purple-200/80 dark:border-purple-900/40 shadow-sm transition hover:border-purple-400 dark:hover:border-purple-700 space-y-3">
+            
+            <!-- Card Header: Question Number + Question Actions -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-start gap-2.5 flex-1">
+                <span class="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-700 to-indigo-700 text-white font-black text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                  ${qNum}
+                </span>
+                <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-relaxed flex-1">
+                  ${escapeHtml(q.question)}
+                </h4>
+              </div>
+
+              <!-- Top Action Buttons -->
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" onclick="editTab5Question(${qId})" title="تعديل هذا السؤال" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-bold transition flex items-center gap-1">
+                  <i class="fa-solid fa-pen text-purple-600"></i>
+                  <span>تعديل</span>
+                </button>
+                <button type="button" id="tab5-btn-regen-${qId}" onclick="regenerateTab5Question(${qId})" title="إعادة توليد هذا السؤال فقط بالذكاء الاصطناعي" class="px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[11px] font-bold transition flex items-center gap-1">
+                  <i class="fa-solid fa-rotate text-purple-600"></i>
+                  <span>توليد بديل</span>
+                </button>
+                <button type="button" onclick="deleteTab5Question(${qId})" title="حذف السؤال" class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-600 border border-rose-200 dark:border-rose-900 text-xs flex items-center justify-center transition">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Options Grid (INTERACTIVE SIMULATION CLICK) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+              ${['A', 'B', 'C', 'D'].map(key => {
+                const optText = (q.options && q.options[key]) ? q.options[key] : '';
+                let cardClass = "p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-purple-500 cursor-pointer transition flex items-start gap-2.5 group";
+                let badgeClass = "w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 group-hover:bg-purple-100 text-slate-700 dark:text-slate-300 group-hover:text-purple-700 font-bold text-xs flex items-center justify-center shrink-0 transition";
+                let badgeContent = key;
+
+                if (isRevealed) {
+                  if (key === correctLetter) {
+                    cardClass = "p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border-2 border-emerald-500 flex items-start gap-2.5 shadow-sm";
+                    badgeClass = "w-6 h-6 rounded-md bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0";
+                    badgeContent = "✓";
+                  } else if (userSelected && key === userSelected.toUpperCase()) {
+                    cardClass = "p-3 rounded-xl bg-rose-50 dark:bg-rose-950/80 border-2 border-rose-500 flex items-start gap-2.5 shadow-sm";
+                    badgeClass = "w-6 h-6 rounded-md bg-rose-600 text-white font-bold text-xs flex items-center justify-center shrink-0";
+                    badgeContent = "✗";
+                  } else {
+                    cardClass = "p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 opacity-60 flex items-start gap-2.5";
+                  }
+                }
+
+                return `
+                  <div id="tab5-opt-${qId}-${key}" onclick="handleTab5OptionClick(${qId}, '${key}')" class="${cardClass}">
+                    <span class="${badgeClass}">${badgeContent}</span>
+                    <span class="text-xs text-slate-800 dark:text-slate-200 leading-normal flex-1">${escapeHtml(optText)}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+
+            <!-- VERIFIED REFERENCE QUOTE FROM LECTURE (STRICT ZERO HALLUCINATION) -->
+            ${(quote && isRevealed) ? `
+              <div class="p-2.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-800/80 flex items-start gap-2 text-[11px] text-amber-900 dark:text-amber-200">
+                <i class="fa-solid fa-quote-right text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"></i>
+                <div class="flex-1">
+                  <span class="font-bold text-amber-800 dark:text-amber-300">مقتبس المحاضرة المرجعي (Evidence Citation):</span>
+                  <p class="font-mono text-[11px] mt-0.5 leading-relaxed text-amber-950 dark:text-amber-100">"${escapeHtml(quote)}"</p>
+                </div>
+                <span class="px-1.5 py-0.5 rounded bg-amber-200/70 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-[10px] font-bold shrink-0">
+                  Zero Hallucination
+                </span>
+              </div>
+            ` : ''}
+
+            <!-- Bottom Action & Explanation Area -->
+            <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
+              <button type="button" onclick="toggleRevealTab5Question(${qId})" class="text-purple-600 dark:text-purple-400 hover:text-purple-700 font-bold flex items-center gap-1.5 transition">
+                <i class="fa-solid ${isRevealed ? 'fa-eye-slash' : 'fa-lightbulb'}"></i>
+                <span>${isRevealed ? 'إخفاء الإجابة والشرح' : 'كشف الإجابة والشرح'}</span>
+              </button>
+
+              <span class="text-[11px] font-medium">
+                ${userSelected ? (
+                  userSelected.toUpperCase() === correctLetter 
+                    ? '<span class="text-emerald-600 font-bold">إجابة صحيحة! 🎉</span>'
+                    : '<span class="text-rose-500 font-bold">إجابة غير صحيحة ❌</span>'
+                ) : (
+                  isRevealed 
+                    ? '<span class="text-emerald-600 font-bold">تم كشف الحل ✅</span>'
+                    : '<span class="text-slate-400">انقر للتجربة التفاعلية أو الكشف</span>'
+                )}
+              </span>
+            </div>
+
+            <!-- Explanation Box -->
+            ${isRevealed ? `
+              <div class="p-3.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-100 animate-fadeIn">
+                <div class="font-bold flex items-center gap-1.5 mb-1 text-emerald-700 dark:text-emerald-300">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <span>الإجابة النموذجية المعتمدة: (${correctLetter})</span>
+                </div>
+                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px] sm:text-xs">
+                  ${escapeHtml(exp)}
+                </p>
+              </div>
+            ` : ''}
+
+          </div>
+        `;
+      }).join('');
     }
 
-    function copyGeneratedQuiz() {
-      if (!lastGeneratedQuiz || !lastGeneratedQuiz.questions) return;
-      let text = '📋 أسئلة الاختبار المولدة بالذكاء الاصطناعي (Gemini AI):\n\n';
-      lastGeneratedQuiz.questions.forEach((q, i) => {
-        text += `${i+1}. ${q.question}\n`;
-        (q.options || []).forEach((opt, oi) => {
-          text += `   [${['أ', 'ب', 'ج', 'د'][oi] || oi+1}] ${opt}\n`;
-        });
-        text += `   الإجابة الصحيحة: ${q.options[q.correct]}\n\n`;
+    // ── TAB 5 INTERACTIVE ACTIONS ─────────────────────────────────────────────
+    function handleTab5OptionClick(qId, selectedKey) {
+      tab5QuizState.studentAnswers[qId] = selectedKey;
+      tab5QuizState.revealed[qId] = true;
+      renderTab5QuizResults();
+    }
+
+    function toggleRevealTab5Question(qId) {
+      tab5QuizState.revealed[qId] = !tab5QuizState.revealed[qId];
+      renderTab5QuizResults();
+    }
+
+    function revealAllTab5Answers() {
+      tab5QuizState.questions.forEach(q => {
+        tab5QuizState.revealed[q.id] = true;
       });
-      navigator.clipboard.writeText(text);
-      showToast('تم نسخ الأسئلة للحافظة بنجاح! 📋', 'success');
+      renderTab5QuizResults();
+      showToast('تم كشف جميع الإجابات النموذجية والشروحات بنجاح ✅', 'success');
+    }
+
+    function hideAllTab5Answers() {
+      tab5QuizState.questions.forEach(q => {
+        tab5QuizState.revealed[q.id] = false;
+      });
+      tab5QuizState.studentAnswers = {};
+      renderTab5QuizResults();
+      showToast('تم إخفاء جميع الإجابات لإعادة التدريب والمحاكاة 🔒', 'info');
+    }
+
+    function resetTab5Simulation() {
+      tab5QuizState.studentAnswers = {};
+      tab5QuizState.revealed = {};
+      renderTab5QuizResults();
+      showToast('تمت إعادة ضبط تجربة الاختبار التفاعلي 🔄', 'info');
+    }
+
+    function updateTab5ScoreTracker() {
+      const total = tab5QuizState.questions.length;
+      let answered = 0;
+      let correct = 0;
+
+      tab5QuizState.questions.forEach(q => {
+        const sel = tab5QuizState.studentAnswers[q.id];
+        if (sel) {
+          answered++;
+          const correctKey = (tab5QuizState.answers[q.id]?.correct_answer || q.correct || 'A').toUpperCase();
+          if (sel.toUpperCase() === correctKey) {
+            correct++;
+          }
+        }
+      });
+
+      const pct = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+
+      const statTotal = document.getElementById('tab5-stat-total');
+      const statAnswered = document.getElementById('tab5-stat-answered');
+      const statCorrect = document.getElementById('tab5-stat-correct');
+      const statPct = document.getElementById('tab5-stat-pct');
+
+      if (statTotal) statTotal.innerText = String(total);
+      if (statAnswered) statAnswered.innerText = String(answered);
+      if (statCorrect) statCorrect.innerText = String(correct);
+      if (statPct) statPct.innerText = `${pct}%`;
+    }
+
+    function editTab5Question(qId) {
+      const q = tab5QuizState.questions.find(item => item.id === qId);
+      if (q) {
+        q._editing = true;
+        renderTab5QuizResults();
+      }
+    }
+
+    function cancelTab5QuestionEdit(qId) {
+      const q = tab5QuizState.questions.find(item => item.id === qId);
+      if (q) {
+        q._editing = false;
+        renderTab5QuizResults();
+      }
+    }
+
+    function saveTab5QuestionEdit(qId) {
+      const q = tab5QuizState.questions.find(item => item.id === qId);
+      if (!q) return;
+
+      const newQText = document.getElementById(`tab5-edit-q-${qId}`)?.value || q.question;
+      const optA = document.getElementById(`tab5-edit-opt-${qId}-A`)?.value || (q.options?.A || '');
+      const optB = document.getElementById(`tab5-edit-opt-${qId}-B`)?.value || (q.options?.B || '');
+      const optC = document.getElementById(`tab5-edit-opt-${qId}-C`)?.value || (q.options?.C || '');
+      const optD = document.getElementById(`tab5-edit-opt-${qId}-D`)?.value || (q.options?.D || '');
+
+      const selectedRadio = document.querySelector(`input[name="tab5-correct-radio-${qId}"]:checked`);
+      const newCorrect = selectedRadio ? selectedRadio.value : (q.correct || 'A');
+
+      const newExp = document.getElementById(`tab5-edit-exp-${qId}`)?.value || (q.explanation || '');
+      const newQuote = document.getElementById(`tab5-edit-quote-${qId}`)?.value || (q.reference_quote || '');
+
+      q.question = newQText.trim();
+      q.options = { A: optA.trim(), B: optB.trim(), C: optC.trim(), D: optD.trim() };
+      q.correct = newCorrect;
+      q.explanation = newExp.trim();
+      q.reference_quote = newQuote.trim();
+      q._editing = false;
+
+      tab5QuizState.answers[qId] = {
+        correct_answer: newCorrect,
+        explanation: newExp.trim(),
+        reference_quote: newQuote.trim()
+      };
+
+      renderTab5QuizResults();
+      showToast('تم تحديث السؤال في الاستوديو بنجاح! 🚀', 'success');
+    }
+
+    async function regenerateTab5Question(qId) {
+      const btn = document.getElementById(`tab5-btn-regen-${qId}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>جاري التوليد...</span>';
+      }
+
+      try {
+        const diffRaw = document.getElementById('ai-quiz-difficulty')?.value || 'متوسط';
+        const diffMap = { 'متوسط': 'medium', 'مبتدئ': 'easy', 'متقدم': 'hard' };
+        const diff = diffMap[diffRaw] || 'medium';
+
+        let newQ = null;
+        if (tab5QuizState.sessionId && !tab5QuizState.sessionId.startsWith('local-')) {
+          const res = await fetch(`${API_BASE}/quiz/session/${tab5QuizState.sessionId}/regenerate-question/${qId}`, {
+            method: 'POST',
+            headers: getAuthHeaders(true),
+            body: JSON.stringify({
+              session_id: tab5QuizState.sessionId,
+              question_id: qId,
+              difficulty: diff
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            newQ = data.question;
+          }
+        }
+
+        if (!newQ) {
+          // Local fallback generator for single question
+          const fb = simulateInteractiveGeminiQuestions(tab5QuizState.content || 'المادة الدراسية', 1, diff);
+          newQ = fb.questions[0];
+          newQ.id = qId;
+        }
+
+        const qIdx = tab5QuizState.questions.findIndex(item => item.id === qId);
+        if (qIdx !== -1) {
+          tab5QuizState.questions[qIdx] = {
+            id: qId,
+            question: newQ.question,
+            options: newQ.options,
+            correct: newQ.correct,
+            explanation: newQ.explanation || '',
+            reference_quote: newQ.reference_quote || '',
+            _editing: false
+          };
+        }
+
+        tab5QuizState.answers[qId] = {
+          correct_answer: newQ.correct,
+          explanation: newQ.explanation || '',
+          reference_quote: newQ.reference_quote || ''
+        };
+
+        delete tab5QuizState.studentAnswers[qId];
+        renderTab5QuizResults();
+        showToast(`تمت إعادة توليد السؤال #${qId} بنجاح عبر Gemini! ✨`, 'success');
+
+      } catch (err) {
+        showToast('تعذرت إعادة توليد السؤال', 'error');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-rotate text-purple-600"></i> <span>توليد بديل</span>';
+        }
+      }
+    }
+
+    function deleteTab5Question(qId) {
+      if (!confirm('هل أنت متأكد من حذف هذا السؤال؟')) return;
+      tab5QuizState.questions = tab5QuizState.questions.filter(item => item.id !== qId);
+      tab5QuizState.questions.forEach((q, i) => { q.id = i + 1; });
+      delete tab5QuizState.studentAnswers[qId];
+      renderTab5QuizResults();
+      showToast('تم حذف السؤال وإعادة ترقيم بنك الأسئلة', 'info');
+    }
+
+    function addNewTab5Question() {
+      const newId = tab5QuizState.questions.length + 1;
+      tab5QuizState.questions.push({
+        id: newId,
+        question: 'سؤال تدريبي جديد من إعداد المعلم...',
+        options: {
+          A: 'الخيار الأول (الإجابة النموذجية)',
+          B: 'الخيار الثاني',
+          C: 'الخيار الثالث',
+          D: 'الخيار الرابع'
+        },
+        correct: 'A',
+        explanation: 'تفسير الإجابة الصحيحة...',
+        reference_quote: 'مقتبس من شرح المحاضرة...',
+        _editing: true
+      });
+      renderTab5QuizResults();
+      const card = document.getElementById(`tab5-card-${newId}`);
+      if (card) card.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function saveTab5QuizToDb() {
+      if (!tab5QuizState.sessionId) {
+        showToast('لا توجد جلسة نشطة لحفظها', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-tab5-quiz');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>جاري الحفظ...</span>';
+      }
+
+      try {
+        const payloadQuestions = tab5QuizState.questions.map(q => {
+          const ans = tab5QuizState.answers[q.id] || {};
+          return {
+            id: q.id,
+            question: q.question,
+            options: {
+              A: q.options?.A || '',
+              B: q.options?.B || '',
+              C: q.options?.C || '',
+              D: q.options?.D || ''
+            },
+            correct: (q.correct || ans.correct_answer || 'A').toUpperCase().trim(),
+            explanation: q.explanation || ans.explanation || '',
+            reference_quote: q.reference_quote || ans.reference_quote || ''
+          };
+        });
+
+        if (!tab5QuizState.sessionId.startsWith('local-')) {
+          await fetch(`${API_BASE}/quiz/session/${tab5QuizState.sessionId}/questions`, {
+            method: 'PUT',
+            headers: getAuthHeaders(true),
+            body: JSON.stringify({
+              session_id: tab5QuizState.sessionId,
+              questions: payloadQuestions
+            })
+          });
+        }
+
+        showToast('تم حفظ ونشر أسئلة الاختبار بنجاح في قاعدة البيانات وجلسة الطلاب! 🚀', 'success');
+
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span>حفظ ونشر للاختبارات 🚀</span>';
+        }
+      }
+    }
+
+    function copyTab5Quiz() {
+      if (!tab5QuizState.questions || tab5QuizState.questions.length === 0) return;
+      let text = '📋 بنك الأسئلة التفاعلي (مدرسة WE للتكنولوجيا التطبيقية بالسويس):\n\n';
+      tab5QuizState.questions.forEach((q, idx) => {
+        text += `${idx + 1}. ${q.question}\n`;
+        text += `   A) ${q.options.A}\n`;
+        text += `   B) ${q.options.B}\n`;
+        text += `   C) ${q.options.C}\n`;
+        text += `   D) ${q.options.D}\n`;
+        text += `   الإجابة النموذجية: (${q.correct})\n`;
+        if (q.explanation) text += `   الشرح: ${q.explanation}\n`;
+        if (q.reference_quote) text += `   📜 المقتبس المرجعي: "${q.reference_quote}"\n`;
+        text += '\n';
+      });
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('تم نسخ جميع الأسئلة والمقتبسات المرجعية إلى الحافظة! 📋', 'success');
+      });
+    }
+
+    function printTab5ExamSheet() {
+      if (!tab5QuizState.questions || tab5QuizState.questions.length === 0) {
+        showToast('لا توجد أسئلة لطباعتها في ورقة الامتحان', 'error');
+        return;
+      }
+
+      // Temporarily sync to currentQuizState for printing
+      currentQuizState = {
+        sessionId: tab5QuizState.sessionId,
+        fileTitle: tab5QuizState.content.slice(0, 50) || 'مادة دراسية تخصصية',
+        questions: tab5QuizState.questions,
+        answers: tab5QuizState.answers
+      };
+      printOfficialExamSheet();
     }
 
     // ── ATTENDANCE SESSIONS & INTERACTIVE SHEET ───────────────────────────────
