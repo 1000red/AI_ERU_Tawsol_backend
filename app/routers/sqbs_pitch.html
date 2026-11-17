@@ -213,11 +213,18 @@
 
         <span class="hidden sm:inline-block h-5 w-px bg-white/15 mx-0.5"></span>
 
-        <!-- Egyptian Neural Voice-Over Toggle (V) -->
-        <button onclick="toggleVoiceOver()" id="btn-voiceover" class="px-2.5 py-1.5 rounded-xl bg-we-surface hover:bg-purple-900/70 text-slate-200 border border-we-borderDark text-xs font-bold transition flex items-center gap-1.5" title="تشغيل / إيقاف التعليق الصوتي بالعامية المصرية الطبيعية (V)">
-          <i class="fa-solid fa-volume-high text-purple-300" id="icon-voiceover"></i>
-          <span class="hidden lg:inline" data-ar="تعليق مصري 🇪🇬" data-en="Voice-Over">تعليق مصري 🇪🇬</span>
-        </button>
+        <!-- Voice-Over Language & Friendly Woman Voice Controls (V) -->
+        <div class="flex items-center gap-1 bg-we-surface/90 p-0.5 rounded-xl border border-we-borderDark">
+          <button onclick="toggleVoiceOver()" id="btn-voiceover" class="px-2.5 py-1 rounded-lg hover:bg-purple-900/70 text-slate-100 text-xs font-bold transition flex items-center gap-1.5" title="تشغيل / إيقاف التعليق الصوتي الودود (V)">
+            <i class="fa-solid fa-volume-high text-we-gold" id="icon-voiceover"></i>
+            <span class="hidden lg:inline" data-ar="التعليق الصوتي" data-en="Voice-Over">التعليق الصوتي</span>
+          </button>
+          <select id="voiceover-lang-select" onchange="setVoiceOverProfile(this.value, true)" aria-label="Choose Voice-Over Language" title="اختر لغة ونبرة التعليق الصوتي" class="bg-we-imperial text-we-goldLight text-[11px] font-bold px-2 py-1 rounded-lg border border-purple-500/40 outline-none cursor-pointer hover:border-we-gold transition">
+            <option value="ar_f" selected>🇪🇬 مصري (نسائي ودود)</option>
+            <option value="en_f">🇺🇸 English (Friendly Woman)</option>
+            <option value="ar_m">🇪🇬 مصري (صوت شاب)</option>
+          </select>
+        </div>
 
         <!-- Subtitles Toggle (S) -->
         <button onclick="toggleSubtitles()" id="btn-subtitles" class="px-2 py-1.5 rounded-xl bg-we-electric/25 hover:bg-we-electric/45 text-purple-100 border border-we-electric/50 text-xs font-bold transition flex items-center gap-1" title="تشغيل / إيقاف شريط الترجمة (S)">
@@ -1317,8 +1324,8 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <span id="voiceover-engine-badge" class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-700/40 text-[10px] font-bold" data-ar="عامية مصرية طبيعية 🇪🇬" data-en="English / Egyptian VO">
-            عامية مصرية طبيعية 🇪🇬
+          <span id="voiceover-engine-badge" class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-700/40 text-[10px] font-bold">
+            🎙️ صوت نسائي مصري طبيعي 🇪🇬
           </span>
           <button onclick="cycleVoiceRate()" id="btn-voice-rate" class="px-2 py-0.5 rounded-md bg-we-surface hover:bg-purple-900 text-we-gold text-[11px] font-mono font-bold border border-we-borderDark" title="تغيير سرعة الصوت">1.0x</button>
           <button onclick="speakCurrentSlide()" class="px-2.5 py-0.5 rounded-md bg-purple-900/70 hover:bg-purple-800 text-purple-100 text-[11px] font-bold flex items-center gap-1 border border-purple-500/40">
@@ -1588,6 +1595,8 @@
     let timerInterval = null;
     let isSubtitlesOn = true;
     let isVoiceOverActive = false;
+    let voiceOverProfile = 'ar_f'; // 'ar_f' (Egyptian friendly woman), 'en_f' (English friendly woman), 'ar_m' (Egyptian male)
+    let userPickedVoiceProfile = false;
     let isNotesCollapsed = false;
     const VOICE_RATES = [1.0, 1.1, 1.2, 0.9];
     let currentVoiceRateIdx = 0;
@@ -1612,6 +1621,9 @@
     // ── FULL BILINGUAL AR (RTL) <-> EN (LTR) SWITCHER ─────────────────────────
     function togglePresentationLanguage() {
       currentLang = currentLang === 'ar' ? 'en' : 'ar';
+      if (!userPickedVoiceProfile) {
+        setVoiceOverProfile(currentLang === 'en' ? 'en_f' : 'ar_f', false);
+      }
       applyLanguageToDOM();
       updateSlideUI();
       initSlideGrid();
@@ -1791,26 +1803,62 @@
       const item = qaDatabase.find(x => x.id === qaId);
       if (!item) return;
       stopVoiceOver();
-      const text = currentLang === 'en' ? item.aEn : item.aAr;
-      speakFallbackTTS(text, currentLang === 'en' ? 'en-US' : 'ar-EG');
+      const useEn = voiceOverProfile === 'en_f';
+      const text = useEn ? item.aEn : item.aAr;
+      speakFallbackTTS(text, useEn ? 'en-US' : 'ar-EG');
     }
 
-    // ── EGYPTIAN NEURAL AUDIO ENGINE + ENGLISH / ar-EG TTS FALLBACK ───────────
-    function getSlideAudioCandidates(audioFile) {
-      const cloudUrl = `${CLOUD_AUDIO_BASE}/${audioFile}`;
-      const localUrl = `sqbs_audio/${audioFile}`;
+    // ── STUDIO FRIENDLY WOMAN VOICE-OVER ENGINE (BILINGUAL AR & EN) ───────────
+    function setVoiceOverProfile(profile, isManual = true) {
+      voiceOverProfile = profile;
+      if (isManual) userPickedVoiceProfile = true;
+
+      const sel = document.getElementById('voiceover-lang-select');
+      if (sel && sel.value !== profile) sel.value = profile;
+
+      const badge = document.getElementById('voiceover-engine-badge');
+      if (badge) {
+        badge.innerText =
+          profile === 'en_f' ? '🎙️ Friendly Natural Woman (EN) 🇺🇸' :
+          profile === 'ar_m' ? '🎙️ عامية مصرية طبيعية (شاب) 🇪🇬' :
+                               '🎙️ صوت نسائي مصري طبيعي وودود 🇪🇬';
+      }
+
+      preloadSlideAudio(currentSlide);
+      preloadSlideAudio(currentSlide + 1);
+
+      if (isManual) {
+        const msg =
+          profile === 'en_f' ? '🎙️ Voice-Over: Friendly Natural English Woman 🇺🇸' :
+          profile === 'ar_m' ? '🎙️ التعليق الصوتي: عامية مصرية طبيعية (شاب) 🇪🇬' :
+                               '🎙️ التعليق الصوتي: صوت نسائي مصري طبيعي وودود 🇪🇬';
+        showToast(msg, 'success');
+        if (isVoiceOverActive) speakCurrentSlide();
+      }
+    }
+
+    function getAudioRelPath(slideNum, profile) {
+      if (profile === 'en_f') return `en_f/slide_${slideNum}.mp3`;
+      if (profile === 'ar_f') return `ar_f/slide_${slideNum}.mp3`;
+      return slidesData[slideNum - 1].audioFile;
+    }
+
+    function getSlideAudioCandidates(slideNum, profile) {
+      const rel = getAudioRelPath(slideNum, profile);
+      const cloudUrl = `${CLOUD_AUDIO_BASE}/${rel}`;
+      const localUrl = `sqbs_audio/${rel}`;
       return window.location.protocol === 'file:' ? [localUrl, cloudUrl] : [cloudUrl, localUrl];
     }
 
     function preloadSlideAudio(slideNum) {
       if (slideNum < 1 || slideNum > totalSlides) return;
-      const file = slidesData[slideNum - 1].audioFile;
-      if (preloadedAudioMap[file]) return;
-      const [primary] = getSlideAudioCandidates(file);
+      const key = `${voiceOverProfile}_${slideNum}`;
+      if (preloadedAudioMap[key]) return;
+      const [primary] = getSlideAudioCandidates(slideNum, voiceOverProfile);
       const a = new Audio();
       a.preload = 'auto';
       a.src = primary;
-      preloadedAudioMap[file] = a;
+      preloadedAudioMap[key] = a;
     }
 
     function cycleVoiceRate() {
@@ -1825,13 +1873,13 @@
       const btn = document.getElementById('btn-voiceover');
       const icon = document.getElementById('icon-voiceover');
       if (isVoiceOverActive) {
-        btn.className = 'px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-we-electric to-purple-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5 border border-purple-400';
+        btn.className = 'px-2.5 py-1 rounded-lg bg-gradient-to-r from-we-electric to-purple-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5';
         icon.className = 'fa-solid fa-volume-high text-we-gold animate-bounce';
         speakCurrentSlide();
       } else {
         stopVoiceOver();
-        btn.className = 'px-2.5 py-1.5 rounded-xl bg-we-surface hover:bg-purple-900/70 text-slate-200 border border-we-borderDark text-xs font-bold transition flex items-center gap-1.5';
-        icon.className = 'fa-solid fa-volume-high text-purple-300';
+        btn.className = 'px-2.5 py-1 rounded-lg hover:bg-purple-900/70 text-slate-100 text-xs font-bold transition flex items-center gap-1.5';
+        icon.className = 'fa-solid fa-volume-high text-we-gold';
       }
     }
 
@@ -1846,17 +1894,15 @@
       const pulse = document.getElementById('voiceover-pulse-dot');
       if (pulse) pulse.className = 'w-2.5 h-2.5 rounded-full bg-we-gold animate-ping';
 
-      // In English mode, narrate English script cleanly; in Arabic mode, play Studio Egyptian MP3
-      if (currentLang === 'en') {
-        speakFallbackTTS(data.scriptEn, 'en-US');
-        return;
-      }
-
-      const candidates = getSlideAudioCandidates(data.audioFile);
+      const profile = voiceOverProfile;
+      const candidates = getSlideAudioCandidates(currentSlide, profile);
       let idx = 0;
+
       function tryPlay() {
         if (idx >= candidates.length) {
-          speakFallbackTTS(data.scriptAr, 'ar-EG');
+          const fallbackText = profile === 'en_f' ? data.scriptEn : data.scriptAr;
+          const fallbackLang = profile === 'en_f' ? 'en-US' : 'ar-EG';
+          speakFallbackTTS(fallbackText, fallbackLang);
           return;
         }
         const audio = new Audio(candidates[idx++]);
@@ -1885,10 +1931,20 @@
       const u = new SpeechSynthesisUtterance(text);
       u.lang = langCode;
       u.rate = voicePlaybackRate;
+      u.pitch = 1.04; // Warm natural female pitch
       const voices = window.speechSynthesis.getVoices();
       const chosen = langCode.startsWith('ar')
-        ? (voices.find(v => /ar[-_]EG/i.test(v.lang)) || voices.find(v => v.lang.startsWith('ar')))
-        : (voices.find(v => /en[-_]US/i.test(v.lang) && /natural|neural|google/i.test(v.name)) || voices.find(v => v.lang.startsWith('en')));
+        ? (
+            voices.find(v => /ar[-_]EG/i.test(v.lang) && /salma|hoda|natural|neural|female/i.test(v.name)) ||
+            voices.find(v => /ar[-_]EG/i.test(v.lang)) ||
+            voices.find(v => v.lang.startsWith('ar') && /salma|zariyah|fatima|hoda|female/i.test(v.name)) ||
+            voices.find(v => v.lang.startsWith('ar'))
+          )
+        : (
+            voices.find(v => /en[-_]US/i.test(v.lang) && /aria|jenny|ava|emma|samantha|natural|neural|google us/i.test(v.name)) ||
+            voices.find(v => /en/i.test(v.lang) && /female|aria|jenny|zira|samantha|google/i.test(v.name)) ||
+            voices.find(v => v.lang.startsWith('en'))
+          );
       if (chosen) u.voice = chosen;
       u.onend = () => {
         updateVoiceProgress(100);
