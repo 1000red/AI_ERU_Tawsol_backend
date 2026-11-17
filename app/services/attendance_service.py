@@ -13,6 +13,10 @@ from app.schemas.attendance import (
     AttendanceAttendee,
     AttendanceCheckInOut,
     StudentCourseAttendanceSummary,
+    AttendanceSheetOut,
+    AttendanceSheetStudent,
+    AttendanceSheetSummary,
+    AttendanceMarkRequest,
 )
 
 
@@ -223,3 +227,192 @@ def get_student_attendance_summary(db: Session, student_user: User) -> list[Stud
         )
 
     return summaries
+
+
+# ── Full Attendance Sheet & Manual Filling Services ─────────────────────────
+def get_session_attendance_sheet(db: Session, session_id: int) -> AttendanceSheetOut:
+    session = db.query(AttendanceSession).filter(AttendanceSession.session_id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="جلسة التحضير غير موجودة.")
+
+    mat = db.query(Material).filter(Material.material_id == session.material_id).first()
+    course_name = mat.name if mat else session.material_id
+
+    # 1. Fetch all enrolled students in this course
+    enrolled_students = (
+        db.query(User)
+        .join(MaterialStudent, MaterialStudent.user_id == User.user_id)
+        .filter(MaterialStudent.material_id == session.material_id)
+        .order_by(User.name.asc())
+        .all()
+    )
+
+    # 2. Fetch all existing attendance records for this session
+    records = db.query(AttendanceRecord).filter(AttendanceRecord.session_id == session_id).all()
+    record_map = {r.student_id: r for r in records}
+
+    # 3. Assemble full student list with accurate status
+    students_out: list[AttendanceSheetStudent] = []
+    present_cnt = 0
+    late_cnt = 0
+    excused_cnt = 0
+    absent_cnt = 0
+
+    for stu in enrolled_students:
+        rec = record_map.get(stu.user_id)
+        if rec:
+            st = rec.status.upper()
+            if st == "PRESENT":
+                present_cnt += 1
+            elif st == "LATE":
+                late_cnt += 1
+            elif st == "EXCUSED":
+                excused_cnt += 1
+            else:
+                absent_cnt += 1
+            students_out.append(
+                AttendanceSheetStudent(
+                    student_id=stu.user_id,
+                    name=stu.name,
+                    uni_code=stu.uni_code,
+                    email=stu.email,
+                    status=st,
+                    scanned_at=rec.scanned_at,
+                    record_id=rec.record_id,
+                )
+            )
+        else:
+            absent_cnt += 1
+            students_out.append(
+                AttendanceSheetStudent(
+                    student_id=stu.user_id,
+                    name=stu.name,
+                    uni_code=stu.uni_code,
+                    email=stu.email,
+                    status="ABSENT",
+                    scanned_at=None,
+                    record_id=None,
+                )
+            )
+
+    total_enrolled = len(enrolled_students)
+    att_rate = round(((present_cnt + late_cnt) / total_enrolled * 100.0), 1) if total_enrolled > 0 else 0.0
+
+    now = datetime.now(timezone.utc)
+    is_active = session.is_active and (session.expires_at > now)
+
+    summary = AttendanceSheetSummary(
+        total_enrolled=total_enrolled,
+        present_count=present_cnt,
+        late_count=late_cnt,
+        excused_count=excused_cnt,
+        absent_count=absent_cnt,
+        attendance_rate=att_rate,
+    )
+
+    return AttendanceSheetOut(
+        session_id=session.session_id,
+        material_id=session.material_id,
+        course_name=course_name,
+        title=session.title,
+        token=session.token,
+        qr_payload=f"eru_attendance:{session.token}",
+        created_at=session.created_at,
+        expires_at=session.expires_at,
+        is_active=is_active,
+        summary=summary,
+        students=students_out,
+    )
+
+
+def mark_student_attendance(db: Session, session_id: int, student_id: int, status_code: str) -> AttendanceSheetOut:
+    session = db.query(AttendanceSession).filter(AttendanceSession.session_id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="جلسة التحضير غير موجودة.")
+
+    clean_status = status_code.upper().strip()
+    if clean_status not in ("PRESENT", "LATE", "EXCUSED", "ABSENT"):
+        raise HTTPException(status_code=422, detail="حالة الحضور غير صالحة. اختر بين: PRESENT, LATE, EXCUSED, ABSENT")
+
+    rec = (
+        db.query(AttendanceRecord)
+        .filter(AttendanceRecord.session_id == session_id, AttendanceRecord.student_id == student_id)
+        .first()
+    )
+
+    if clean_status == "ABSENT":
+        if rec:
+            db.delete(rec)
+            db.commit()
+    else:
+        if rec:
+            rec.status = clean_status
+        else:
+            rec = AttendanceRecord(
+                session_id=session_id,
+                material_id=session.material_id,
+                student_id=student_id,
+                status=clean_status,
+            )
+            db.add(rec)
+        db.commit()
+
+    return get_session_attendance_sheet(db, session_id)
+
+
+def batch_mark_attendance(db: Session, session_id: int, records_data: list[AttendanceMarkRequest]) -> AttendanceSheetOut:
+    session = db.query(AttendanceSession).filter(AttendanceSession.session_id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="جلسة التحضير غير موجودة.")
+
+    for item in records_data:
+        clean_status = item.status.upper().strip()
+        rec = (
+            db.query(AttendanceRecord)
+            .filter(AttendanceRecord.session_id == session_id, AttendanceRecord.student_id == item.student_id)
+            .first()
+        )
+        if clean_status == "ABSENT":
+            if rec:
+                db.delete(rec)
+        elif clean_status in ("PRESENT", "LATE", "EXCUSED"):
+            if rec:
+                rec.status = clean_status
+            else:
+                rec = AttendanceRecord(
+                    session_id=session_id,
+                    material_id=session.material_id,
+                    student_id=item.student_id,
+                    status=clean_status,
+                )
+                db.add(rec)
+
+    db.commit()
+    return get_session_attendance_sheet(db, session_id)
+
+
+def get_course_attendance_sessions(db: Session, material_id: str) -> list[dict]:
+    sessions = (
+        db.query(AttendanceSession)
+        .filter(AttendanceSession.material_id == material_id)
+        .order_by(AttendanceSession.created_at.desc())
+        .limit(30)
+        .all()
+    )
+    now = datetime.now(timezone.utc)
+    results = []
+    for s in sessions:
+        attended = db.query(func.count(AttendanceRecord.record_id)).filter(AttendanceRecord.session_id == s.session_id).scalar() or 0
+        is_active = s.is_active and (s.expires_at > now)
+        results.append({
+            "session_id": s.session_id,
+            "material_id": s.material_id,
+            "title": s.title,
+            "token": s.token,
+            "qr_payload": f"eru_attendance:{s.token}",
+            "created_at": s.created_at.isoformat() if s.created_at else None,
+            "expires_at": s.expires_at.isoformat() if s.expires_at else None,
+            "is_active": is_active,
+            "total_attended": attended,
+        })
+    return results

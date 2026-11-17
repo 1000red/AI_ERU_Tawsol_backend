@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
+
 class QuizGenerateRequest(BaseModel):
     file_id: Optional[int] = None
     text_content: Optional[str] = None
@@ -20,7 +21,10 @@ class QuizOption(BaseModel):
 class QuizQuestion(BaseModel):
     id: int
     question: str
-    options: QuizOption # "A" | "B" | "C" | "D"
+    options: QuizOption  # "A" | "B" | "C" | "D"
+    reference_quote: Optional[str] = ""
+    explanation: Optional[str] = ""
+    correct: Optional[str] = None
 
 
 class QuizGenerateResponse(BaseModel):
@@ -41,6 +45,7 @@ class QuizEvaluateResponse(BaseModel):
     correct: bool
     correct_answer: str
     explanation: str
+    reference_quote: Optional[str] = ""
 
 
 class QuizSubmitRequest(BaseModel):
@@ -57,3 +62,27 @@ class QuizSubmitResponse(BaseModel):
     passed: bool
     details: list[dict] = []
 
+
+class QuizQuestionUpdateItem(BaseModel):
+    id: int
+    question: str
+    options: QuizOption
+    correct: str  # "A" | "B" | "C" | "D"
+    explanation: Optional[str] = ""
+    reference_quote: Optional[str] = ""
+
+
+class QuizUpdateQuestionsRequest(BaseModel):
+    session_id: str
+    questions: list[QuizQuestionUpdateItem]
+
+
+class QuizRegenerateQuestionRequest(BaseModel):
+    session_id: str
+    question_id: int
+    difficulty: Optional[str] = "medium"
+
+
+class QuizRegenerateQuestionResponse(BaseModel):
+    session_id: str
+    question: QuizQuestionUpdateItem

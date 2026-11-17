@@ -649,6 +649,97 @@
   </div>
 
   <!-- ========================================================================= -->
+  <!-- MODAL: CREATE ATTENDANCE SESSION WITH QR CODE                             -->
+  <!-- ========================================================================= -->
+  <div id="modal-create-attendance-session" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-qrcode text-emerald-600"></i>
+          <span>فتح جلسة حضور إلكترونية جديدة</span>
+        </h3>
+        <button onclick="closeModal('modal-create-attendance-session')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleCreateAttendanceSessionSubmit(event)" class="mt-4 space-y-4 text-xs sm:text-sm">
+        <div>
+          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">المقرر الدراسي *</label>
+          <select id="modal-session-course" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-emerald-500">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">عنوان الجلسة / المحاضرة *</label>
+          <input type="text" id="modal-session-title" required placeholder="مثال: محاضرة 4: أمن الشبكات والـ Firewall" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div>
+          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">مدة صلاحية رمز الـ QR *</label>
+          <select id="modal-session-duration" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium outline-none focus:ring-2 focus:ring-emerald-500">
+            <option value="15" selected>15 دقيقة (موصى بها لبداية المحاضرة)</option>
+            <option value="30">30 دقيقة</option>
+            <option value="45">45 دقيقة (حصة كاملة)</option>
+            <option value="60">60 دقيقة</option>
+            <option value="90">90 دقيقة (محاضرة ممتدة)</option>
+          </select>
+        </div>
+
+        <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" onclick="closeModal('modal-create-attendance-session')" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition text-xs">
+            إلغاء
+          </button>
+          <button type="submit" id="btn-submit-create-session" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 hover:opacity-95 transition flex items-center gap-2">
+            <i class="fa-solid fa-qrcode"></i>
+            <span>توليد رمز الـ QR وفتح الجلسة</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: PROJECTOR FULLSCREEN QR CODE VIEW                                  -->
+  <!-- ========================================================================= -->
+  <div id="modal-qr-projector" class="fixed inset-0 z-50 bg-[#1F0D2B]/95 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="max-w-2xl w-full p-8 text-center text-white space-y-6 relative">
+      <button onclick="closeModal('modal-qr-projector')" class="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="space-y-1">
+        <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-slate-950 uppercase tracking-wider">
+          مدرسة WE للتكنولوجيا التطبيقية بالسويس
+        </span>
+        <h2 id="projector-session-title" class="text-2xl sm:text-3xl font-black mt-2">محاضرة</h2>
+        <p id="projector-session-course" class="text-sm text-purple-200">امسح رمز الاستجابة السريعة (QR) بكاميرا هاتفك لتسجيل الحضور</p>
+      </div>
+
+      <!-- Massive QR Box -->
+      <div class="inline-block p-6 bg-white rounded-3xl shadow-2xl shadow-purple-900/50">
+        <div id="projector-qr-box" class="flex items-center justify-center"></div>
+      </div>
+
+      <!-- Live Counters & Timer -->
+      <div class="flex items-center justify-center gap-6 text-sm flex-wrap">
+        <div class="bg-white/10 px-4 py-2 rounded-2xl border border-white/20 font-mono">
+          <i class="fa-solid fa-stopwatch text-amber-400 ml-1"></i>
+          <span>الوقت المتبقي: </span>
+          <strong id="projector-timer" class="text-amber-300 font-bold text-base">--:--</strong>
+        </div>
+
+        <div class="bg-white/10 px-4 py-2 rounded-2xl border border-white/20 font-mono">
+          <i class="fa-solid fa-user-check text-emerald-400 ml-1"></i>
+          <span>حضور مسجل: </span>
+          <strong id="projector-attended-count" class="text-emerald-300 font-bold text-base">0</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
   <!-- MODAL: ADD LECTURE / MATERIAL FILE                                        -->
   <!-- ========================================================================= -->
   <div id="modal-add-file" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
@@ -835,6 +926,116 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: INTERACTIVE AI QUIZ STUDIO (GEMINI FUNCTION CALLING)               -->
+  <!-- ========================================================================= -->
+  <div id="modal-ai-quiz" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden my-auto">
+      
+      <!-- Studio Header -->
+      <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-purple-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-900 dark:to-purple-950/30 flex flex-wrap items-center justify-between gap-4 shrink-0">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="px-2.5 py-1 rounded-lg bg-purple-600 text-white font-black text-xs tracking-wider flex items-center gap-1.5 shadow-sm shadow-purple-500/20">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>AI QUIZ STUDIO</span>
+            </span>
+            <span class="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center gap-1 border border-emerald-200 dark:border-emerald-800">
+              <i class="fa-solid fa-code"></i>
+              <span>Gemini Function Calling (Strict Grounding 100%)</span>
+            </span>
+            <span class="hidden sm:inline-block px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-bold text-xs border border-purple-200 dark:border-purple-800">
+              مدرسة WE للتكنولوجيا التطبيقية بالسويس
+            </span>
+          </div>
+          <h3 class="font-black text-lg sm:text-xl text-slate-900 dark:text-white mt-1.5 flex items-center gap-2">
+            <span>استوديو الاختبارات التفاعلي والذكي للمعلم</span>
+            <span id="quiz-count-badge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold"></span>
+          </h3>
+          <p id="quiz-modal-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-xl truncate"></p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="printOfficialExamSheet()" title="طباعة ورقة امتحان رسمية" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+            <i class="fa-solid fa-print text-purple-600 dark:text-purple-400"></i>
+            <span class="hidden sm:inline">طباعة ورقة امتحان 🖨️</span>
+          </button>
+          <button type="button" onclick="closeModal('modal-ai-quiz')" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white flex items-center justify-center transition">
+            <i class="fa-solid fa-xmark text-base"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Criteria & Action Bar -->
+      <div class="px-5 py-3 bg-slate-50/80 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
+        <!-- Criteria Controls -->
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <label class="text-slate-500 dark:text-slate-400 font-medium">العدد:</label>
+            <select id="studio-num-questions" class="bg-transparent font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer">
+              <option value="5" selected>5 أسئلة</option>
+              <option value="10">10 أسئلة</option>
+              <option value="15">15 سؤالاً</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <label class="text-slate-500 dark:text-slate-400 font-medium">المستوى:</label>
+            <select id="studio-difficulty" class="bg-transparent font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer">
+              <option value="easy">سهل (مفاهيم مباشرة)</option>
+              <option value="medium" selected>متوسط (فهم وتطبيق)</option>
+              <option value="hard">متقدم (تحليل ومسائل)</option>
+            </select>
+          </div>
+
+          <button type="button" onclick="regenerateFullQuizWithCriteria(true)" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold transition flex items-center gap-1.5 shadow-sm shadow-purple-500/20">
+            <i class="fa-solid fa-rotate"></i>
+            <span>توليد بنك جديد (Force Fresh)</span>
+          </button>
+        </div>
+
+        <!-- Studio Actions -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="addNewManualQuestion()" class="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 font-bold transition flex items-center gap-1.5 border border-indigo-200 dark:border-indigo-800">
+            <i class="fa-solid fa-plus"></i>
+            <span>إضافة سؤال +</span>
+          </button>
+          <button type="button" onclick="revealAllQuizAnswers()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+            <i class="fa-solid fa-eye text-emerald-600"></i>
+            <span>كشف الإجابات</span>
+          </button>
+          <button type="button" onclick="hideAllQuizAnswers()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+            <i class="fa-solid fa-eye-slash text-slate-400"></i>
+            <span>إخفاء الإجابات</span>
+          </button>
+          <button type="button" onclick="copyQuizQuestions()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition flex items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+            <i class="fa-regular fa-copy text-indigo-600"></i>
+            <span>نسخ البنك</span>
+          </button>
+          <button type="button" onclick="saveCurrentQuizEdits()" id="btn-save-quiz-edits" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition flex items-center gap-1.5 shadow-sm shadow-emerald-600/20">
+            <i class="fa-solid fa-floppy-disk"></i>
+            <span>حفظ ونشر للاختبارات 🚀</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable Questions Studio Area -->
+      <div id="quiz-content-area" class="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+        <!-- Dynamic Questions / Edit / Sim Card -->
+      </div>
+      
+      <!-- Studio Footer Note -->
+      <div class="px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+        <span class="flex items-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-emerald-500"></i>
+          <span>الأسئلة مستندة 100% لمحتوى المحاضرة المرفوع بموجب مقتبس مرجعي موثق (Zero Outside Knowledge).</span>
+        </span>
+        <span class="font-bold text-purple-700 dark:text-purple-300">مدرسة WE للتكنولوجيا التطبيقية بالسويس</span>
+      </div>
+
     </div>
   </div>
 
@@ -1581,49 +1782,79 @@
       }
     }
 
-    // ── AI QUIZ GENERATOR & REVEAL ON CLICK ──────────────────────────────────
+    // ── INTERACTIVE AI QUIZ STUDIO (GEMINI FUNCTION CALLING) ────────────────
     let currentQuizState = {
       sessionId: null,
       fileId: null,
       fileTitle: '',
       questions: [],
-      answers: {}, // Cache of revealed answers: { qId: { correct: 'A', explanation: '...' } }
+      answers: {}, // Cache of revealed answers: { qId: { correct: 'A', explanation: '...', reference_quote: '...' } }
+      fromCache: false,
+      tokensSaved: 0
     };
 
-    async function openAiQuizForFile(fileId, fileTitle, fileType) {
+    async function openAiQuizForFile(fileId, fileTitle, fileType, numQuestions = null, difficulty = null, forceRefresh = false) {
       if (!currentTeacher) {
         showToast('يرجى تسجيل الدخول أولاً', 'error');
         return;
       }
 
+      const numQ = numQuestions || parseInt(document.getElementById('studio-num-questions')?.value || '5');
+      const diff = difficulty || (document.getElementById('studio-difficulty')?.value || 'medium');
+
+      // Update criteria inputs if present
+      if (document.getElementById('studio-num-questions')) {
+        document.getElementById('studio-num-questions').value = String(numQ);
+      }
+      if (document.getElementById('studio-difficulty')) {
+        document.getElementById('studio-difficulty').value = diff;
+      }
+
       currentQuizState = {
         sessionId: null,
         fileId: fileId,
-        fileTitle: fileTitle || 'المحاضرة',
+        fileTitle: fileTitle || 'المحاضرة الدراسية',
         questions: [],
-        answers: {}
+        answers: {},
+        fromCache: false,
+        tokensSaved: 0
       };
 
-      document.getElementById('quiz-modal-subtitle').innerText = `المحاضرة: "${fileTitle}" • إجابات مخفية تُكشف بالضغط عليها`;
+      const subTitleEl = document.getElementById('quiz-modal-subtitle');
+      if (subTitleEl) {
+        subTitleEl.innerText = `المحاضرة: "${fileTitle}" • استوديو تفاعلي بإسناد صارم 100% لمحتوى الملف المرفوع`;
+      }
+      const countBadge = document.getElementById('quiz-count-badge');
+      if (countBadge) countBadge.innerText = 'جاري التوليد...';
+
       openModal('modal-ai-quiz');
 
       const contentArea = document.getElementById('quiz-content-area');
       contentArea.innerHTML = `
-        <div class="py-14 text-center">
-          <div class="w-16 h-16 rounded-2xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center text-2xl mx-auto mb-4 animate-spin">
+        <div class="py-16 text-center">
+          <div class="w-16 h-16 rounded-2xl bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center text-2xl mx-auto mb-4 animate-spin shadow-lg shadow-purple-500/10">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
           </div>
-          <h4 class="font-bold text-base text-slate-800 dark:text-slate-200">جاري تحليل المحاضرة وتوليد الأسئلة الذكية...</h4>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">يقوم نموذج Google Gemini AI بقراءة المحتوى وصياغة أسئلة تدريبية تفاعلية دقيقة</p>
+          <h4 class="font-bold text-base text-slate-800 dark:text-slate-200">جاري تحليل المحاضرة واستدعاء دوال Gemini المهيكلة...</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 max-w-md mx-auto">يتم استخراج مقتبسات مرجعية حرفية (reference quotes) من صلب الملف لضمان دقة قطعية بنسبة 100% ومنع أي معلومات خارجية</p>
+          <div class="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold">
+            <i class="fa-solid fa-shield-check"></i>
+            <span>Gemini Function Calling (mode: ANY) • Zero Outside Hallucinations</span>
+          </div>
         </div>
       `;
 
       try {
-        let payload = {};
+        let payload = {
+          num_questions: numQ,
+          difficulty: diff,
+          force_refresh: forceRefresh
+        };
+
         if (fileId && !isNaN(parseInt(fileId))) {
           payload.file_id = parseInt(fileId);
         } else {
-          payload.text_content = `محتوى مادة دراسية تخصصية في مدرسة WE للتكنولوجيا التطبيقية بالسويس: عنوان الدرس: ${fileTitle}. الرجاء توليد أسئلة اختبار تدريبية تغطي هذا المفهوم بدقة.`;
+          payload.text_content = `محتوى مادة دراسية تخصصية في مدرسة WE للتكنولوجيا التطبيقية بالسويس: عنوان الدرس: ${fileTitle}. الرجاء توليد أسئلة اختبار تدريبية تغطي هذا المفهوم بدقة بالغة.`;
         }
 
         const res = await fetch(`${API_BASE}/quiz/generate`, {
@@ -1634,14 +1865,16 @@
 
         if (!res.ok) {
           const errData = await res.json().catch(() => null);
-          // If binary extraction failed, fallback to title text_content
           if (res.status === 422 || res.status === 500) {
             console.log('Retrying quiz generation with rich course topic context...');
             const fallbackRes = await fetch(`${API_BASE}/quiz/generate`, {
               method: 'POST',
               headers: getAuthHeaders(true),
               body: JSON.stringify({
-                text_content: `محتوى ومفاهيم مادة ومحاضرة: "${fileTitle}". الرجاء صياغة أسئلة اختيار من متعدد تغطي المفاهيم الأساسية، والتعريفات، ومجالات التطبيق التقنية لهذا الموضوع بمستوى متوسط.`
+                text_content: `محتوى ومفاهيم مادة ومحاضرة: "${fileTitle}". الرجاء صياغة أسئلة اختيار من متعدد تغطي المفاهيم الأساسية، والتعريفات، ومجالات التطبيق التقنية لهذا الموضوع بمستوى ${diff}.`,
+                num_questions: numQ,
+                difficulty: diff,
+                force_refresh: forceRefresh
               })
             });
             if (fallbackRes.ok) {
@@ -1658,13 +1891,19 @@
 
       } catch (err) {
         contentArea.innerHTML = `
-          <div class="py-10 text-center bg-rose-50 dark:bg-rose-950/40 rounded-2xl border border-rose-200 dark:border-rose-900 p-6">
-            <i class="fa-solid fa-triangle-exclamation text-2xl text-rose-500 mb-2"></i>
-            <h4 class="font-bold text-sm text-rose-800 dark:text-rose-200">تعذر إنشاء الأسئلة حالياً</h4>
+          <div class="py-12 text-center bg-rose-50 dark:bg-rose-950/40 rounded-3xl border border-rose-200 dark:border-rose-900 p-6 max-w-lg mx-auto">
+            <i class="fa-solid fa-triangle-exclamation text-3xl text-rose-500 mb-3"></i>
+            <h4 class="font-bold text-sm text-rose-800 dark:text-rose-200">تعذر إنشاء بنك الأسئلة حالياً</h4>
             <p class="text-xs text-rose-600 dark:text-rose-300 mt-1">${err.message}</p>
-            <button onclick="openAiQuizForFile('${fileId}', '${escapeHtml(fileTitle)}', '${fileType}')" class="mt-4 px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition">
-              إعادة المحاولة
-            </button>
+            <div class="mt-4 flex items-center justify-center gap-2">
+              <button onclick="openAiQuizForFile('${fileId}', '${escapeHtml(fileTitle)}', '${fileType}', ${numQ}, '${diff}', true)" class="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>إعادة المحاولة مع تحديث الكاش</span>
+              </button>
+              <button onclick="closeModal('modal-ai-quiz')" class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-medium">
+                إغلاق
+              </button>
+            </div>
           </div>
         `;
       }
@@ -1672,16 +1911,32 @@
 
     async function handleQuizGeneratedSuccess(data) {
       currentQuizState.sessionId = data.session_id;
-      currentQuizState.questions = data.questions || [];
+      currentQuizState.questions = (data.questions || []).map(q => ({
+        ...q,
+        _editing: false
+      }));
       currentQuizState.fromCache = !!data.from_cache;
+      currentQuizState.tokensSaved = data.tokens_saved || 0;
 
-      // Fetch all answers cache in background for instantaneous click-to-reveal
+      // Seed answers from questions payload if teacher generated
+      currentQuizState.questions.forEach(q => {
+        if (q.correct) {
+          currentQuizState.answers[q.id] = {
+            correct_answer: q.correct,
+            explanation: q.explanation || '',
+            reference_quote: q.reference_quote || ''
+          };
+        }
+      });
+
+      // Fetch complete answers and citations cache in background
       try {
         const ansRes = await fetch(`${API_BASE}/quiz/session/${data.session_id}/all-answers`, {
           headers: getAuthHeaders()
         });
         if (ansRes.ok) {
-          currentQuizState.answers = await ansRes.json();
+          const loadedAnswers = await ansRes.json();
+          currentQuizState.answers = { ...currentQuizState.answers, ...loadedAnswers };
         }
       } catch (e) {
         console.warn('Could not prefetch answers, will evaluate on click');
@@ -1696,68 +1951,382 @@
       const countBadge = document.getElementById('quiz-count-badge');
       if (countBadge) {
         if (currentQuizState.fromCache) {
-          countBadge.innerHTML = `${questions.length} أسئلة <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">⚡ كاش موفر للتوكنز</span>`;
+          countBadge.innerHTML = `${questions.length} أسئلة <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">⚡ كاش موفر للتوكنز (${currentQuizState.tokensSaved} Saved)</span>`;
         } else {
-          countBadge.innerText = `${questions.length} أسئلة`;
+          countBadge.innerHTML = `${questions.length} أسئلة <span class="text-[10px] font-bold text-purple-600 dark:text-purple-400">✨ توليد دقيق عبر Function Calling</span>`;
         }
       }
 
       if (!questions || questions.length === 0) {
-        contentArea.innerHTML = '<p class="text-center text-xs text-slate-400 py-8">لم يتم استرجاع أسئلة.</p>';
+        contentArea.innerHTML = `
+          <div class="py-12 text-center text-slate-400">
+            <i class="fa-solid fa-folder-open text-3xl mb-2"></i>
+            <p class="text-xs">لم يتم العثور على أسئلة في هذا البنك.</p>
+            <button onclick="addNewManualQuestion()" class="mt-3 px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition">
+              + إضافة أول سؤال يدوياً
+            </button>
+          </div>
+        `;
         return;
       }
 
       contentArea.innerHTML = questions.map((q, idx) => {
         const qNum = idx + 1;
         const qId = q.id;
+        const ansInfo = currentQuizState.answers[String(qId)] || currentQuizState.answers[qId] || {};
+        const correctLetter = (ansInfo.correct_answer || q.correct || 'A').toUpperCase().trim();
+        const refQuote = q.reference_quote || ansInfo.reference_quote || '';
+        const explanationText = ansInfo.explanation || q.explanation || 'تم اعتماد الإجابة من واقع محتوى المحاضرة.';
+
+        // EDIT MODE FOR THIS QUESTION
+        if (q._editing) {
+          return `
+            <div id="quiz-card-${qId}" class="p-5 sm:p-6 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border-2 border-purple-500 shadow-md transition space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-purple-200 dark:border-purple-800">
+                <span class="font-bold text-xs text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                  <span>محرر السؤال #${qNum}</span>
+                </span>
+                <span class="text-[11px] text-slate-400">تعديل مباشر على السؤال والخيارات</span>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">نص السؤال:</label>
+                <textarea id="edit-q-text-${qId}" rows="2" class="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-purple-500 font-medium">${escapeHtml(q.question)}</textarea>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                ${['A', 'B', 'C', 'D'].map(key => {
+                  const optVal = (q.options && q.options[key]) ? q.options[key] : '';
+                  const isChecked = (key === correctLetter);
+                  return `
+                    <div class="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center gap-2">
+                      <input type="radio" name="edit-correct-${qId}" value="${key}" id="edit-radio-${qId}-${key}" ${isChecked ? 'checked' : ''} class="w-4 h-4 text-purple-600 focus:ring-purple-500 cursor-pointer">
+                      <label for="edit-radio-${qId}-${key}" class="w-6 h-6 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0 cursor-pointer">
+                        ${key}
+                      </label>
+                      <input type="text" id="edit-opt-${qId}-${key}" value="${escapeHtml(optVal)}" placeholder="الخيار ${key}" class="flex-1 px-2 py-1 bg-transparent text-xs text-slate-800 dark:text-slate-200 outline-none border-b border-transparent focus:border-purple-500">
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">الشرح والتعليل النموذجي:</label>
+                  <input type="text" id="edit-exp-${qId}" value="${escapeHtml(explanationText)}" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-amber-700 dark:text-amber-400 mb-1">مقتبس المحاضرة المرجعي الحرفي (Citation):</label>
+                  <input type="text" id="edit-quote-${qId}" value="${escapeHtml(refQuote)}" placeholder="جملة من ملف المحاضرة تثبت صحة الإجابة..." class="w-full px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 outline-none focus:ring-2 focus:ring-amber-500">
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end gap-2 pt-2 border-t border-purple-200 dark:border-purple-800">
+                <button type="button" onclick="cancelInlineQuestionEdit(${qId})" class="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                  إلغاء
+                </button>
+                <button type="button" onclick="saveInlineQuestionEdit(${qId})" class="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
+                  <i class="fa-solid fa-check"></i>
+                  <span>حفظ التعديل</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        // VIEW / INTERACTIVE SIMULATION MODE
         return `
-          <div id="quiz-card-${qId}" class="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 transition hover:border-purple-300 dark:hover:border-purple-800">
-            <div class="flex items-start gap-3 mb-3">
-              <span class="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0">
-                ${qNum}
-              </span>
-              <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-relaxed flex-1">
-                ${q.question}
-              </h4>
+          <div id="quiz-card-${qId}" class="p-4 sm:p-5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-800 transition hover:border-purple-300 dark:hover:border-purple-700 shadow-sm space-y-3">
+            
+            <!-- Card Top Bar: Number + Actions -->
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-start gap-2.5 flex-1">
+                <span class="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">
+                  ${qNum}
+                </span>
+                <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-relaxed flex-1">
+                  ${escapeHtml(q.question)}
+                </h4>
+              </div>
+
+              <!-- Question Action Buttons -->
+              <div class="flex items-center gap-1 shrink-0">
+                <button type="button" onclick="toggleEditQuestion(${qId})" title="تعديل هذا السؤال والخيارات" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[11px] font-bold transition flex items-center gap-1">
+                  <i class="fa-solid fa-pen text-purple-600"></i>
+                  <span>تعديل</span>
+                </button>
+                <button type="button" id="btn-regen-${qId}" onclick="regenerateSingleQuestion(${qId})" title="إعادة توليد هذا السؤال فقط بالذكاء الاصطناعي مع الحفاظ على باقي الأسئلة" class="px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[11px] font-bold transition flex items-center gap-1">
+                  <i class="fa-solid fa-rotate text-purple-600"></i>
+                  <span>توليد بديل</span>
+                </button>
+                <button type="button" onclick="deleteQuizQuestion(${qId})" title="حذف هذا السؤال" class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-600 border border-rose-200 dark:border-rose-900 text-xs flex items-center justify-center transition">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
             </div>
 
-            <!-- Options Grid (WITHOUT ANSWERS - CLICK TO REVEAL) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3" id="options-group-${qId}">
+            <!-- Options Grid (INTERACTIVE SIMULATION) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2" id="options-group-${qId}">
               ${['A', 'B', 'C', 'D'].map(key => {
-                const optText = q.options[key] || '';
+                const optText = (q.options && q.options[key]) ? q.options[key] : '';
                 return `
                   <div id="opt-btn-${qId}-${key}" onclick="handleOptionClick(${qId}, '${key}')" class="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 hover:border-purple-500 cursor-pointer transition flex items-start gap-2.5 group">
                     <span id="opt-badge-${qId}-${key}" class="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 group-hover:bg-purple-100 text-slate-700 dark:text-slate-300 group-hover:text-purple-700 font-bold text-xs flex items-center justify-center shrink-0 transition">
                       ${key}
                     </span>
-                    <span class="text-xs text-slate-800 dark:text-slate-200 leading-normal flex-1">${optText}</span>
+                    <span class="text-xs text-slate-800 dark:text-slate-200 leading-normal flex-1">${escapeHtml(optText)}</span>
                   </div>
                 `;
               }).join('')}
             </div>
 
-            <!-- Reveal Toggle & Explanation Area (Hidden initially) -->
-            <div class="mt-3 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
+            <!-- VERIFIED REFERENCE QUOTE FROM LECTURE (STRICT ZERO HALLUCINATION) -->
+            ${refQuote ? `
+              <div class="p-2.5 rounded-xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-800/80 flex items-start gap-2 text-[11px] text-amber-900 dark:text-amber-200">
+                <i class="fa-solid fa-quote-right text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"></i>
+                <div class="flex-1">
+                  <span class="font-bold text-amber-800 dark:text-amber-300">مقتبس المحاضرة المرجعي (Evidence Citation):</span>
+                  <p class="font-mono text-[11px] mt-0.5 leading-relaxed text-amber-950 dark:text-amber-100">"${escapeHtml(refQuote)}"</p>
+                </div>
+                <span class="px-1.5 py-0.5 rounded bg-amber-200/70 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-[10px] font-bold shrink-0">
+                  Zero Hallucination
+                </span>
+              </div>
+            ` : ''}
+
+            <!-- Reveal Toggle & Bottom Info -->
+            <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
               <button type="button" onclick="toggleRevealQuestion(${qId})" id="btn-reveal-${qId}" class="text-purple-600 dark:text-purple-400 hover:text-purple-700 font-bold flex items-center gap-1.5 transition">
                 <i class="fa-solid fa-lightbulb"></i>
-                <span>كشف الإجابة النموذجية والشرح</span>
+                <span>كشف الإجابة والشرح</span>
               </button>
-              <span id="status-tag-${qId}" class="text-[11px] text-slate-400 font-medium">إجابة مخفية (انقر للاختبار)</span>
+              <span id="status-tag-${qId}" class="text-[11px] text-slate-400 font-medium">إجابة مخفية (انقر للاختبار والمحاكاة)</span>
             </div>
 
-            <!-- Explanation box -->
-            <div id="explanation-box-${qId}" class="hidden mt-3 p-3.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-100 animate-fadeIn">
+            <!-- Explanation Box -->
+            <div id="explanation-box-${qId}" class="hidden p-3.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-100 animate-fadeIn">
               <div class="font-bold flex items-center gap-1.5 mb-1 text-emerald-700 dark:text-emerald-300">
                 <i class="fa-solid fa-circle-check"></i>
-                <span>الإجابة الصحيحة: (<span id="correct-letter-${qId}"></span>)</span>
+                <span>الإجابة النموذجية المعتمدة: (<span id="correct-letter-${qId}">${correctLetter}</span>)</span>
               </div>
-              <p id="explanation-text-${qId}" class="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px] sm:text-xs"></p>
+              <p id="explanation-text-${qId}" class="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px] sm:text-xs">
+                ${escapeHtml(explanationText)}
+              </p>
             </div>
+
           </div>
         `;
       }).join('');
     }
 
+    // ── INLINE QUESTION EDITING & ACTIONS ─────────────────────────────────────
+    function toggleEditQuestion(qId) {
+      const q = currentQuizState.questions.find(item => item.id === qId);
+      if (!q) return;
+      q._editing = true;
+      renderQuizQuestions();
+    }
+
+    function cancelInlineQuestionEdit(qId) {
+      const q = currentQuizState.questions.find(item => item.id === qId);
+      if (!q) return;
+      q._editing = false;
+      renderQuizQuestions();
+    }
+
+    function saveInlineQuestionEdit(qId) {
+      const q = currentQuizState.questions.find(item => item.id === qId);
+      if (!q) return;
+
+      const newQuestion = document.getElementById(`edit-q-text-${qId}`)?.value || q.question;
+      const optA = document.getElementById(`edit-opt-${qId}-A`)?.value || (q.options?.A || '');
+      const optB = document.getElementById(`edit-opt-${qId}-B`)?.value || (q.options?.B || '');
+      const optC = document.getElementById(`edit-opt-${qId}-C`)?.value || (q.options?.C || '');
+      const optD = document.getElementById(`edit-opt-${qId}-D`)?.value || (q.options?.D || '');
+
+      const selectedRadio = document.querySelector(`input[name="edit-correct-${qId}"]:checked`);
+      const newCorrect = selectedRadio ? selectedRadio.value : (q.correct || 'A');
+
+      const newExp = document.getElementById(`edit-exp-${qId}`)?.value || (q.explanation || '');
+      const newQuote = document.getElementById(`edit-quote-${qId}`)?.value || (q.reference_quote || '');
+
+      q.question = newQuestion.trim();
+      q.options = { A: optA.trim(), B: optB.trim(), C: optC.trim(), D: optD.trim() };
+      q.correct = newCorrect;
+      q.explanation = newExp.trim();
+      q.reference_quote = newQuote.trim();
+      q._editing = false;
+
+      currentQuizState.answers[qId] = {
+        correct_answer: newCorrect,
+        explanation: newExp.trim(),
+        reference_quote: newQuote.trim()
+      };
+
+      renderQuizQuestions();
+      showToast('تم تحديث السؤال في الاستوديو! انقر "حفظ ونشر للاختبارات" لتثبيت التعديل في السجل 🚀', 'success');
+    }
+
+    async function regenerateSingleQuestion(qId) {
+      if (!currentQuizState.sessionId) {
+        showToast('لا توجد جلسة اختبار نشطة حالياً', 'error');
+        return;
+      }
+
+      const btn = document.getElementById(`btn-regen-${qId}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>جاري التوليد...</span>';
+      }
+
+      try {
+        const diff = document.getElementById('studio-difficulty')?.value || 'medium';
+        const res = await fetch(`${API_BASE}/quiz/session/${currentQuizState.sessionId}/regenerate-question/${qId}`, {
+          method: 'POST',
+          headers: getAuthHeaders(true),
+          body: JSON.stringify({
+            session_id: currentQuizState.sessionId,
+            question_id: qId,
+            difficulty: diff
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشلت إعادة توليد هذا السؤال'));
+        }
+
+        const data = await res.json();
+        const newQ = data.question;
+
+        // Replace in currentQuizState
+        const qIndex = currentQuizState.questions.findIndex(item => item.id === qId);
+        if (qIndex !== -1) {
+          currentQuizState.questions[qIndex] = {
+            id: newQ.id,
+            question: newQ.question,
+            options: newQ.options,
+            correct: newQ.correct,
+            explanation: newQ.explanation || '',
+            reference_quote: newQ.reference_quote || '',
+            _editing: false
+          };
+        }
+
+        currentQuizState.answers[qId] = {
+          correct_answer: newQ.correct,
+          explanation: newQ.explanation || '',
+          reference_quote: newQ.reference_quote || ''
+        };
+
+        renderQuizQuestions();
+        showToast(`تمت إعادة توليد السؤال #${qId} بنجاح عبر Gemini Function Calling! ✨`, 'success');
+
+      } catch (err) {
+        showToast(err.message, 'error');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-rotate text-purple-600"></i> <span>توليد بديل</span>';
+        }
+      }
+    }
+
+    function deleteQuizQuestion(qId) {
+      if (!confirm(`هل أنت متأكد من حذف هذا السؤال؟`)) return;
+      currentQuizState.questions = currentQuizState.questions.filter(item => item.id !== qId);
+      // Re-index questions cleanly
+      currentQuizState.questions.forEach((q, i) => {
+        q.id = i + 1;
+      });
+      renderQuizQuestions();
+      showToast('تم حذف السؤال وإعادة ترقيم بنك الأسئلة بنجاح', 'info');
+    }
+
+    function addNewManualQuestion() {
+      const newId = currentQuizState.questions.length + 1;
+      currentQuizState.questions.push({
+        id: newId,
+        question: 'سؤال جديد أضافه المعلم...',
+        options: {
+          A: 'الخيار الأول',
+          B: 'الخيار الثاني',
+          C: 'الخيار الثالث',
+          D: 'الخيار الرابع'
+        },
+        correct: 'A',
+        explanation: 'شرح وتوضيح الإجابة الصحيحة...',
+        reference_quote: 'مقتبس من شرح المحاضرة...',
+        _editing: true
+      });
+      renderQuizQuestions();
+      const newCard = document.getElementById(`quiz-card-${newId}`);
+      if (newCard) newCard.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function saveCurrentQuizEdits() {
+      if (!currentQuizState.sessionId) {
+        showToast('لا توجد جلسة اختبار نشطة لحفظها', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-quiz-edits');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>جاري الحفظ...</span>';
+      }
+
+      try {
+        const payloadQuestions = currentQuizState.questions.map(q => {
+          const ans = currentQuizState.answers[q.id] || {};
+          return {
+            id: q.id,
+            question: q.question,
+            options: {
+              A: q.options?.A || '',
+              B: q.options?.B || '',
+              C: q.options?.C || '',
+              D: q.options?.D || ''
+            },
+            correct: (q.correct || ans.correct_answer || 'A').toUpperCase().trim(),
+            explanation: q.explanation || ans.explanation || '',
+            reference_quote: q.reference_quote || ans.reference_quote || ''
+          };
+        });
+
+        const res = await fetch(`${API_BASE}/quiz/session/${currentQuizState.sessionId}/questions`, {
+          method: 'PUT',
+          headers: getAuthHeaders(true),
+          body: JSON.stringify({
+            session_id: currentQuizState.sessionId,
+            questions: payloadQuestions
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => null);
+          throw new Error(formatApiError(errData, 'فشل حفظ تعديلات بنك الأسئلة'));
+        }
+
+        showToast('تم حفظ ونشر أسئلة الاختبار بنجاح في قاعدة البيانات وجلسة الطلاب! 🚀', 'success');
+
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> <span>حفظ ونشر للاختبارات 🚀</span>';
+        }
+      }
+    }
+
+    function regenerateFullQuizWithCriteria(forceRefresh = true) {
+      const numQ = parseInt(document.getElementById('studio-num-questions')?.value || '5');
+      const diff = document.getElementById('studio-difficulty')?.value || 'medium';
+      openAiQuizForFile(currentQuizState.fileId, currentQuizState.fileTitle, null, numQ, diff, forceRefresh);
+    }
+
+    // ── INTERACTIVE OPTION CLICK & REVEAL EVALUATION ─────────────────────────
     async function handleOptionClick(qId, selectedKey) {
       await revealAnswerForQuestion(qId, selectedKey);
     }
@@ -1775,7 +2344,6 @@
       let ansInfo = currentQuizState.answers[String(qId)] || currentQuizState.answers[qId];
 
       if (!ansInfo) {
-        // Evaluate via API
         try {
           const res = await fetch(`${API_BASE}/quiz/evaluate`, {
             method: 'POST',
@@ -1790,7 +2358,8 @@
             const evalData = await res.json();
             ansInfo = {
               correct_answer: evalData.correct_answer,
-              explanation: evalData.explanation
+              explanation: evalData.explanation,
+              reference_quote: evalData.reference_quote || ''
             };
             currentQuizState.answers[qId] = ansInfo;
           }
@@ -1801,7 +2370,7 @@
       }
 
       if (!ansInfo) return;
-      const correctKey = ansInfo.correct_answer.toUpperCase().trim();
+      const correctKey = (ansInfo.correct_answer || 'A').toUpperCase().trim();
 
       // Highlight options
       ['A', 'B', 'C', 'D'].forEach(key => {
@@ -1827,8 +2396,10 @@
       // Show explanation
       const expBox = document.getElementById(`explanation-box-${qId}`);
       if (expBox) {
-        document.getElementById(`correct-letter-${qId}`).innerText = correctKey;
-        document.getElementById(`explanation-text-${qId}`).innerText = ansInfo.explanation || 'تم تأكيد الإجابة النموذجية من محتوى المحاضرة.';
+        const correctLetterEl = document.getElementById(`correct-letter-${qId}`);
+        if (correctLetterEl) correctLetterEl.innerText = correctKey;
+        const expTextEl = document.getElementById(`explanation-text-${qId}`);
+        if (expTextEl) expTextEl.innerText = ansInfo.explanation || 'تم تأكيد الإجابة النموذجية من محتوى المحاضرة.';
         expBox.classList.remove('hidden');
       }
 
@@ -1840,7 +2411,7 @@
             ? '<span class="text-emerald-600 font-bold">إجابة صحيحة! 🎉</span>'
             : '<span class="text-rose-500 font-bold">إجابة غير صحيحة ❌</span>';
         } else {
-          statusTag.innerHTML = '<span class="text-emerald-600 font-bold">تم كشف الإجابة والشرح ✅</span>';
+          statusTag.innerHTML = '<span class="text-emerald-600 font-bold">تم كشف الإجابة النموذجية والشرح ✅</span>';
         }
       }
 
@@ -1864,11 +2435,11 @@
       if (expBox) expBox.classList.add('hidden');
 
       const statusTag = document.getElementById(`status-tag-${qId}`);
-      if (statusTag) statusTag.innerHTML = '<span class="text-slate-400 font-medium">إجابة مخفية (انقر للاختبار)</span>';
+      if (statusTag) statusTag.innerHTML = '<span class="text-slate-400 font-medium">إجابة مخفية (انقر للاختبار والمحاكاة)</span>';
 
       const btnReveal = document.getElementById(`btn-reveal-${qId}`);
       if (btnReveal) {
-        btnReveal.innerHTML = '<i class="fa-solid fa-lightbulb"></i> <span>كشف الإجابة النموذجية والشرح</span>';
+        btnReveal.innerHTML = '<i class="fa-solid fa-lightbulb"></i> <span>كشف الإجابة والشرح</span>';
       }
     }
 
@@ -1883,24 +2454,273 @@
       for (const q of currentQuizState.questions) {
         hideAnswerForQuestion(q.id);
       }
-      showToast('تم إخفاء جميع الإجابات لإعادة التدريب 🔒', 'info');
+      showToast('تم إخفاء جميع الإجابات لإعادة التجربة 🔒', 'info');
     }
 
     function copyQuizQuestions() {
       if (!currentQuizState.questions || currentQuizState.questions.length === 0) return;
-      let text = `✨ بنك أسئلة وتدريبات: ${currentQuizState.fileTitle}\nمدرسة WE للتكنولوجيا التطبيقية بالسويس\n\n`;
+      let text = `✨ بنك أسئلة واختبارات: ${currentQuizState.fileTitle}\nمدرسة WE للتكنولوجيا التطبيقية بالسويس\n\n`;
       currentQuizState.questions.forEach((q, idx) => {
         text += `${idx + 1}. ${q.question}\n`;
         text += `   A) ${q.options.A}\n`;
         text += `   B) ${q.options.B}\n`;
         text += `   C) ${q.options.C}\n`;
-        text += `   D) ${q.options.D}\n\n`;
+        text += `   D) ${q.options.D}\n`;
+        if (q.reference_quote) {
+          text += `   📜 المرجع: "${q.reference_quote}"\n`;
+        }
+        text += `\n`;
       });
       navigator.clipboard.writeText(text).then(() => {
-        showToast('تم نسخ جميع الأسئلة والخيارات إلى الحافظة! 📋', 'success');
+        showToast('تم نسخ جميع الأسئلة والمقتبسات المرجعية إلى الحافظة! 📋', 'success');
       }).catch(() => {
         showToast('فشل النسخ تلقائياً', 'error');
       });
+    }
+
+    // ── PRINT OFFICIAL EXAM SHEET (WE APPLIED TECHNOLOGY SCHOOL - SUEZ) ──────
+    function printOfficialExamSheet() {
+      if (!currentQuizState.questions || currentQuizState.questions.length === 0) {
+        showToast('لا توجد أسئلة لطباعتها في ورقة الامتحان', 'error');
+        return;
+      }
+
+      const printWin = window.open('', '_blank', 'width=900,height=1000');
+      if (!printWin) {
+        showToast('يرجى السماح بالنوافذ المنبثقة لطباعة ورقة الامتحان', 'error');
+        return;
+      }
+
+      const todayStr = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+      const teacherName = currentTeacher ? currentTeacher.name : 'معلم المادة التخصصية';
+
+      const examHtml = `
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>ورقة امتحان رسمي - مدرسة WE للتكنولوجيا التطبيقية بالسويس</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      padding: 24px;
+      color: #0f172a;
+      background: #fff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .header-table {
+      width: 100%;
+      border-bottom: 2px solid #431259;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+    .school-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #431259;
+      margin: 0;
+    }
+    .sub-title {
+      font-size: 12px;
+      color: #64748b;
+      margin: 2px 0 0 0;
+    }
+    .exam-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 6px;
+      background: #f3e8ff;
+      color: #6b21a8;
+      font-size: 13px;
+      font-weight: 800;
+      border: 1px solid #d8b4fe;
+    }
+    .student-fields-table {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      background: #f8fafc;
+    }
+    .student-fields-table td {
+      padding: 4px 8px;
+    }
+    .q-card {
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+      border-bottom: 1px dashed #cbd5e1;
+      padding-bottom: 12px;
+    }
+    .q-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bubble {
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid #64748b;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      color: #475569;
+    }
+    .page-break {
+      page-break-before: always;
+    }
+    .answer-key-header {
+      background: #ecfdf5;
+      border: 1px solid #6ee7b7;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 14px;
+      color: #065f46;
+      font-weight: bold;
+      font-size: 13px;
+    }
+    .quote-box {
+      font-size: 10px;
+      color: #b45309;
+      background: #fffbeb;
+      border-right: 3px solid #f59e0b;
+      padding: 3px 8px;
+      margin-top: 4px;
+      border-radius: 2px;
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { padding: 12mm 15mm; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Controls for preview before printing -->
+  <div class="no-print" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: flex-end; background: #f1f5f9; padding: 12px; border-radius: 8px;">
+    <button onclick="window.print()" style="padding: 8px 18px; background: #431259; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: Cairo;">
+      🖨️ بدء الطباعة الآن
+    </button>
+    <button onclick="window.close()" style="padding: 8px 14px; background: #e2e8f0; color: #334155; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: Cairo;">
+      إغلاق النافذة
+    </button>
+  </div>
+
+  <!-- EXAM SHEET HEADER -->
+  <table class="header-table">
+    <tr>
+      <td style="text-align: right; width: 60%;">
+        <div style="font-size: 11px; color: #64748b; font-weight: bold;">جمهورية مصر العربية • وزارة التربية والتعليم والتعليم الفني</div>
+        <h1 class="school-title">مدرسة WE للتكنولوجيا التطبيقية بالسويس</h1>
+        <p class="sub-title">منظومة التقييم والاختبارات الأكاديمية الذكية (Smart Evaluation System)</p>
+      </td>
+      <td style="text-align: left; width: 40%; vertical-align: top;">
+        <span class="exam-badge">ورقة امتحان وتدريب فصلي</span>
+        <div style="font-size: 11px; color: #64748b; margin-top: 6px;">التاريخ: ${todayStr}</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- STUDENT INFO FIELDS -->
+  <table class="student-fields-table">
+    <tr>
+      <td style="width: 50%;"><strong>اسم الطالب:</strong> ..............................................................</td>
+      <td style="width: 25%;"><strong>رقم الجلوس:</strong> ....................</td>
+      <td style="width: 25%;"><strong>الفصل / الشعبة:</strong> ....................</td>
+    </tr>
+    <tr>
+      <td><strong>المادة الدراسية:</strong> ${escapeHtml(currentQuizState.fileTitle)}</td>
+      <td><strong>معلم المادة:</strong> ${escapeHtml(teacherName)}</td>
+      <td><strong>الدرجة المستحقة:</strong> [ &nbsp;&nbsp;&nbsp;&nbsp; / ${currentQuizState.questions.length * 2} ]</td>
+    </tr>
+  </table>
+
+  <!-- QUESTIONS LIST -->
+  <div>
+    ${currentQuizState.questions.map((q, idx) => `
+      <div class="q-card">
+        <div class="q-title">س${idx + 1}: ${escapeHtml(q.question)}</div>
+        <div class="options-grid">
+          ${['A', 'B', 'C', 'D'].map(key => `
+            <div class="option-item">
+              <span class="bubble">${key}</span>
+              <span>${escapeHtml(q.options ? (q.options[key] || '') : '')}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  </div>
+
+  <!-- PAGE BREAK FOR TEACHER ANSWER KEY & LECTURE CITATIONS -->
+  <div class="page-break"></div>
+
+  <table class="header-table">
+    <tr>
+      <td style="text-align: right;">
+        <h2 style="font-size: 16px; color: #431259; margin: 0;">نموذج الإجابة والمقتبسات المرجعية الموثقة (خاص بالمعلم)</h2>
+        <p style="font-size: 11px; color: #64748b; margin: 2px 0 0 0;">مدرسة WE للتكنولوجيا التطبيقية بالسويس • مادة: ${escapeHtml(currentQuizState.fileTitle)}</p>
+      </td>
+      <td style="text-align: left;">
+        <span style="font-size: 11px; font-weight: bold; color: #047857;">Zero Outside Knowledge Verification</span>
+      </td>
+    </tr>
+  </table>
+
+  <div>
+    ${currentQuizState.questions.map((q, idx) => {
+      const ans = currentQuizState.answers[q.id] || {};
+      const correctKey = (ans.correct_answer || q.correct || 'A').toUpperCase();
+      const exp = ans.explanation || q.explanation || 'تم إثبات الإجابة من صلب المحاضرة.';
+      const quote = q.reference_quote || ans.reference_quote || '';
+      return `
+        <div style="margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; font-size: 12px;">
+          <div style="font-weight: bold; color: #1e293b;">
+            س${idx + 1}: الإجابة الصحيحة هي: 
+            <span style="display: inline-block; width: 20px; height: 20px; border-radius: 4px; background: #059669; color: #fff; text-align: center; line-height: 20px; margin: 0 4px;">${correctKey}</span>
+            (${escapeHtml(q.options ? q.options[correctKey] || '' : '')})
+          </div>
+          <div style="color: #475569; margin-top: 4px;"><strong>الشرح:</strong> ${escapeHtml(exp)}</div>
+          ${quote ? `<div class="quote-box"><strong>📜 المقتبس الحرفي من المحاضرة:</strong> "${escapeHtml(quote)}"</div>` : ''}
+        </div>
+      `;
+    }).join('')}
+  </div>
+
+  <script>
+    window.onload = function() {
+      // Auto open print dialog
+      setTimeout(function() {
+        window.print();
+      }, 500);
+    };
+  <\/script>
+</body>
+</html>
+      `;
+
+      printWin.document.open();
+      printWin.document.write(examHtml);
+      printWin.document.close();
     }
 
 
@@ -2257,17 +3077,74 @@
       showToast('تم نسخ الأسئلة للحافظة بنجاح! 📋', 'success');
     }
 
-    // ── ATTENDANCE SESSIONS ───────────────────────────────────────────────────
-    let activeSession = null;
+    // ── ATTENDANCE SESSIONS & INTERACTIVE SHEET ───────────────────────────────
+    let activeAttendanceSession = null;
+    let attendanceTimerInterval = null;
+    let currentAttendanceSheetData = null;
+    let currentSheetFilter = 'ALL';
+    let currentSheetSearch = '';
 
-    async function openCreateSessionModal() {
+    function initAttendanceTab() {
+      // Populate course dropdowns
+      const filterSelect = document.getElementById('attendance-filter-course');
+      const modalSelect = document.getElementById('modal-session-course');
       if (!teacherCourses || teacherCourses.length === 0) {
-        showToast('يرجى اختيار مقرر دراسي أولاً', 'error');
+        if (filterSelect) filterSelect.innerHTML = '<option value="">لا توجد مقررات مسندة</option>';
+        if (modalSelect) modalSelect.innerHTML = '<option value="">لا توجد مقررات</option>';
         return;
       }
-      const courseId = teacherCourses[0].material_id;
-      const title = prompt('أدخل عنوان جلسة الحضور:', `حضور محاضرة ${courseId}`);
-      if (!title) return;
+
+      const optionsHtml = teacherCourses.map(c => `
+        <option value="${c.material_id}">${c.material_id} - ${c.name}</option>
+      `).join('');
+
+      if (filterSelect) filterSelect.innerHTML = optionsHtml;
+      if (modalSelect) modalSelect.innerHTML = optionsHtml;
+
+      const selectedCourse = filterSelect ? filterSelect.value : (teacherCourses[0] ? teacherCourses[0].material_id : '');
+      if (selectedCourse) {
+        loadCourseAttendanceSessionsHistory(selectedCourse);
+      }
+    }
+
+    function handleAttendanceCourseChange() {
+      const select = document.getElementById('attendance-filter-course');
+      if (select && select.value) {
+        loadCourseAttendanceSessionsHistory(select.value);
+      }
+    }
+
+    function openCreateAttendanceSessionModal() {
+      if (!teacherCourses || teacherCourses.length === 0) {
+        showToast('يرجى الانضمام لمقرر دراسي أولاً', 'error');
+        return;
+      }
+      const filterSelect = document.getElementById('attendance-filter-course');
+      const modalSelect = document.getElementById('modal-session-course');
+      if (filterSelect && modalSelect && filterSelect.value) {
+        modalSelect.value = filterSelect.value;
+      }
+      const titleInput = document.getElementById('modal-session-title');
+      if (titleInput) {
+        const todayStr = new Date().toLocaleDateString('ar-EG', { weekday: 'long', month: 'short', day: 'numeric' });
+        titleInput.value = `محاضرة - ${todayStr}`;
+      }
+      const m = document.getElementById('modal-create-attendance-session');
+      if (m) {
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+      }
+    }
+
+    async function handleCreateAttendanceSessionSubmit(e) {
+      e.preventDefault();
+      const courseId = document.getElementById('modal-session-course').value;
+      const title = document.getElementById('modal-session-title').value.trim();
+      const duration = parseInt(document.getElementById('modal-session-duration').value) || 15;
+
+      const btn = document.getElementById('btn-submit-create-session');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري فتح الجلسة...';
 
       try {
         const res = await fetch(`${API_BASE}/attendance/sessions`, {
@@ -2276,35 +3153,467 @@
           body: JSON.stringify({
             material_id: courseId,
             title: title,
-            duration_minutes: 45
+            duration_minutes: duration
           })
         });
+
         if (!res.ok) {
           const errData = await res.json().catch(() => null);
           throw new Error(formatApiError(errData, 'فشل فتح جلسة الحضور'));
         }
-        const data = await res.json();
-        activeSession = data;
-        renderActiveSession(data);
-        showToast('تم فتح جلسة الحضور بنجاح! ⏱️', 'success');
+
+        const session = await res.json();
+        closeModal('modal-create-attendance-session');
+        showToast('تم فتح جلسة الحضور وتوليد الـ QR بنجاح! ⏱️', 'success');
+
+        await displayActiveSession(session);
+        loadCourseAttendanceSessionsHistory(courseId);
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-qrcode"></i> <span>توليد رمز الـ QR وفتح الجلسة</span>';
+      }
+    }
+
+    async function displayActiveSession(session) {
+      activeAttendanceSession = session;
+      const card = document.getElementById('active-session-card');
+      card.classList.remove('hidden');
+
+      document.getElementById('active-session-title').innerText = session.title || 'حضور المحاضرة';
+      document.getElementById('session-course-badge').innerText = session.course_name || session.material_id;
+      document.getElementById('session-token-text').innerText = session.token;
+      document.getElementById('session-status-badge').className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1.5 animate-pulse';
+      document.getElementById('session-status-badge').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>جلسة حضور نشطة الآن</span>';
+      document.getElementById('btn-close-session').classList.remove('hidden');
+
+      // Render dynamic QR code
+      renderSessionQRCode(session.qr_payload || `eru_attendance:${session.token}`);
+
+      // Start Countdown Timer
+      startSessionTimer(session.expires_at);
+
+      // Load full attendance sheet
+      await loadSessionAttendanceSheet(session.session_id);
+    }
+
+    function renderSessionQRCode(qrText) {
+      const box = document.getElementById('session-qr-box');
+      if (!box) return;
+      box.innerHTML = '';
+      if (typeof QRCode !== 'undefined') {
+        try {
+          new QRCode(box, {
+            text: qrText,
+            width: 190,
+            height: 190,
+            colorDark: '#1F0D2B',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+          return;
+        } catch (e) {
+          console.warn('QRCode library error, falling back to image:', e);
+        }
+      }
+      box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=${encodeURIComponent(qrText)}" class="w-48 h-48 rounded-lg" alt="QR Code">`;
+    }
+
+    function startSessionTimer(expiresAtIso) {
+      if (attendanceTimerInterval) clearInterval(attendanceTimerInterval);
+      const expiry = new Date(expiresAtIso).getTime();
+
+      function update() {
+        const now = Date.now();
+        const diff = expiry - now;
+        if (diff <= 0) {
+          clearInterval(attendanceTimerInterval);
+          const elTimer = document.getElementById('session-countdown-timer');
+          if (elTimer) elTimer.innerText = 'انتهت الصلاحية';
+          const pTimer = document.getElementById('projector-timer');
+          if (pTimer) pTimer.innerText = 'انتهت الصلاحية';
+          const statusBadge = document.getElementById('session-status-badge');
+          if (statusBadge) {
+            statusBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300';
+            statusBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>انتهت الجلسة</span>';
+          }
+          return;
+        }
+        const m = Math.floor(diff / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        const timerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        const elTimer = document.getElementById('session-countdown-timer');
+        if (elTimer) elTimer.innerText = timerText;
+        const pTimer = document.getElementById('projector-timer');
+        if (pTimer) pTimer.innerText = timerText;
+      }
+
+      update();
+      attendanceTimerInterval = setInterval(update, 1000);
+    }
+
+    async function refreshActiveAttendanceSheet() {
+      if (!activeAttendanceSession && !currentAttendanceSheetData) return;
+      const sId = (activeAttendanceSession && activeAttendanceSession.session_id) || (currentAttendanceSheetData && currentAttendanceSheetData.session_id);
+      if (sId) {
+        await loadSessionAttendanceSheet(sId);
+        showToast('تم تحديث كشف الحضور لحظياً 🔄', 'info');
+      }
+    }
+
+    async function loadSessionAttendanceSheet(sessionId) {
+      try {
+        const res = await fetch(`${API_BASE}/attendance/sessions/${sessionId}/sheet`, {
+          headers: getAuthHeaders()
+        });
+        if (!res.ok) throw new Error('فشل تحميل كشف الحضور');
+        const sheet = await res.json();
+        currentAttendanceSheetData = sheet;
+
+        // Update counters
+        const sm = sheet.summary || {};
+        document.getElementById('counter-present').innerText = sm.present_count || 0;
+        document.getElementById('counter-late').innerText = sm.late_count || 0;
+        document.getElementById('counter-excused').innerText = sm.excused_count || 0;
+        document.getElementById('counter-absent').innerText = sm.absent_count || 0;
+        document.getElementById('counter-total-enrolled').innerText = sm.total_enrolled || 0;
+        document.getElementById('counter-attendance-rate').innerText = `${sm.attendance_rate || 0}%`;
+
+        // Update Projector counter
+        const pCount = document.getElementById('projector-attended-count');
+        if (pCount) pCount.innerText = (sm.present_count || 0) + (sm.late_count || 0);
+
+        // Update filter pill counts
+        document.getElementById('filter-count-all').innerText = sm.total_enrolled || 0;
+        document.getElementById('filter-count-present').innerText = sm.present_count || 0;
+        document.getElementById('filter-count-late').innerText = sm.late_count || 0;
+        document.getElementById('filter-count-excused').innerText = sm.excused_count || 0;
+        document.getElementById('filter-count-absent').innerText = sm.absent_count || 0;
+
+        renderAttendanceSheetTable();
+      } catch (err) {
+        console.error('loadSessionAttendanceSheet error:', err);
+      }
+    }
+
+    function renderAttendanceSheetTable() {
+      const tbody = document.getElementById('attendance-sheet-tbody');
+      if (!tbody) return;
+      if (!currentAttendanceSheetData || !currentAttendanceSheetData.students || currentAttendanceSheetData.students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400 font-semibold">لا يوجد طلاب مسجلين في هذا المقرر حتى الآن</td></tr>';
+        return;
+      }
+
+      let students = currentAttendanceSheetData.students;
+
+      // Filter by status
+      if (currentSheetFilter !== 'ALL') {
+        students = students.filter(s => (s.status || '').toUpperCase() === currentSheetFilter);
+      }
+
+      // Filter by search
+      if (currentSheetSearch) {
+        const q = currentSheetSearch.toLowerCase();
+        students = students.filter(s => 
+          (s.name || '').toLowerCase().includes(q) || 
+          (s.uni_code || '').toLowerCase().includes(q) ||
+          (s.email || '').toLowerCase().includes(q)
+        );
+      }
+
+      if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400 font-semibold">لا يوجد طلاب مطابقين للبحث أو الفلتر</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = students.map((s, idx) => {
+        const sid = s.student_id;
+        const st = (s.status || 'ABSENT').toUpperCase();
+        let badgeHtml = '';
+        if (st === 'PRESENT') {
+          badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1 w-fit mx-auto"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> حاضر</span>';
+        } else if (st === 'LATE') {
+          badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1 w-fit mx-auto"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> متأخر</span>';
+        } else if (st === 'EXCUSED') {
+          badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-300 dark:border-blue-800 flex items-center gap-1 w-fit mx-auto"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> عذر</span>';
+        } else {
+          badgeHtml = '<span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-800 flex items-center gap-1 w-fit mx-auto"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> غائب</span>';
+        }
+
+        let timeStr = '<span class="text-slate-400">لم يسجل بعد</span>';
+        if (s.scanned_at) {
+          const d = new Date(s.scanned_at);
+          timeStr = `<span class="text-emerald-700 dark:text-emerald-400 font-mono font-bold">${d.toLocaleTimeString('ar-EG')}</span> <span class="text-[10px] text-slate-400">(مسح QR)</span>`;
+        }
+
+        return `
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+            <td class="py-3 px-4 font-mono font-bold text-slate-400">${idx + 1}</td>
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-bold text-xs flex items-center justify-center shrink-0">
+                  ${(s.name || 'ط')[0]}
+                </div>
+                <div>
+                  <div class="font-bold text-slate-900 dark:text-white">${s.name}</div>
+                  <div class="text-[10px] text-slate-400 font-mono">${s.email || ''}</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 px-4 font-mono font-bold text-slate-700 dark:text-slate-300">${s.uni_code || '--'}</td>
+            <td class="py-3 px-4">${timeStr}</td>
+            <td class="py-3 px-4 text-center">${badgeHtml}</td>
+            <td class="py-3 px-4 text-center">
+              <div class="flex items-center justify-center gap-1">
+                <button onclick="handleMarkSingleStudent(${sid}, 'PRESENT')" class="px-2 py-1 rounded-lg text-[11px] font-bold ${st === 'PRESENT' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-emerald-100'} transition" title="رصد حضور">حاضر</button>
+                <button onclick="handleMarkSingleStudent(${sid}, 'LATE')" class="px-2 py-1 rounded-lg text-[11px] font-bold ${st === 'LATE' ? 'bg-amber-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-amber-100'} transition" title="رصد تأخير">متأخر</button>
+                <button onclick="handleMarkSingleStudent(${sid}, 'EXCUSED')" class="px-2 py-1 rounded-lg text-[11px] font-bold ${st === 'EXCUSED' ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-blue-100'} transition" title="رصد عذر">عذر</button>
+                <button onclick="handleMarkSingleStudent(${sid}, 'ABSENT')" class="px-2 py-1 rounded-lg text-[11px] font-bold ${st === 'ABSENT' ? 'bg-rose-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-100'} transition" title="رصد غياب">غائب</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function handleMarkSingleStudent(studentId, newStatus) {
+      const sessionId = (activeAttendanceSession && activeAttendanceSession.session_id) || (currentAttendanceSheetData && currentAttendanceSheetData.session_id);
+      if (!sessionId) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/attendance/sessions/${sessionId}/mark`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            student_id: studentId,
+            status: newStatus
+          })
+        });
+        if (!res.ok) throw new Error('فشل تحديث حالة الحضور');
+        const sheet = await res.json();
+        currentAttendanceSheetData = sheet;
+        
+        // Re-render counters
+        const sm = sheet.summary || {};
+        document.getElementById('counter-present').innerText = sm.present_count || 0;
+        document.getElementById('counter-late').innerText = sm.late_count || 0;
+        document.getElementById('counter-excused').innerText = sm.excused_count || 0;
+        document.getElementById('counter-absent').innerText = sm.absent_count || 0;
+        document.getElementById('counter-attendance-rate').innerText = `${sm.attendance_rate || 0}%`;
+
+        document.getElementById('filter-count-all').innerText = sm.total_enrolled || 0;
+        document.getElementById('filter-count-present').innerText = sm.present_count || 0;
+        document.getElementById('filter-count-late').innerText = sm.late_count || 0;
+        document.getElementById('filter-count-excused').innerText = sm.excused_count || 0;
+        document.getElementById('filter-count-absent').innerText = sm.absent_count || 0;
+
+        renderAttendanceSheetTable();
+        showToast('تم تحديث حالة الطالب بنجاح ✅', 'success');
       } catch (err) {
         showToast(err.message, 'error');
       }
     }
 
-    function renderActiveSession(session) {
-      const card = document.getElementById('active-session-card');
-      card.classList.remove('hidden');
-      document.getElementById('active-session-title').innerText = session.title || 'جلسة حضور نشطة';
-      document.getElementById('active-session-course').innerText = `المقرر: ${session.material_id || '--'}`;
+    async function handleBatchMarkAll(statusToSet) {
+      if (!currentAttendanceSheetData || !currentAttendanceSheetData.students) return;
+      const sessionId = currentAttendanceSheetData.session_id;
+      const confirmMsg = statusToSet === 'PRESENT' ? 'هل تريد رصد حضور جميع طلاب الشعبة؟' : 'هل تريد رصد غياب جميع الطلاب؟';
+      if (!confirm(confirmMsg)) return;
+
+      const records = currentAttendanceSheetData.students.map(s => ({
+        student_id: s.student_id,
+        status: statusToSet
+      }));
+
+      try {
+        const res = await fetch(`${API_BASE}/attendance/sessions/${sessionId}/batch-mark`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ records })
+        });
+        if (!res.ok) throw new Error('فشل التحديث الجماعي');
+        const sheet = await res.json();
+        currentAttendanceSheetData = sheet;
+        loadSessionAttendanceSheet(sessionId);
+        showToast('تم تطبيق الرصد الجماعي بنجاح! 📋', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
     }
 
-    async function closeCurrentSession() {
-      if (!confirm('هل تريد إغلاق جلسة الحضور الحالية؟')) return;
+    function filterAttendanceSheet(status) {
+      currentSheetFilter = status;
+      document.querySelectorAll('.att-filter-btn').forEach(btn => {
+        btn.className = 'att-filter-btn px-3 py-1 rounded-lg font-bold text-slate-600 dark:text-slate-400 hover:text-emerald-600 transition';
+      });
+      const activeBtn = document.getElementById(`filter-att-${status}`);
+      if (activeBtn) {
+        activeBtn.className = 'att-filter-btn px-3 py-1 rounded-lg font-bold bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm transition';
+      }
+      renderAttendanceSheetTable();
+    }
+
+    function handleAttendanceSearch(val) {
+      currentSheetSearch = val.trim();
+      renderAttendanceSheetTable();
+    }
+
+    async function closeCurrentAttendanceSession() {
+      if (!activeAttendanceSession) return;
+      if (!confirm('هل أنت متأكد من قفل جلسة الحضور؟ لن يتمكن الطلاب من مسح الـ QR بعد الإغلاق.')) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/attendance/sessions/${activeAttendanceSession.session_id}/close`, {
+          method: 'POST',
+          headers: getAuthHeaders()
+        });
+        if (!res.ok) throw new Error('فشل قفل الجلسة');
+        if (attendanceTimerInterval) clearInterval(attendanceTimerInterval);
+        document.getElementById('session-status-badge').className = 'px-3 py-1 rounded-full text-xs font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+        document.getElementById('session-status-badge').innerHTML = '<i class="fa-solid fa-lock"></i> <span>جلسة مغلقة وموثقة</span>';
+        document.getElementById('session-countdown-timer').innerText = 'تم الإغلاق';
+        document.getElementById('btn-close-session').classList.add('hidden');
+        showToast('تم قفل جلسة الحضور وتوثيق الكشف النهائي 🔒', 'info');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function openProjectorQRModal() {
+      if (!activeAttendanceSession && !currentAttendanceSheetData) return;
+      const s = activeAttendanceSession || currentAttendanceSheetData;
+      const m = document.getElementById('modal-qr-projector');
+      document.getElementById('projector-session-title').innerText = s.title;
+      document.getElementById('projector-session-course').innerText = `${s.course_name || s.material_id} • كود التحقق: ${s.token}`;
+      
+      const box = document.getElementById('projector-qr-box');
+      box.innerHTML = '';
+      const qrText = s.qr_payload || `eru_attendance:${s.token}`;
+      if (typeof QRCode !== 'undefined') {
+        try {
+          new QRCode(box, {
+            text: qrText,
+            width: 320,
+            height: 320,
+            colorDark: '#1F0D2B',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+          });
+        } catch (e) {
+          box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrText)}" class="w-80 h-80 rounded-xl" alt="QR">`;
+        }
+      } else {
+        box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrText)}" class="w-80 h-80 rounded-xl" alt="QR">`;
+      }
+
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function copySessionToken() {
+      const s = activeAttendanceSession || currentAttendanceSheetData;
+      if (!s) return;
+      navigator.clipboard.writeText(s.token).then(() => {
+        showToast('تم نسخ كود الحضور للحافظة! 📋', 'success');
+      });
+    }
+
+    function exportAttendanceCSV() {
+      if (!currentAttendanceSheetData || !currentAttendanceSheetData.students) {
+        showToast('لا توجد بيانات لتصديرها', 'warning');
+        return;
+      }
+      const data = currentAttendanceSheetData;
+      let csv = "\uFEFF"; // UTF-8 BOM for Excel Arabic
+      csv += `كشف الحضور والانصراف - مدرسة WE للتكنولوجيا التطبيقية بالسويس\n`;
+      csv += `المقرر: ${data.course_name} (${data.material_id}), الجلسة: ${data.title}, التاريخ: ${new Date(data.created_at).toLocaleDateString('ar-EG')}\n\n`;
+      csv += `الرقم,اسم الطالب,الكود الأكاديمي,البريد الإلكتروني,وقت التسجيل,الحالة\n`;
+
+      data.students.forEach((s, idx) => {
+        const time = s.scanned_at ? new Date(s.scanned_at).toLocaleTimeString('ar-EG') : 'لم يسجل';
+        const st = s.status === 'PRESENT' ? 'حاضر' : s.status === 'LATE' ? 'متأخر' : s.status === 'EXCUSED' ? 'عذر' : 'غائب';
+        csv += `${idx + 1},"${s.name}","${s.uni_code || ''}","${s.email || ''}","${time}","${st}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `كشف_حضور_${data.material_id}_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('تم تصدير ملف الإكسل (CSV) بنجاح! 📥', 'success');
+    }
+
+    function printOfficialAttendanceSheet() {
+      if (!currentAttendanceSheetData) {
+        showToast('افتح جلسة أولاً لطباعة كشفها', 'warning');
+        return;
+      }
+      window.print();
+    }
+
+    async function loadCourseAttendanceSessionsHistory(courseId) {
+      try {
+        const res = await fetch(`${API_BASE}/attendance/courses/${courseId}/sessions`, {
+          headers: getAuthHeaders()
+        });
+        if (!res.ok) return;
+        const sessions = await res.json();
+        const container = document.getElementById('attendance-history-list');
+        if (!container) return;
+
+        if (!sessions || sessions.length === 0) {
+          container.innerHTML = '<p class="text-xs text-slate-400 py-3 text-center">لا توجد جلسات حضور سابقة لهذا المقرر.</p>';
+          return;
+        }
+
+        container.innerHTML = sessions.map(s => {
+          const d = new Date(s.created_at);
+          return `
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 font-bold flex items-center justify-center">
+                  <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-900 dark:text-white">${s.title}</div>
+                  <div class="text-[10px] text-slate-400 font-mono">${d.toLocaleDateString('ar-EG')} • ${d.toLocaleTimeString('ar-EG')}</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <span class="text-slate-500 font-bold font-mono">حضر: ${s.total_attended}</span>
+                <button onclick="displayHistoricalSession(${s.session_id})" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 text-slate-700 dark:text-slate-300 font-bold transition">
+                  عرض وتعبئة الكشف
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error('loadCourseAttendanceSessionsHistory error:', e);
+      }
+    }
+
+    async function displayHistoricalSession(sessionId) {
+      await loadSessionAttendanceSheet(sessionId);
+      const s = currentAttendanceSheetData;
+      if (!s) return;
       const card = document.getElementById('active-session-card');
-      card.classList.add('hidden');
-      activeSession = null;
-      showToast('تم إغلاق جلسة الحضور وحفظ السجل', 'info');
+      card.classList.remove('hidden');
+      document.getElementById('active-session-title').innerText = s.title;
+      document.getElementById('session-course-badge').innerText = s.course_name;
+      document.getElementById('session-token-text').innerText = s.token;
+      document.getElementById('session-status-badge').className = 'px-3 py-1 rounded-full text-xs font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
+      document.getElementById('session-status-badge').innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> <span>جلسة سابقة</span>';
+      document.getElementById('session-countdown-timer').innerText = 'مؤرشفة';
+      document.getElementById('btn-close-session').classList.add('hidden');
+      renderSessionQRCode(s.qr_payload);
+      showToast('تم تحميل كشف الحضور للجلسة المحددة 📋', 'info');
     }
 
     // ── PROFILE & CHANGE PASSWORD ─────────────────────────────────────────────

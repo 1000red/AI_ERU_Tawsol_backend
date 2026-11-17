@@ -56,3 +56,46 @@ class StudentCourseAttendanceSummary(BaseModel):
     attended_sessions: int
     total_sessions: int
     attendance_rate: float # e.g. 90.0%
+
+
+# ── Full Attendance Sheet & Teacher Marking Schemas ──────────────────────────
+class AttendanceMarkRequest(BaseModel):
+    student_id: int
+    status: str = "PRESENT"  # PRESENT, LATE, EXCUSED, ABSENT
+
+
+class AttendanceBatchMarkRequest(BaseModel):
+    records: list[AttendanceMarkRequest]
+
+
+class AttendanceSheetStudent(BaseModel):
+    student_id: int
+    name: str
+    uni_code: Optional[str] = None
+    email: Optional[str] = None
+    status: str = "ABSENT"  # PRESENT, LATE, EXCUSED, ABSENT
+    scanned_at: Optional[datetime] = None
+    record_id: Optional[int] = None
+
+
+class AttendanceSheetSummary(BaseModel):
+    total_enrolled: int = 0
+    present_count: int = 0
+    late_count: int = 0
+    excused_count: int = 0
+    absent_count: int = 0
+    attendance_rate: float = 0.0
+
+
+class AttendanceSheetOut(BaseModel):
+    session_id: int
+    material_id: str
+    course_name: str
+    title: str
+    token: str
+    qr_payload: str
+    created_at: datetime
+    expires_at: datetime
+    is_active: bool
+    summary: AttendanceSheetSummary
+    students: list[AttendanceSheetStudent]

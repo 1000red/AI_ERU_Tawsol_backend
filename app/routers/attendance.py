@@ -10,6 +10,9 @@ from app.schemas.attendance import (
     AttendanceCheckInRequest,
     AttendanceCheckInOut,
     StudentCourseAttendanceSummary,
+    AttendanceSheetOut,
+    AttendanceMarkRequest,
+    AttendanceBatchMarkRequest,
 )
 from app.services import attendance_service as att_svc
 
@@ -34,6 +37,48 @@ def get_session(
 ):
     """View session status and live attendee list."""
     return att_svc.get_session_details(db, session_id)
+
+
+@router.get("/sessions/{session_id}/sheet", response_model=AttendanceSheetOut)
+def get_attendance_sheet(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """(Teacher / Admin) Get full attendance sheet with all enrolled students and their status."""
+    return att_svc.get_session_attendance_sheet(db, session_id)
+
+
+@router.post("/sessions/{session_id}/mark", response_model=AttendanceSheetOut)
+def mark_attendance(
+    session_id: int,
+    data: AttendanceMarkRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """(Teacher / Admin) Manually mark or change a student's attendance status."""
+    return att_svc.mark_student_attendance(db, session_id, data.student_id, data.status)
+
+
+@router.post("/sessions/{session_id}/batch-mark", response_model=AttendanceSheetOut)
+def batch_mark_attendance(
+    session_id: int,
+    data: AttendanceBatchMarkRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """(Teacher / Admin) Bulk mark or update student attendance statuses."""
+    return att_svc.batch_mark_attendance(db, session_id, data.records)
+
+
+@router.get("/courses/{material_id}/sessions")
+def get_course_sessions(
+    material_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """(Teacher / Admin) List previous attendance sessions for a course."""
+    return att_svc.get_course_attendance_sessions(db, material_id)
 
 
 @router.post("/sessions/{session_id}/close", response_model=AttendanceSessionOut)
