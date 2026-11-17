@@ -2158,7 +2158,18 @@ ${JSON.stringify(data, null, 2)}`;
 
     async function loadPlatformStatus() {
       try {
-        const res = await fetch(`${API_BASE}/platform/status`, { cache: 'no-store' });
+        const hasCreds = !!(
+          localStorage.getItem('admin_token') ||
+          sessionStorage.getItem('admin_token') ||
+          localStorage.getItem('admin_key') ||
+          sessionStorage.getItem('admin_key')
+        );
+        let res = hasCreds
+          ? await authFetch(`${API_BASE}/admin/api/platform/status`, { cache: 'no-store' })
+          : await fetch(`${API_BASE}/platform/status`, { cache: 'no-store' });
+        if (!res.ok && hasCreds) {
+          res = await fetch(`${API_BASE}/platform/status`, { cache: 'no-store' });
+        }
         if (!res.ok) return;
         const data = await res.json();
         applyPlatformStatusUI(data);
@@ -2172,12 +2183,28 @@ ${JSON.stringify(data, null, 2)}`;
       const card = document.getElementById('platform-control-card');
       const icon = document.getElementById('platform-control-icon');
       const pill = document.getElementById('platform-status-pill');
+      const meta = document.getElementById('platform-status-meta');
       const btn = document.getElementById('btn-toggle-platform');
       const msgInput = document.getElementById('input-maintenance-msg');
       const badge = document.getElementById('system-badge');
 
       if (msgInput && data.maintenance_message && document.activeElement !== msgInput) {
         msgInput.value = data.maintenance_message;
+      }
+
+      if (meta) {
+        const parts = [];
+        if (data.updated_at) {
+          try {
+            parts.push('آخر تحديث: ' + new Date(data.updated_at).toLocaleString('ar-EG'));
+          } catch (e) {}
+        }
+        if (data.updated_by_name) {
+          parts.push('بواسطة: ' + data.updated_by_name);
+        }
+        meta.innerText = parts.length > 0
+          ? parts.join(' • ')
+          : 'يمكنك إيقاف المنصة مؤقتاً عن جميع الطلاب والمعلمين مع بقاء لوحة التحكم متاحة للمسؤول.';
       }
 
       if (currentPlatformActive) {
@@ -2265,6 +2292,7 @@ ${JSON.stringify(data, null, 2)}`;
     window.addEventListener('DOMContentLoaded', () => {
       updateAuthStatus();
       refreshAll();
+      setInterval(() => loadPlatformStatus(), 30000);
     });
   </script>
 </body>

@@ -2431,7 +2431,7 @@
             </div>
             
             <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
-              <button onclick="openAiQuizForFile('${f.file_id || f.id}', '${escapeHtml(f.title)}', '${f.file_type}')" class="px-3 py-2 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-950 dark:text-purple-300 dark:hover:bg-purple-900 font-bold text-xs transition flex items-center gap-1.5 border border-purple-200 dark:border-purple-800 shadow-sm" title="توليد أسئلة تفاعلية ذكية بالذكاء الاصطناعي على هذه المحاضرة">
+              <button data-file-id="${escapeHtml(f.file_id || f.id)}" data-file-title="${escapeHtml(f.title)}" data-file-type="${escapeHtml(f.file_type)}" onclick="openAiQuizForFile(this.dataset.fileId, this.dataset.fileTitle, this.dataset.fileType)" class="px-3 py-2 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-950 dark:text-purple-300 dark:hover:bg-purple-900 font-bold text-xs transition flex items-center gap-1.5 border border-purple-200 dark:border-purple-800 shadow-sm" title="توليد أسئلة تفاعلية ذكية بالذكاء الاصطناعي على هذه المحاضرة">
                 <i class="fa-solid fa-wand-magic-sparkles text-xs text-purple-600 dark:text-purple-400"></i>
                 <span>أسئلة AI</span>
               </button>
@@ -2773,9 +2773,9 @@
           <div class="py-12 text-center bg-rose-50 dark:bg-rose-950/40 rounded-3xl border border-rose-200 dark:border-rose-900 p-6 max-w-lg mx-auto">
             <i class="fa-solid fa-triangle-exclamation text-3xl text-rose-500 mb-3"></i>
             <h4 class="font-bold text-sm text-rose-800 dark:text-rose-200">تعذر إنشاء بنك الأسئلة حالياً</h4>
-            <p class="text-xs text-rose-600 dark:text-rose-300 mt-1">${err.message}</p>
+            <p class="text-xs text-rose-600 dark:text-rose-300 mt-1">${escapeHtml(err.message)}</p>
             <div class="mt-4 flex items-center justify-center gap-2">
-              <button onclick="openAiQuizForFile('${fileId}', '${escapeHtml(fileTitle)}', '${fileType}', ${numQ}, '${diff}', true)" class="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition flex items-center gap-1.5 shadow-sm">
+              <button data-file-id="${escapeHtml(fileId)}" data-file-title="${escapeHtml(fileTitle)}" data-file-type="${escapeHtml(fileType)}" data-num-q="${escapeHtml(numQ)}" data-diff="${escapeHtml(diff)}" onclick="openAiQuizForFile(this.dataset.fileId, this.dataset.fileTitle, this.dataset.fileType, Number(this.dataset.numQ), this.dataset.diff, true)" class="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition flex items-center gap-1.5 shadow-sm">
                 <i class="fa-solid fa-rotate-right"></i>
                 <span>إعادة المحاولة مع تحديث الكاش</span>
               </button>
@@ -5484,8 +5484,12 @@
           const wasHidden = overlay.classList.contains('hidden');
           overlay.classList.add('hidden');
           overlay.classList.remove('flex');
-          if (!wasHidden && manualRetry) {
-            window.location.reload();
+          if (!wasHidden) {
+            if (manualRetry) {
+              window.location.reload();
+            } else {
+              checkBackendHealth();
+            }
           }
         }
       } catch (e) {

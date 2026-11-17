@@ -469,6 +469,7 @@ def test_html_portals_include_killswitch_and_lockout_ui(test_ctx):
     dash_html = client.get("/dashboard").text
     assert "platform-control-card" in dash_html
     assert "togglePlatformStatus" in dash_html
+    assert "/admin/api/platform/status" in dash_html
     assert "!window.location.origin.includes('localhost')" not in dash_html
 
     teacher_html = client.get("/teacher").text
@@ -476,6 +477,9 @@ def test_html_portals_include_killswitch_and_lockout_ui(test_ctx):
     assert "checkPlatformOperationalStatus" in teacher_html
     assert "installPlatformMaintenanceInterceptor" in teacher_html
     assert "function escapeHtml(" in teacher_html
+    assert "this.dataset.fileTitle" in teacher_html
+    assert "'${escapeHtml(f.title)}'" not in teacher_html
+    assert "'${escapeHtml(fileTitle)}'" not in teacher_html
 
     checkin_html = client.get("/checkin").text
     assert "platform-stopped-overlay" in checkin_html
