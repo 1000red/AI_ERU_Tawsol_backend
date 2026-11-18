@@ -175,6 +175,53 @@ class TestGeminiFunctionCallingQuiz(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(questions), 5)
         self.assertEqual(questions[0].reference_quote, "مقتبس من نص المحاضرة للسؤال 1")
 
+    @patch("app.services.quiz_service.generator._make_client")
+    @patch("app.services.quiz_service.generator.quiz_cache")
+    async def test_06_model_failover_skips_retired_and_rotates_on_429_503(self, mock_cache, mock_make_client):
+        """Verify retired models are skipped and 429/503 rotates cleanly to the next live model."""
+        from app.services.quiz_service.generator import _resolve_model_candidates
+        from app.core.config import settings
+
+        mock_cache.get.return_value = None
+
+        # Even if env var is stale (gemini-1.5-flash-8b), retired model is skipped
+        with patch.object(settings, "GEMINI_MODEL", "gemini-1.5-flash-8b"):
+            models = _resolve_model_candidates()
+            self.assertNotIn("gemini-1.5-flash-8b", models)
+            self.assertEqual(models[0], "gemini-3.5-flash-lite")
+
+        mock_call = MagicMock()
+        mock_call.name = "save_quiz_questions"
+        mock_call.args = {
+            "questions": [
+                {
+                    "id": i,
+                    "question": f"سؤال failover {i}",
+                    "options": {"A": "أ", "B": "ب", "C": "ج", "D": "د"},
+                    "correct": "B",
+                    "explanation": f"شرح {i}",
+                    "reference_quote": f"اقتباس {i}",
+                }
+                for i in range(1, 6)
+            ]
+        }
+        mock_good = MagicMock()
+        mock_good.function_calls = [mock_call]
+        mock_good.text = None
+
+        mock_client = MagicMock()
+        mock_client.models.generate_content.side_effect = [
+            Exception("429 RESOURCE_EXHAUSTED: quota exceeded"),
+            Exception("503 UNAVAILABLE: high demand"),
+            mock_good,
+        ]
+        mock_make_client.return_value = mock_client
+
+        sample_lecture = "محتوى تدريبي لمادة البرمجة وهندسة البرمجيات بمدرسة وي بالسويس " * 10
+        questions = await generate_quiz(sample_lecture, num_questions=5, difficulty="medium", force_refresh=True)
+        self.assertEqual(len(questions), 5)
+        self.assertEqual(mock_client.models.generate_content.call_count, 3)
+
 
 if __name__ == "__main__":
     unittest.main()

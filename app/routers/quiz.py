@@ -105,11 +105,22 @@ async def generate_quiz_endpoint(
 
         try:
             text_to_process = extract_text(material_file.file_path)
-        except HTTPException:
-            raise
+        except HTTPException as exc:
+            if (
+                exc.status_code in (404, 500)
+                and material_file.description
+                and len(material_file.description.strip()) >= 50
+            ):
+                text_to_process = (
+                    f"{material_file.title or ''}\n"
+                    f"{material_file.description.strip()}\n"
+                    f"محتوى المادة الدراسية في مدرسة WE للتكنولوجيا التطبيقية بالسويس."
+                )
+            else:
+                raise
         except Exception as exc:
-            if material_file.description and len(material_file.description.strip()) >= 100:
-                text_to_process = f"{material_file.title}\n{material_file.description}"
+            if material_file.description and len(material_file.description.strip()) >= 50:
+                text_to_process = f"{material_file.title or ''}\n{material_file.description.strip()}"
             else:
                 raise HTTPException(
                     status_code=500,

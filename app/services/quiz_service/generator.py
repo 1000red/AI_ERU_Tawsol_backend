@@ -120,6 +120,74 @@ LECTURE CONTENT:
 """
 
 
+_RETIRED_GEMINI_MODELS = frozenset({
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-2.5-flash-lite",
+})
+
+_DEFAULT_LIVE_MODELS = (
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite-preview",
+    "gemini-2.5-flash",
+)
+
+
+def _resolve_model_candidates() -> list[str]:
+    """Build ordered list of live Gemini models, skipping retired/deprecated IDs."""
+    configured_model = (getattr(settings, "GEMINI_MODEL", "") or "").strip()
+    candidates: list[str] = []
+    if configured_model and configured_model not in _RETIRED_GEMINI_MODELS:
+        candidates.append(configured_model)
+    for m in _DEFAULT_LIVE_MODELS:
+        if m not in candidates:
+            candidates.append(m)
+    return candidates
+
+
+def _is_auth_error(msg: str) -> bool:
+    return (
+        "api_key" in msg
+        or "invalid" in msg
+        or "403" in msg
+        or "401" in msg
+        or "unauthorized" in msg
+        or "forbidden" in msg
+        or "credentials" in msg
+    )
+
+
+def _is_rotatable_model_error(exc: Exception) -> bool:
+    """Return True when an error warrants failing over to the next Gemini model."""
+    msg = str(exc).lower()
+    if _is_auth_error(msg):
+        return False
+    return (
+        "not found" in msg
+        or "404" in msg
+        or "is not supported" in msg
+        or "no longer available" in msg
+        or "deprecated" in msg
+        or "429" in msg
+        or "quota" in msg
+        or "resource_exhausted" in msg
+        or "503" in msg
+        or "unavailable" in msg
+        or "high demand" in msg
+        or "overloaded" in msg
+        or "504" in msg
+        or "deadline" in msg
+        or "timeout" in msg
+        or "timed out" in msg
+        or "time out" in msg
+    )
+
+
 def _make_client():
     import ssl
     import traceback
@@ -137,11 +205,16 @@ def _make_client():
     try:
         ctx = ssl.create_default_context()
         ctx.load_default_certs()
-        http_options = types.HttpOptions(
-            api_version="v1beta",
-            client_args={"verify": ctx},
-            async_client_args={"verify": ctx},
-        )
+        http_kwargs = {
+            "api_version": "v1beta",
+            "timeout": 20_000,
+            "client_args": {"verify": ctx},
+            "async_client_args": {"verify": ctx},
+        }
+        # Disable long SDK retry backoff so 429/503 rotates immediately to the next live model
+        if hasattr(types, "HttpRetryOptions"):
+            http_kwargs["retry_options"] = types.HttpRetryOptions(attempts=1)
+        http_options = types.HttpOptions(**http_kwargs)
         return genai.Client(api_key=api_key, http_options=http_options)
     except Exception as e:
         tb = traceback.format_exc()
@@ -167,15 +240,7 @@ def _make_client():
 def _handle_error(exc: Exception) -> None:
     msg = str(exc).lower()
 
-    if (
-        "api_key" in msg
-        or "invalid" in msg
-        or "403" in msg
-        or "401" in msg
-        or "unauthorized" in msg
-        or "forbidden" in msg
-        or "credentials" in msg
-    ):
+    if _is_auth_error(msg):
         raise HTTPException(
             status_code=401,
             detail="Invalid Gemini API key. Check GEMINI_API_KEY in backend/.env.",
@@ -194,6 +259,11 @@ def _handle_error(exc: Exception) -> None:
         raise HTTPException(
             status_code=504,
             detail="AI generation timed out.",
+        )
+    if "503" in msg or "unavailable" in msg or "high demand" in msg or "overloaded" in msg:
+        raise HTTPException(
+            status_code=503,
+            detail="Gemini AI is temporarily busy. Please try again in a few seconds.",
         )
     raise HTTPException(status_code=502, detail=f"Gemini API error: {exc}")
 
@@ -338,23 +408,20 @@ async def generate_quiz(
     client = _make_client()
     loop = asyncio.get_running_loop()
 
-    # Model resolution: candidate models ordered by priority
-    configured_model = getattr(settings, "GEMINI_MODEL", "gemini-1.5-flash-8b") or "gemini-1.5-flash-8b"
-    model_candidates = [configured_model, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-flash"]
-    models: list[str] = []
-    for m in model_candidates:
-        if m and m not in models:
-            models.append(m)
+    # Model resolution: live candidate models ordered by speed & free-tier headroom
+    models = _resolve_model_candidates()
 
     last_error = HTTPException(
         status_code=502,
         detail="AI returned an empty or blocked response. Please try again.",
     )
+    last_exc: Exception | None = None
 
     # ── 4. Concurrency & Rate Limiter Guard (guarantees <= 12 RPM, max 2 concurrent)
     await gemini_limiter.acquire()
     try:
         for model_name in models:
+            model_responded = False
             for attempt in range(2):
                 try:
                     response = await loop.run_in_executor(
@@ -373,10 +440,12 @@ async def generate_quiz(
                 except HTTPException:
                     raise
                 except Exception as exc:
-                    exc_msg = str(exc).lower()
-                    if "not found" in exc_msg or "404" in exc_msg or "is not supported" in exc_msg:
+                    if _is_rotatable_model_error(exc):
+                        last_exc = exc
                         break
                     _handle_error(exc)
+
+                model_responded = True
 
                 # ── 5. Extract questions from Gemini Function Call ───────────────────
                 try:
@@ -388,7 +457,7 @@ async def generate_quiz(
                                     if file_id and file_id > 0:
                                         quiz_cache.set(questions, file_id=file_id)
                                     return questions[:num_questions]
-                except Exception as e:
+                except Exception:
                     pass
 
                 # Fallback: check text response
@@ -402,9 +471,14 @@ async def generate_quiz(
                 except Exception as parse_err:
                     last_error = parse_err
                     continue
+
+            if model_responded:
+                break
     finally:
         gemini_limiter.release()
 
+    if last_exc is not None:
+        _handle_error(last_exc)
     raise last_error
 
 
@@ -446,9 +520,8 @@ async def regenerate_single_question(
     client = _make_client()
     loop = asyncio.get_running_loop()
 
-    configured_model = getattr(settings, "GEMINI_MODEL", "gemini-1.5-flash-8b") or "gemini-1.5-flash-8b"
-    model_candidates = [configured_model, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-flash"]
-    models: list[str] = [m for m in model_candidates if m]
+    models = _resolve_model_candidates()
+    last_exc: Exception | None = None
 
     await gemini_limiter.acquire()
     try:
@@ -470,8 +543,8 @@ async def regenerate_single_question(
             except HTTPException:
                 raise
             except Exception as exc:
-                exc_msg = str(exc).lower()
-                if "not found" in exc_msg or "404" in exc_msg or "is not supported" in exc_msg:
+                if _is_rotatable_model_error(exc):
+                    last_exc = exc
                     continue
                 _handle_error(exc)
 
@@ -527,4 +600,6 @@ async def regenerate_single_question(
     finally:
         gemini_limiter.release()
 
+    if last_exc is not None:
+        _handle_error(last_exc)
     raise HTTPException(status_code=502, detail="Failed to regenerate question with Gemini Function Calling.")

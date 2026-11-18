@@ -589,7 +589,7 @@ def get_quizzes_stats(
         "cache_hits": cache_stats["hits"],
         "cache_hit_rate_pct": cache_stats["hit_rate_pct"],
         "protection_active": True,
-        "active_model": getattr(settings, "GEMINI_MODEL", "gemini-1.5-flash-8b"),
+        "active_model": getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite"),
     }
 
     return {
@@ -600,7 +600,7 @@ def get_quizzes_stats(
         "students_quizzes_count": students_quizzes,
         "teachers_quizzes_count": teachers_quizzes,
         "average_score": avg_score,
-        "gemini_model": getattr(settings, "GEMINI_MODEL", "gemini-1.5-flash-8b"),
+        "gemini_model": getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite"),
         "free_tier_status": free_tier_status,
         "difficulty_breakdown": diff_breakdown,
         "courses_breakdown": course_breakdown,
