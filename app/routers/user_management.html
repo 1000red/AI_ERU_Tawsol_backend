@@ -13,6 +13,9 @@
   <!-- Font Awesome 6 Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
+  <!-- Chart.js for Interactive Admin Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -818,6 +821,38 @@
         </div>
       </div>
 
+      <!-- Interactive Charts Row: Course Exam Averages + Score Distribution -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-8 glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h4 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-chart-column text-purple-600 dark:text-purple-400"></i>
+                <span>متوسط الدرجات ونسبة النجاح حسب المقرر الدراسي</span>
+              </h4>
+              <p class="text-[11px] text-slate-400 mt-0.5">مبني على درجات الطلاب الحقيقية المسجلة في اختبارات المقررات</p>
+            </div>
+            <span id="quiz-charts-course-count" class="px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 text-[11px] font-bold">0 مقررات</span>
+          </div>
+          <div class="relative h-[240px]">
+            <canvas id="chart-quiz-courses"></canvas>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+          <div class="mb-3">
+            <h4 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-emerald-600 dark:text-emerald-400"></i>
+              <span>توزيع مستويات الطلاب</span>
+            </h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">تصنيف الأداء الأكاديمي العام للطلاب</p>
+          </div>
+          <div class="relative h-[240px] flex items-center justify-center">
+            <canvas id="chart-quiz-distribution"></canvas>
+          </div>
+        </div>
+      </div>
+
       <!-- Sub-Navigation Pills (Students Analysis vs All Gemini Quizzes Log) -->
       <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div class="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
@@ -862,10 +897,17 @@
               class="w-full pr-8 pl-3 py-2 text-xs rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500"
             >
           </div>
-          <div class="flex items-center gap-2 w-full sm:w-auto">
+          <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+            <select id="students-quiz-course-filter" onchange="handleStudentsQuizFilter()" class="px-3 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none font-semibold">
+              <option value="">جميع المقررات</option>
+            </select>
             <select id="students-quiz-dept-filter" onchange="handleStudentsQuizFilter()" class="px-3 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none font-semibold">
               <option value="">جميع الأقسام والتخصصات</option>
             </select>
+            <button onclick="exportStudentsQuizCSV()" class="px-3 py-2 text-xs rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold flex items-center gap-1.5 transition shrink-0">
+              <i class="fa-solid fa-file-csv"></i>
+              <span>تصدير CSV</span>
+            </button>
           </div>
         </div>
 
@@ -957,7 +999,7 @@
     <!-- ======================================================================= -->
     <section id="section-tab-platform" class="hidden space-y-6">
       
-      <!-- Platform Summary Cards -->
+      <!-- Platform Primary KPI Cards (100% Live Database Data) -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div class="flex items-center justify-between">
@@ -975,7 +1017,7 @@
 
         <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div class="flex items-center justify-between">
-            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">جلسات الحضور</p>
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">جلسات وسجلات الحضور</p>
             <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center text-sm">
               <i class="fa-solid fa-user-clock"></i>
             </div>
@@ -984,7 +1026,10 @@
             <h3 id="stat-platform-sessions" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
             <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">جلسة</span>
           </div>
-          <p id="stat-platform-active-sessions" class="text-[11px] text-emerald-600 font-semibold mt-1">-- جلسة مفتوحة حالياً</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+            <span id="stat-platform-att-records" class="font-bold text-emerald-600 dark:text-emerald-400">0</span> حضور •
+            <span id="stat-platform-active-sessions">0 مفتوحة</span>
+          </p>
         </div>
 
         <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -995,37 +1040,144 @@
             </div>
           </div>
           <div class="mt-3 flex items-baseline gap-2">
-            <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">8</h3>
-            <span class="text-xs font-semibold text-purple-600 dark:text-purple-400">مقررات C1..C8</span>
+            <h3 id="stat-platform-courses" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">--</h3>
+            <span class="text-xs font-semibold text-purple-600 dark:text-purple-400">مقرر دراسي</span>
           </div>
-          <p class="text-[11px] text-slate-400 mt-1">البرمجة والشبكات والاتصالات</p>
+          <p id="stat-platform-courses-sub" class="text-[11px] text-slate-400 mt-1">البرمجة والشبكات والاتصالات</p>
         </div>
 
         <div class="glass-card rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div class="flex items-center justify-between">
-            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">كفاءة النظام</p>
-            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center text-sm">
-              <i class="fa-solid fa-server"></i>
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">متوسط نتائج الاختبارات</p>
+            <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-950/80 dark:text-amber-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-award"></i>
             </div>
           </div>
           <div class="mt-3 flex items-baseline gap-2">
-            <h3 class="text-2xl sm:text-3xl font-extrabold text-emerald-600">99.9%</h3>
-            <span class="text-xs font-bold text-emerald-600">Uptime</span>
+            <h3 id="stat-platform-avg-score" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">--%</h3>
+            <span id="stat-platform-pass-rate" class="text-xs font-bold text-slate-500 dark:text-slate-400">نجاح --%</span>
           </div>
-          <p class="text-[11px] text-slate-400 mt-1">خوادم Vercel و Neon S3 سحابية</p>
+          <p id="stat-platform-tested-sub" class="text-[11px] text-slate-400 mt-1">-- محاولة اختبار مسجلة</p>
+        </div>
+      </div>
+
+      <!-- Secondary Live Activity Strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div class="glass-card rounded-xl p-3 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400"><i class="fa-solid fa-bullhorn text-indigo-500 ml-1.5"></i>الإعلانات</span>
+          <strong id="stat-platform-announcements" class="text-sm font-extrabold font-mono text-slate-900 dark:text-white">--</strong>
+        </div>
+        <div class="glass-card rounded-xl p-3 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400"><i class="fa-solid fa-file-pen text-purple-500 ml-1.5"></i>التكليفات</span>
+          <strong id="stat-platform-assignments" class="text-sm font-extrabold font-mono text-slate-900 dark:text-white">--</strong>
+        </div>
+        <div class="glass-card rounded-xl p-3 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400"><i class="fa-solid fa-comments text-blue-500 ml-1.5"></i>الرسائل</span>
+          <strong id="stat-platform-chats" class="text-sm font-extrabold font-mono text-slate-900 dark:text-white">--</strong>
+        </div>
+        <div class="glass-card rounded-xl p-3 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400"><i class="fa-solid fa-headset text-amber-500 ml-1.5"></i>الدعم الفني</span>
+          <strong id="stat-platform-support" class="text-sm font-extrabold font-mono text-slate-900 dark:text-white">--</strong>
+        </div>
+        <div class="glass-card rounded-xl p-3 border border-slate-200 dark:border-slate-800 flex items-center justify-between col-span-2 sm:col-span-1">
+          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400"><i class="fa-solid fa-bolt text-emerald-500 ml-1.5"></i>نشط (7 أيام)</span>
+          <strong id="stat-platform-active-7d" class="text-sm font-extrabold font-mono text-emerald-600 dark:text-emerald-400">--</strong>
+        </div>
+      </div>
+
+      <!-- Interactive Charts Row: 14-Day Activity Trend + Student Departments -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-8 glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <div>
+              <h4 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-brand-600 dark:text-brand-400"></i>
+                <span>اتجاه نشاط المنصة اليومي (آخر 14 يوماً)</span>
+              </h4>
+              <p class="text-[11px] text-slate-400 mt-0.5">تسجيلات الحضور عبر QR • محاولات الاختبارات الذكية • رسائل المحادثات</p>
+            </div>
+            <button onclick="loadPlatformAnalytics()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>تحديث التحليلات</span>
+            </button>
+          </div>
+          <div class="relative h-[260px]">
+            <canvas id="chart-platform-trend"></canvas>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5">
+          <div class="mb-3">
+            <h4 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <i class="fa-solid fa-diagram-project text-indigo-600 dark:text-indigo-400"></i>
+              <span>توزيع الطلاب حسب التخصص</span>
+            </h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">نسبة المسجلين في كل مسار تكنولوجي</p>
+          </div>
+          <div class="relative h-[260px] flex items-center justify-center">
+            <canvas id="chart-platform-depts"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Courses Performance & Usage Breakdown Table -->
+      <div class="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h4 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <i class="fa-solid fa-layer-group text-purple-600 dark:text-purple-400"></i>
+              <span>تحليل تفصيلي لأداء ونشاط المقررات الدراسية</span>
+            </h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">مقارنة الطلاب المسجلين، الملفات، الحضور، ومتوسط الدرجات الحقيقية لكل مقرر</p>
+          </div>
+          <button onclick="exportPlatformAnalyticsCSV()" class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold flex items-center gap-1.5 transition self-start sm:self-auto">
+            <i class="fa-solid fa-file-csv"></i>
+            <span>تصدير تقرير المقررات CSV</span>
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs sm:text-sm">
+            <thead class="bg-slate-100/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold">
+              <tr>
+                <th scope="col" class="py-3 px-4">المقرر</th>
+                <th scope="col" class="py-3 px-4 text-center">الطلاب المسجلون</th>
+                <th scope="col" class="py-3 px-4 text-center">الملفات</th>
+                <th scope="col" class="py-3 px-4 text-center">جلسات الحضور</th>
+                <th scope="col" class="py-3 px-4 text-center">إجمالي الحضور</th>
+                <th scope="col" class="py-3 px-4 text-center">محاولات الاختبار</th>
+                <th scope="col" class="py-3 px-4">متوسط الدرجات</th>
+                <th scope="col" class="py-3 px-4 text-center">نسبة النجاح</th>
+              </tr>
+            </thead>
+            <tbody id="courses-analytics-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tr>
+                <td colspan="8" class="py-8 text-center text-slate-400">
+                  <i class="fa-solid fa-circle-notch fa-spin text-lg text-purple-600 mb-1"></i>
+                  <p>جاري تحميل تحليل المقررات...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
       <!-- Attendance Sessions Log -->
       <div class="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 space-y-4">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h4 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
             <i class="fa-solid fa-clipboard-user text-emerald-600 dark:text-emerald-400"></i>
             <span>سجل جلسات الحضور الذكي المنعقدة</span>
           </h4>
-          <button onclick="loadPlatformAnalytics()" class="text-xs text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 font-semibold">
-            <i class="fa-solid fa-arrows-rotate"></i> تحديث
-          </button>
+          <div class="flex items-center gap-2 flex-wrap">
+            <input type="text" id="attendance-search-input" oninput="filterAttendanceSessions()" placeholder="بحث بعنوان الجلسة أو المعلم..." class="px-3 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-brand-500">
+            <select id="attendance-course-filter" onchange="filterAttendanceSessions()" class="px-3 py-1.5 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 outline-none font-semibold">
+              <option value="">جميع المقررات</option>
+            </select>
+            <button onclick="loadPlatformAnalytics()" class="text-xs text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 font-semibold px-2">
+              <i class="fa-solid fa-arrows-rotate"></i> تحديث
+            </button>
+          </div>
         </div>
 
         <div class="overflow-x-auto min-h-[250px]">
@@ -2091,6 +2243,7 @@
       }, 30000);
       fetchUsers();
       fetchStats();
+      fetchAnalyticsBadges();
     });
 
     // ── THEME MANAGEMENT ─────────────────────────────────────────────────────
@@ -2108,6 +2261,9 @@
         const isDark = document.documentElement.classList.toggle('dark');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         document.getElementById('theme-toggle-icon').className = isDark ? 'fa-solid fa-sun text-sm text-amber-400' : 'fa-solid fa-moon text-sm';
+        // Re-render visible analytics charts with updated contrast colors
+        if (lastQuizAnalysisData) renderQuizCharts(lastQuizAnalysisData);
+        if (lastPlatformOverviewData) renderPlatformCharts(lastPlatformOverviewData);
       });
     }
 
@@ -2271,10 +2427,28 @@
       }
     }
 
+    async function fetchAnalyticsBadges() {
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/overview`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const ov = await res.json();
+        const bUsers = document.getElementById('badge-users-count');
+        if (bUsers && ov.users) bUsers.innerText = ov.users.total ?? 0;
+        const bChats = document.getElementById('badge-chats-count');
+        if (bChats && ov.chats) bChats.innerText = ov.chats.total_messages ?? 0;
+        const bQuizzes = document.getElementById('badge-quizzes-count');
+        if (bQuizzes && ov.quizzes) bQuizzes.innerText = ov.quizzes.total_quizzes ?? 0;
+      } catch (_) {}
+    }
+
     function refreshData() {
       const icon = document.getElementById('refresh-icon');
       if (icon) icon.classList.add('fa-spin');
-      Promise.all([fetchPlatformStatus(), fetchUsers(), fetchStats()]).finally(() => {
+      const tasks = [fetchPlatformStatus(), fetchUsers(), fetchStats(), fetchAnalyticsBadges()];
+      if (currentAdminTab === 'chats') tasks.push(loadChatsMonitoring());
+      else if (currentAdminTab === 'quizzes') tasks.push(loadQuizzesMonitoring());
+      else if (currentAdminTab === 'platform') tasks.push(loadPlatformAnalytics());
+      Promise.all(tasks).finally(() => {
         if (icon) icon.classList.remove('fa-spin');
       });
     }
@@ -2544,18 +2718,20 @@
       // Update pill counters based on allUsers
       let countAll = allUsers.length;
       let countStd = allUsers.filter(u => u.type_code === 'STD' || u.type_code === 'STU').length;
-      let countDr = allUsers.filter(u => u.type_code === 'DR').length;
+      let countDr = allUsers.filter(u => u.type_code === 'DR' || u.type_code === 'TA').length;
       let countAdm = allUsers.filter(u => u.type_code === 'ADM').length;
 
       document.getElementById('count-all').innerText = countAll;
       document.getElementById('count-std').innerText = countStd;
       document.getElementById('count-dr').innerText = countDr;
       document.getElementById('count-adm').innerText = countAdm;
+      const bUsers = document.getElementById('badge-users-count');
+      if (bUsers) bUsers.innerText = countAll;
 
       filteredUsers = allUsers.filter(u => {
         // Role match
         if (currentRoleFilter === 'STD' && !(u.type_code === 'STD' || u.type_code === 'STU')) return false;
-        if (currentRoleFilter === 'DR' && u.type_code !== 'DR') return false;
+        if (currentRoleFilter === 'DR' && !(u.type_code === 'DR' || u.type_code === 'TA')) return false;
         if (currentRoleFilter === 'ADM' && u.type_code !== 'ADM') return false;
 
         // Department match
@@ -3213,23 +3389,53 @@
     let activeChatUser1 = null;
     let activeChatUser2 = null;
 
+    function renderAnalyticsErrorRow(colspan, statusCode, fallbackMsg, retryFnName) {
+      const isAuth = statusCode === 401 || statusCode === 403;
+      const msg = isAuth
+        ? 'صلاحيات مسؤول النظام مطلوبة لعرض هذه التحليلات. يرجى تسجيل الدخول بحساب مسؤول (ADM).'
+        : (fallbackMsg || `تعذر تحميل البيانات من السيرفر (HTTP ${statusCode || 'ERR'})`);
+      const btn = isAuth
+        ? `<button onclick="openLoginModal()" class="mt-3 px-4 py-1.5 rounded-xl bg-brand-800 text-white text-xs font-bold hover:bg-brand-900 transition"><i class="fa-solid fa-key ml-1"></i> تسجيل الدخول بحساب مسؤول</button>`
+        : `<button onclick="${retryFnName}()" class="mt-3 px-4 py-1.5 rounded-xl bg-brand-700 text-white text-xs font-bold hover:bg-brand-800 transition"><i class="fa-solid fa-rotate-right ml-1"></i> إعادة المحاولة</button>`;
+      return `
+        <tr>
+          <td colspan="${colspan}" class="py-10 text-center text-rose-500">
+            <i class="fa-solid ${isAuth ? 'fa-lock' : 'fa-triangle-exclamation'} text-2xl mb-2"></i>
+            <p class="font-bold text-xs sm:text-sm">${msg}</p>
+            ${btn}
+          </td>
+        </tr>
+      `;
+    }
+
     async function loadChatsMonitoring() {
+      const container = document.getElementById('chats-threads-container');
       try {
         const resStats = await fetch(`${API_BASE}/admin/api/chats/stats`, { headers: getAuthHeaders() });
-        if (resStats.ok) {
-          const stats = await resStats.json();
-          document.getElementById('stat-chat-total').innerText = stats.total_messages || 0;
-          document.getElementById('stat-chat-threads').innerText = stats.total_threads || 0;
-          document.getElementById('stat-chat-today').innerText = stats.messages_today || 0;
-          
-          const badgeChats = document.getElementById('badge-chats-count');
-          if (badgeChats) badgeChats.innerText = stats.total_messages || 0;
-
-          // Count media
-          const types = stats.content_types || {};
-          const mediaCount = (types.image || 0) + (types.voice || 0) + (types.file || 0);
-          document.getElementById('stat-chat-media').innerText = mediaCount;
+        if (!resStats.ok) {
+          if (container) {
+            const isAuth = resStats.status === 401 || resStats.status === 403;
+            container.innerHTML = `
+              <div class="py-12 px-4 text-center text-rose-500 text-xs">
+                <i class="fa-solid ${isAuth ? 'fa-lock' : 'fa-triangle-exclamation'} text-2xl mb-2"></i>
+                <p class="font-bold">${isAuth ? 'يرجى تسجيل الدخول بحساب مسؤول لعرض المحادثات' : 'تعذر تحميل إحصائيات المحادثات (HTTP ' + resStats.status + ')'}</p>
+                <button onclick="${isAuth ? 'openLoginModal()' : 'loadChatsMonitoring()'}" class="mt-3 px-4 py-1.5 rounded-xl bg-brand-800 text-white text-xs font-bold">${isAuth ? 'دخول المسؤول' : 'إعادة المحاولة'}</button>
+              </div>
+            `;
+          }
+          return;
         }
+        const stats = await resStats.json();
+        document.getElementById('stat-chat-total').innerText = stats.total_messages || 0;
+        document.getElementById('stat-chat-threads').innerText = stats.total_threads || 0;
+        document.getElementById('stat-chat-today').innerText = stats.messages_today || 0;
+        
+        const badgeChats = document.getElementById('badge-chats-count');
+        if (badgeChats) badgeChats.innerText = stats.total_messages || 0;
+
+        const types = stats.content_types || {};
+        const mediaCount = (types.image || 0) + (types.voice || 0) + (types.file || 0);
+        document.getElementById('stat-chat-media').innerText = mediaCount;
 
         const resConvs = await fetch(`${API_BASE}/admin/api/chats/conversations?limit=100`, { headers: getAuthHeaders() });
         if (resConvs.ok) {
@@ -3239,6 +3445,9 @@
         }
       } catch (err) {
         console.error('Failed to load chats monitoring:', err);
+        if (container) {
+          container.innerHTML = `<div class="py-12 text-center text-rose-500 text-xs"><p class="font-bold">تعذر الاتصال بالسيرفر</p><button onclick="loadChatsMonitoring()" class="mt-2 px-3 py-1 rounded-lg bg-brand-700 text-white">إعادة المحاولة</button></div>`;
+        }
       }
     }
 
@@ -3401,10 +3610,121 @@
       }
     }
 
-        // ── AI QUIZ USAGE & ANALYTICS ─────────────────────────────────────────────
+    // ── AI QUIZ USAGE & ANALYTICS ─────────────────────────────────────────────
     let allQuizLogsList = [];
     let allStudentsQuizList = [];
     let currentQuizSubView = 'students';
+    let lastQuizAnalysisData = null;
+    let chartQuizCoursesInstance = null;
+    let chartQuizDistInstance = null;
+
+    function getChartPalette() {
+      const dark = document.documentElement.classList.contains('dark');
+      return {
+        text: dark ? '#cbd5e1' : '#475569',
+        grid: dark ? 'rgba(148, 163, 184, 0.12)' : 'rgba(15, 23, 42, 0.08)',
+        tooltipBg: dark ? '#0f172a' : '#1e293b',
+      };
+    }
+
+    function renderQuizCharts(stuData) {
+      if (typeof Chart === 'undefined' || !stuData) return;
+      const palette = getChartPalette();
+
+      // 1. Course Performance Bar Chart
+      const coursePerf = stuData.course_performance || [];
+      const countBadge = document.getElementById('quiz-charts-course-count');
+      if (countBadge) countBadge.innerText = `${coursePerf.length} مقررات`;
+
+      const ctxCourse = document.getElementById('chart-quiz-courses');
+      if (ctxCourse) {
+        if (chartQuizCoursesInstance) chartQuizCoursesInstance.destroy();
+        chartQuizCoursesInstance = new Chart(ctxCourse, {
+          type: 'bar',
+          data: {
+            labels: coursePerf.length ? coursePerf.map(c => `${c.course_id}`) : ['لا توجد بيانات'],
+            datasets: [
+              {
+                label: 'متوسط الدرجات (%)',
+                data: coursePerf.length ? coursePerf.map(c => c.avg_score || 0) : [0],
+                backgroundColor: 'rgba(124, 58, 237, 0.82)',
+                borderRadius: 8,
+                maxBarThickness: 32,
+              },
+              {
+                label: 'نسبة النجاح (%)',
+                data: coursePerf.length ? coursePerf.map(c => c.pass_rate || 0) : [0],
+                backgroundColor: 'rgba(16, 185, 129, 0.78)',
+                borderRadius: 8,
+                maxBarThickness: 32,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: palette.text, font: { family: 'Cairo', weight: '700', size: 11 } } },
+              tooltip: {
+                backgroundColor: palette.tooltipBg,
+                titleFont: { family: 'Cairo' },
+                bodyFont: { family: 'Cairo' },
+                callbacks: {
+                  afterTitle: (items) => {
+                    const idx = items[0]?.dataIndex;
+                    const c = coursePerf[idx];
+                    return c ? `${c.course_name} (${c.students_count} طالب • ${c.attempts_count} محاولة)` : '';
+                  },
+                },
+              },
+            },
+            scales: {
+              y: { beginAtZero: true, max: 100, ticks: { color: palette.text, callback: v => v + '%' }, grid: { color: palette.grid } },
+              x: { ticks: { color: palette.text, font: { family: 'Inter', weight: '700' } }, grid: { display: false } },
+            },
+          },
+        });
+      }
+
+      // 2. Score Distribution Doughnut Chart
+      const dist = stuData.score_distribution || {};
+      const ctxDist = document.getElementById('chart-quiz-distribution');
+      if (ctxDist) {
+        if (chartQuizDistInstance) chartQuizDistInstance.destroy();
+        const vals = [
+          dist.excellent_85_100 || 0,
+          dist.good_70_84 || 0,
+          dist.pass_50_69 || 0,
+          dist.fail_below_50 || 0,
+        ];
+        const hasData = vals.some(v => v > 0);
+        chartQuizDistInstance = new Chart(ctxDist, {
+          type: 'doughnut',
+          data: {
+            labels: ['ممتاز (85%+)', 'جيد جداً (70-84%)', 'ناجح (50-69%)', 'يحتاج متابعة (<50%)'],
+            datasets: [{
+              data: hasData ? vals : [1],
+              backgroundColor: hasData
+                ? ['#10b981', '#3b82f6', '#f59e0b', '#f43f5e']
+                : ['#cbd5e1'],
+              borderWidth: 0,
+              hoverOffset: 6,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { color: palette.text, boxWidth: 10, padding: 10, font: { family: 'Cairo', weight: '700', size: 11 } },
+              },
+            },
+          },
+        });
+      }
+    }
 
     function switchQuizSubView(view) {
       currentQuizSubView = view;
@@ -3427,84 +3747,102 @@
     }
 
     async function loadQuizzesMonitoring() {
+      const stuBody = document.getElementById('students-quiz-table-body');
+      const logsBody = document.getElementById('quizzes-table-body');
       try {
         // 1. Fetch Stats & Counters
         const resStats = await fetch(`${API_BASE}/admin/api/quizzes/stats`, { headers: getAuthHeaders() });
-        if (resStats.ok) {
-          const stats = await resStats.json();
-          document.getElementById('stat-quiz-total').innerText = stats.total_quizzes || 0;
-          document.getElementById('stat-quiz-today').innerText = stats.today_quizzes || 0;
-          document.getElementById('stat-quiz-questions').innerText = stats.total_questions || 0;
-          document.getElementById('stat-quiz-stu-count').innerText = stats.students_quizzes_count || 0;
-          document.getElementById('stat-quiz-teach-count').innerText = stats.teachers_quizzes_count || 0;
-
-          if (stats.free_tier_status) {
-            const ft = stats.free_tier_status;
-            const elModel = document.getElementById('stat-gemini-model-badge');
-            if (elModel) elModel.innerText = ft.active_model || stats.gemini_model || 'Gemini 1.5 Flash-8B';
-            const elSaved = document.getElementById('stat-tokens-saved');
-            if (elSaved) elSaved.innerText = Number(ft.estimated_tokens_saved || 0).toLocaleString();
-            const elCalls = document.getElementById('stat-ft-calls-today');
-            if (elCalls) elCalls.innerText = `${ft.today_api_calls || 0} / ${ft.daily_quota_rpd || 1500}`;
-            const elRate = document.getElementById('stat-ft-cache-rate');
-            if (elRate) elRate.innerText = `${ft.cache_hit_rate_pct || 0}%`;
-          }
-
-          const badgeQ = document.getElementById('badge-quizzes-count');
-          if (badgeQ) badgeQ.innerText = stats.total_quizzes || 0;
-          const badgeAllQ = document.getElementById('badge-all-quizzes-count');
-          if (badgeAllQ) badgeAllQ.innerText = stats.total_quizzes || 0;
-
-          // Top course
-          const courses = stats.courses_breakdown || [];
-          if (courses.length > 0) {
-            document.getElementById('stat-quiz-top-course').innerText = courses[0].course_id || 'عام';
-          } else {
-            document.getElementById('stat-quiz-top-course').innerText = 'لا توجد بيانات';
-          }
-
-          // Difficulty breakdown
-          const diffs = stats.difficulty_breakdown || {};
-          const easy = diffs.easy || 0;
-          const med = diffs.medium || 0;
-          const hard = diffs.hard || 0;
-          const totalDiff = (easy + med + hard) || 1;
-
-          document.getElementById('quiz-diff-easy').innerText = easy;
-          document.getElementById('quiz-diff-medium').innerText = med;
-          document.getElementById('quiz-diff-hard').innerText = hard;
-
-          document.getElementById('bar-diff-easy').style.width = `${Math.round((easy / totalDiff) * 100)}%`;
-          document.getElementById('bar-diff-medium').style.width = `${Math.round((med / totalDiff) * 100)}%`;
-          document.getElementById('bar-diff-hard').style.width = `${Math.round((hard / totalDiff) * 100)}%`;
+        if (!resStats.ok) {
+          if (stuBody) stuBody.innerHTML = renderAnalyticsErrorRow(8, resStats.status, null, 'loadQuizzesMonitoring');
+          if (logsBody) logsBody.innerHTML = renderAnalyticsErrorRow(8, resStats.status, null, 'loadQuizzesMonitoring');
+          return;
         }
+        const stats = await resStats.json();
+        document.getElementById('stat-quiz-total').innerText = stats.total_quizzes || 0;
+        document.getElementById('stat-quiz-today').innerText = stats.today_quizzes || 0;
+        document.getElementById('stat-quiz-questions').innerText = stats.total_questions || 0;
+        document.getElementById('stat-quiz-stu-count').innerText = stats.students_quizzes_count || 0;
+        document.getElementById('stat-quiz-teach-count').innerText = stats.teachers_quizzes_count || 0;
+
+        if (stats.free_tier_status) {
+          const ft = stats.free_tier_status;
+          const elModel = document.getElementById('stat-gemini-model-badge');
+          if (elModel) elModel.innerText = ft.active_model || stats.gemini_model || 'Gemini 3.5 Flash-Lite';
+          const elSaved = document.getElementById('stat-tokens-saved');
+          if (elSaved) elSaved.innerText = Number(ft.estimated_tokens_saved || 0).toLocaleString();
+          const elCalls = document.getElementById('stat-ft-calls-today');
+          if (elCalls) elCalls.innerText = `${ft.today_api_calls || 0} / ${ft.daily_quota_rpd || 1500}`;
+          const elRate = document.getElementById('stat-ft-cache-rate');
+          if (elRate) elRate.innerText = `${ft.cache_hit_rate_pct || 0}%`;
+        }
+
+        const badgeQ = document.getElementById('badge-quizzes-count');
+        if (badgeQ) badgeQ.innerText = stats.total_quizzes || 0;
+        const badgeAllQ = document.getElementById('badge-all-quizzes-count');
+        if (badgeAllQ) badgeAllQ.innerText = stats.total_quizzes || 0;
+
+        // Top course
+        const courses = stats.courses_breakdown || [];
+        if (courses.length > 0) {
+          document.getElementById('stat-quiz-top-course').innerText = `${courses[0].course_id}${courses[0].course_name && courses[0].course_name !== courses[0].course_id ? ' - ' + courses[0].course_name : ''}`;
+        } else {
+          document.getElementById('stat-quiz-top-course').innerText = 'لا توجد بيانات';
+        }
+
+        // Difficulty breakdown
+        const diffs = stats.difficulty_breakdown || {};
+        const easy = diffs.easy || 0;
+        const med = diffs.medium || 0;
+        const hard = diffs.hard || 0;
+        const totalDiff = (easy + med + hard) || 1;
+
+        document.getElementById('quiz-diff-easy').innerText = easy;
+        document.getElementById('quiz-diff-medium').innerText = med;
+        document.getElementById('quiz-diff-hard').innerText = hard;
+
+        document.getElementById('bar-diff-easy').style.width = `${Math.round((easy / totalDiff) * 100)}%`;
+        document.getElementById('bar-diff-medium').style.width = `${Math.round((med / totalDiff) * 100)}%`;
+        document.getElementById('bar-diff-hard').style.width = `${Math.round((hard / totalDiff) * 100)}%`;
 
         // 2. Fetch Students Quiz Analysis
         const resStu = await fetch(`${API_BASE}/admin/api/quizzes/students-analysis`, { headers: getAuthHeaders() });
         if (resStu.ok) {
           const stuData = await resStu.json();
+          lastQuizAnalysisData = stuData;
           const summary = stuData.summary || {};
           allStudentsQuizList = stuData.students || [];
 
-          document.getElementById('stat-quiz-avg-score').innerText = summary.overall_avg_score ? `${summary.overall_avg_score}%` : '0%';
-          document.getElementById('stat-quiz-pass-rate').innerText = summary.pass_rate ? `${summary.pass_rate}%` : '0%';
+          document.getElementById('stat-quiz-avg-score').innerText = summary.overall_avg_score !== undefined ? `${summary.overall_avg_score}%` : '0%';
+          document.getElementById('stat-quiz-pass-rate').innerText = summary.pass_rate !== undefined ? `${summary.pass_rate}%` : '0%';
           document.getElementById('stat-quiz-active-students').innerText = summary.total_students_active || 0;
           document.getElementById('stat-quiz-total-evals').innerText = summary.total_evaluations || 0;
 
           const badgeStu = document.getElementById('badge-students-tested-count');
           if (badgeStu) badgeStu.innerText = summary.total_students_active || 0;
 
-          // Populate department filter options
+          // Populate department & course filter options
           const depts = [...new Set(allStudentsQuizList.map(s => s.department).filter(Boolean))];
           const deptSelect = document.getElementById('students-quiz-dept-filter');
           if (deptSelect) {
             const currentVal = deptSelect.value;
-            deptSelect.innerHTML = '<option value="">جميع الأقسام والتخصصات</option>' + 
+            deptSelect.innerHTML = '<option value="">جميع الأقسام والتخصصات</option>' +
               depts.map(d => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
             deptSelect.value = currentVal;
           }
 
-          renderStudentsQuizTable(allStudentsQuizList);
+          const coursePerf = stuData.course_performance || [];
+          const courseSelect = document.getElementById('students-quiz-course-filter');
+          if (courseSelect) {
+            const currentCourse = courseSelect.value;
+            courseSelect.innerHTML = '<option value="">جميع المقررات</option>' +
+              coursePerf.map(c => `<option value="${escapeHtml(c.course_id)}">${escapeHtml(c.course_id)} - ${escapeHtml(c.course_name || c.course_id)}</option>`).join('');
+            courseSelect.value = currentCourse;
+          }
+
+          renderQuizCharts(stuData);
+          handleStudentsQuizFilter();
+        } else if (stuBody) {
+          stuBody.innerHTML = renderAnalyticsErrorRow(8, resStu.status, null, 'loadQuizzesMonitoring');
         }
 
         // 3. Fetch All Quizzes Logs
@@ -3513,9 +3851,13 @@
           const data = await resLogs.json();
           allQuizLogsList = data.quizzes || [];
           renderQuizzesTable(allQuizLogsList);
+        } else if (logsBody) {
+          logsBody.innerHTML = renderAnalyticsErrorRow(8, resLogs.status, null, 'loadQuizzesMonitoring');
         }
       } catch (err) {
         console.error('Failed to load quizzes monitoring:', err);
+        if (stuBody) stuBody.innerHTML = renderAnalyticsErrorRow(8, 0, 'تعذر الاتصال بالسيرفر لجلب تحليلات الاختبارات', 'loadQuizzesMonitoring');
+        if (logsBody) logsBody.innerHTML = renderAnalyticsErrorRow(8, 0, 'تعذر الاتصال بالسيرفر لجلب سجل الاختبارات', 'loadQuizzesMonitoring');
       }
     }
 
@@ -3528,7 +3870,7 @@
           <tr>
             <td colspan="8" class="py-12 text-center text-slate-400">
               <i class="fa-solid fa-user-graduate text-2xl text-slate-300 dark:text-slate-700 mb-2"></i>
-              <p>لا توجد بيانات اختبارات للطلاب حالياً</p>
+              <p>لا توجد بيانات اختبارات مطابقة للفلتر المحدد</p>
             </td>
           </tr>
         `;
@@ -3546,10 +3888,14 @@
             scoreBarColor = 'bg-emerald-500';
             scoreTextColor = 'text-emerald-600 dark:text-emerald-400';
             statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">🌟 متميز (ممتاز)</span>';
-          } else if (scoreVal >= 60) {
+          } else if (scoreVal >= 70) {
             scoreBarColor = 'bg-blue-500';
             scoreTextColor = 'text-blue-600 dark:text-blue-400';
-            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">✅ ناجح</span>';
+            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">✨ جيد جداً</span>';
+          } else if (scoreVal >= 50) {
+            scoreBarColor = 'bg-amber-500';
+            scoreTextColor = 'text-amber-600 dark:text-amber-400';
+            statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">✅ ناجح</span>';
           } else {
             scoreBarColor = 'bg-rose-500';
             scoreTextColor = 'text-rose-600 dark:text-rose-400';
@@ -3558,6 +3904,9 @@
         }
 
         const initial = s.name ? s.name.charAt(0).toUpperCase() : 'S';
+        const coursesHtml = (s.courses && s.courses.length)
+          ? `<div class="flex flex-wrap gap-1 mt-1">${s.courses.map(c => `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-mono">${escapeHtml(c)}</span>`).join('')}</div>`
+          : '';
 
         return `
           <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
@@ -3568,7 +3917,7 @@
                 </div>
                 <div>
                   <div class="font-bold text-slate-900 dark:text-white">${escapeHtml(s.name)}</div>
-                  <div class="text-[10px] text-slate-400 font-mono-code">${escapeHtml(s.email)}</div>
+                  <div class="text-[10px] text-slate-400 font-mono-code">${escapeHtml(s.uni_code ? s.uni_code + ' • ' : '')}${escapeHtml(s.email)}</div>
                 </div>
               </div>
             </td>
@@ -3576,6 +3925,7 @@
               <span class="px-2 py-0.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                 ${escapeHtml(s.department || 'عام')}
               </span>
+              ${coursesHtml}
             </td>
             <td class="py-3 px-4 text-center font-bold font-mono text-purple-700 dark:text-purple-300">
               ${s.quizzes_count}
@@ -3586,7 +3936,7 @@
                   <span class="font-extrabold ${scoreTextColor} font-mono">${scoreVal !== null ? `${scoreVal}%` : '--'}</span>
                 </div>
                 <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                  <div class="${scoreBarColor} h-full transition-all duration-300" style="width: ${scoreVal || 0}%"></div>
+                  <div class="${scoreBarColor} h-full transition-all duration-300" style="width: ${Math.min(100, scoreVal || 0)}%"></div>
                 </div>
               </div>
             </td>
@@ -3607,20 +3957,53 @@
     }
 
     function handleStudentsQuizFilter() {
-      const q = (document.getElementById('students-quiz-search-input').value || '').trim().toLowerCase();
-      const dept = (document.getElementById('students-quiz-dept-filter').value || '').trim();
+      const q = (document.getElementById('students-quiz-search-input')?.value || '').trim().toLowerCase();
+      const dept = (document.getElementById('students-quiz-dept-filter')?.value || '').trim();
+      const course = (document.getElementById('students-quiz-course-filter')?.value || '').trim();
 
       let filtered = allStudentsQuizList;
       if (dept) {
         filtered = filtered.filter(s => s.department === dept);
       }
+      if (course) {
+        filtered = filtered.filter(s => Array.isArray(s.courses) && s.courses.includes(course));
+      }
       if (q) {
-        filtered = filtered.filter(s => 
+        filtered = filtered.filter(s =>
           (s.name && s.name.toLowerCase().includes(q)) ||
-          (s.email && s.email.toLowerCase().includes(q))
+          (s.email && s.email.toLowerCase().includes(q)) ||
+          (s.uni_code && s.uni_code.toLowerCase().includes(q))
         );
       }
       renderStudentsQuizTable(filtered);
+    }
+
+    function exportStudentsQuizCSV() {
+      if (!allStudentsQuizList || allStudentsQuizList.length === 0) {
+        showToast('لا توجد بيانات طلاب لتصديرها', 'info');
+        return;
+      }
+      const headers = ['الكود', 'الاسم', 'البريد الإلكتروني', 'القسم', 'المقررات', 'عدد الاختبارات', 'متوسط الدرجات %', 'أعلى درجة %', 'التقييم'];
+      const rows = allStudentsQuizList.map(s => [
+        s.uni_code || '',
+        s.name || '',
+        s.email || '',
+        s.department || 'عام',
+        (s.courses || []).join(' | '),
+        s.quizzes_count || 0,
+        s.avg_score ?? '',
+        s.highest_score ?? '',
+        s.status || '',
+      ]);
+      const csv = '\uFEFF' + [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `WE_Suez_Students_Quiz_Analytics_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('تم تصدير تقرير درجات الطلاب بنجاح', 'success');
     }
 
     async function openStudentQuizDetails(studentId) {
@@ -3630,11 +4013,10 @@
         const data = await res.json();
 
         const st = data.student || {};
-        const quizzes = data.quizzes || [];
-        const attempts = data.attempts || [];
+        const quizzes = (data.quizzes && data.quizzes.length > 0) ? data.quizzes : (data.attempts || []);
 
         document.getElementById('sq-modal-name').innerText = `تقرير اختبارات: ${st.name || 'طالب'}`;
-        document.getElementById('sq-modal-sub').innerText = `القسم: ${st.department || 'عام'} • الدور: ${st.role || 'طالب'}`;
+        document.getElementById('sq-modal-sub').innerText = `الكود: ${st.uni_code || '--'} • القسم: ${st.department || 'عام'} • الدور: ${st.role || 'طالب'}`;
         document.getElementById('sq-modal-email').innerText = st.email || '--';
 
         document.getElementById('sq-stat-quizzes-count').innerText = quizzes.length;
@@ -3643,9 +4025,9 @@
         // Calculate scores
         const scoredQuizzes = quizzes.filter(q => q.score !== null && q.score !== undefined);
         if (scoredQuizzes.length > 0) {
-          const rawAvg = scoredQuizzes.reduce((acc, q) => acc + q.score, 0) / scoredQuizzes.length;
+          const rawAvg = scoredQuizzes.reduce((acc, q) => acc + Number(q.score), 0) / scoredQuizzes.length;
           const avg = Math.round(rawAvg * 10) / 10;
-          const max = Math.max(...scoredQuizzes.map(q => q.score));
+          const max = Math.max(...scoredQuizzes.map(q => Number(q.score)));
           document.getElementById('sq-stat-avg-score').innerText = `${avg}%`;
           document.getElementById('sq-stat-highest-score').innerText = `${max}%`;
         } else {
@@ -3669,6 +4051,10 @@
               const color = sc >= 80 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : (sc >= 50 ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300');
               scoreBadge = `<span class="px-2.5 py-1 rounded-lg text-xs font-black ${color} font-mono">${sc}%</span>`;
             }
+            const correctInfo = (q.correct_count !== null && q.correct_count !== undefined && q.total_questions)
+              ? `<span>•</span><span class="text-emerald-600 dark:text-emerald-400 font-bold">إجابات صحيحة: ${q.correct_count}/${q.total_questions}</span>`
+              : '';
+            const inspectId = q.quiz_log_id || q.id;
 
             return `
               <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 hover:border-purple-300 dark:hover:border-purple-800 transition">
@@ -3677,20 +4063,22 @@
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">${escapeHtml(q.course_id || 'عام')}</span>
                     <strong class="text-xs text-slate-900 dark:text-white truncate block">${escapeHtml(q.topic || 'اختبار تفاعلي')}</strong>
                   </div>
-                  <div class="flex items-center gap-3 text-[11px] text-slate-400">
-                    <span>${q.num_questions} أسئلة</span>
+                  <div class="flex items-center gap-2 flex-wrap text-[11px] text-slate-400">
+                    <span>${q.num_questions || q.total_questions || 5} أسئلة</span>
+                    ${correctInfo}
                     <span>•</span>
-                    <span>الصعوبة: ${q.difficulty}</span>
+                    <span>الصعوبة: ${escapeHtml(q.difficulty || 'medium')}</span>
                     <span>•</span>
                     <span class="font-mono">${formatChatTime(q.created_at)}</span>
                   </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
                   ${scoreBadge}
-                  <button onclick="inspectQuiz(${q.id})" class="p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm" title="فحص محتوى الاختبار">
+                  ${inspectId ? `
+                  <button onclick="inspectQuiz(${inspectId})" class="p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm" title="فحص محتوى الاختبار">
                     <i class="fa-solid fa-eye text-[11px]"></i>
                     <span class="hidden sm:inline">فحص</span>
-                  </button>
+                  </button>` : ''}
                 </div>
               </div>
             `;
@@ -3867,44 +4255,290 @@ async function inspectQuiz(quizId) {
     }
 
     // ── PLATFORM & ATTENDANCE ANALYTICS ───────────────────────────────────────
+    let lastPlatformOverviewData = null;
+    let allAttendanceSessionsList = [];
+    let chartPlatformTrendInstance = null;
+    let chartPlatformDeptsInstance = null;
+
+    function renderPlatformCharts(ov) {
+      if (typeof Chart === 'undefined' || !ov) return;
+      const palette = getChartPalette();
+
+      // 1. 14-Day Daily Activity Trend Line Chart
+      const trend = ov.daily_trend || [];
+      const ctxTrend = document.getElementById('chart-platform-trend');
+      if (ctxTrend) {
+        if (chartPlatformTrendInstance) chartPlatformTrendInstance.destroy();
+        chartPlatformTrendInstance = new Chart(ctxTrend, {
+          type: 'line',
+          data: {
+            labels: trend.map(d => d.label),
+            datasets: [
+              {
+                label: 'تسجيلات الحضور (QR)',
+                data: trend.map(d => d.attendance || 0),
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.14)',
+                fill: true,
+                tension: 0.35,
+                borderWidth: 2.5,
+                pointRadius: 3,
+              },
+              {
+                label: 'محاولات الاختبارات',
+                data: trend.map(d => d.quiz_attempts || 0),
+                borderColor: '#7c3aed',
+                backgroundColor: 'rgba(124, 58, 237, 0.12)',
+                fill: true,
+                tension: 0.35,
+                borderWidth: 2.5,
+                pointRadius: 3,
+              },
+              {
+                label: 'رسائل المحادثات',
+                data: trend.map(d => d.chats || 0),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.10)',
+                fill: true,
+                tension: 0.35,
+                borderWidth: 2.5,
+                pointRadius: 3,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { labels: { color: palette.text, font: { family: 'Cairo', weight: '700', size: 11 } } },
+              tooltip: { backgroundColor: palette.tooltipBg, titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' } },
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { color: palette.text, precision: 0 }, grid: { color: palette.grid } },
+              x: { ticks: { color: palette.text, font: { family: 'Inter', size: 11 } }, grid: { display: false } },
+            },
+          },
+        });
+      }
+
+      // 2. Student Departments Doughnut Chart
+      const deptsObj = (ov.users && ov.users.departments_breakdown) || {};
+      const deptLabels = Object.keys(deptsObj);
+      const deptCounts = Object.values(deptsObj);
+      const ctxDepts = document.getElementById('chart-platform-depts');
+      if (ctxDepts) {
+        if (chartPlatformDeptsInstance) chartPlatformDeptsInstance.destroy();
+        const hasDepts = deptCounts.some(v => v > 0);
+        chartPlatformDeptsInstance = new Chart(ctxDepts, {
+          type: 'doughnut',
+          data: {
+            labels: hasDepts ? deptLabels : ['لا توجد بيانات'],
+            datasets: [{
+              data: hasDepts ? deptCounts : [1],
+              backgroundColor: hasDepts
+                ? ['#7c3aed', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#6366f1']
+                : ['#cbd5e1'],
+              borderWidth: 0,
+              hoverOffset: 6,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { color: palette.text, boxWidth: 10, padding: 10, font: { family: 'Cairo', weight: '700', size: 11 } },
+              },
+            },
+          },
+        });
+      }
+    }
+
+    function renderCoursesAnalyticsTable(courses) {
+      const tbody = document.getElementById('courses-analytics-table-body');
+      if (!tbody) return;
+      if (!courses || courses.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-400 text-xs">لا توجد مقررات مسجلة حالياً</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = courses.map(c => {
+        const scoreVal = c.avg_score !== null && c.avg_score !== undefined ? c.avg_score : null;
+        const barColor = scoreVal === null ? 'bg-slate-300' : (scoreVal >= 80 ? 'bg-emerald-500' : (scoreVal >= 50 ? 'bg-amber-500' : 'bg-rose-500'));
+        const passBadge = c.pass_rate !== null && c.pass_rate !== undefined
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono ${c.pass_rate >= 70 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'}">${c.pass_rate}%</span>`
+          : '<span class="text-slate-400 text-xs font-mono">--</span>';
+
+        return `
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-lg text-[11px] font-extrabold font-mono bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">${escapeHtml(c.course_id)}</span>
+                <span class="font-bold text-slate-900 dark:text-white">${escapeHtml(c.name || c.course_id)}</span>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-center font-bold font-mono text-blue-600 dark:text-blue-400">${c.enrolled_students || 0}</td>
+            <td class="py-3 px-4 text-center font-bold font-mono text-indigo-600 dark:text-indigo-400">${c.files_count || 0}</td>
+            <td class="py-3 px-4 text-center font-mono text-slate-700 dark:text-slate-300">${c.attendance_sessions || 0}</td>
+            <td class="py-3 px-4 text-center font-bold font-mono text-emerald-600 dark:text-emerald-400">${c.attendance_records || 0}</td>
+            <td class="py-3 px-4 text-center font-bold font-mono text-purple-600 dark:text-purple-400">${c.quiz_attempts || 0}</td>
+            <td class="py-3 px-4">
+              <div class="w-28 space-y-1">
+                <span class="text-xs font-extrabold font-mono text-slate-800 dark:text-slate-200">${scoreVal !== null ? scoreVal + '%' : '--'}</span>
+                <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                  <div class="${barColor} h-full" style="width: ${Math.min(100, scoreVal || 0)}%"></div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-center">${passBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderAttendanceSessionsTable(sessions) {
+      const tbody = document.getElementById('attendance-table-body');
+      if (!tbody) return;
+      if (!sessions || sessions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400 text-xs">لا توجد جلسات حضور مطابقة</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = sessions.map(s => `
+        <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+          <td class="py-3 px-4">
+            <span class="font-bold text-brand-700 dark:text-brand-300 font-mono">${escapeHtml(s.course_id || '--')}</span>
+            ${s.course_name && s.course_name !== s.course_id ? `<div class="text-[10px] text-slate-400 truncate max-w-[140px]">${escapeHtml(s.course_name)}</div>` : ''}
+          </td>
+          <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${escapeHtml(s.title || 'جلسة حضور')}</td>
+          <td class="py-3 px-4 text-slate-600 dark:text-slate-300">${escapeHtml(s.teacher_name || 'المعلم')}</td>
+          <td class="py-3 px-4 text-xs font-mono">${s.duration_minutes || 30} دقيقة</td>
+          <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">${s.attendees_count || 0} طالب حاضر</td>
+          <td class="py-3 px-4 text-xs text-slate-400 font-mono">${formatChatTime(s.created_at)}</td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}">
+              ${s.is_active ? 'مفتوحة الآن' : 'مغلقة'}
+            </span>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterAttendanceSessions() {
+      const q = (document.getElementById('attendance-search-input')?.value || '').trim().toLowerCase();
+      const cid = (document.getElementById('attendance-course-filter')?.value || '').trim();
+      let filtered = allAttendanceSessionsList;
+      if (cid) filtered = filtered.filter(s => s.course_id === cid);
+      if (q) {
+        filtered = filtered.filter(s =>
+          (s.title && s.title.toLowerCase().includes(q)) ||
+          (s.teacher_name && s.teacher_name.toLowerCase().includes(q)) ||
+          (s.course_id && s.course_id.toLowerCase().includes(q)) ||
+          (s.course_name && s.course_name.toLowerCase().includes(q))
+        );
+      }
+      renderAttendanceSessionsTable(filtered);
+    }
+
+    function exportPlatformAnalyticsCSV() {
+      const courses = (lastPlatformOverviewData && lastPlatformOverviewData.courses && lastPlatformOverviewData.courses.list) || [];
+      if (!courses.length) {
+        showToast('لا توجد بيانات مقررات لتصديرها', 'info');
+        return;
+      }
+      const headers = ['رمز المقرر', 'اسم المقرر', 'الطلاب المسجلون', 'الملفات', 'جلسات الحضور', 'إجمالي الحضور', 'محاولات الاختبار', 'متوسط الدرجات %', 'نسبة النجاح %'];
+      const rows = courses.map(c => [
+        c.course_id,
+        c.name || c.course_id,
+        c.enrolled_students || 0,
+        c.files_count || 0,
+        c.attendance_sessions || 0,
+        c.attendance_records || 0,
+        c.quiz_attempts || 0,
+        c.avg_score ?? '',
+        c.pass_rate ?? '',
+      ]);
+      const csv = '\uFEFF' + [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `WE_Suez_Platform_Analytics_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('تم تصدير تقرير تحليلات المقررات بنجاح', 'success');
+    }
+
     async function loadPlatformAnalytics() {
+      const coursesBody = document.getElementById('courses-analytics-table-body');
+      const attBody = document.getElementById('attendance-table-body');
       try {
         const resOverview = await fetch(`${API_BASE}/admin/api/overview`, { headers: getAuthHeaders() });
-        if (resOverview.ok) {
-          const ov = await resOverview.json();
-          document.getElementById('stat-platform-files').innerText = (ov.materials && ov.materials.total_files) || 0;
-          document.getElementById('stat-platform-size').innerText = `حجم التخزين: ${(ov.materials && ov.materials.size_mb) || 0} MB`;
-          document.getElementById('stat-platform-sessions').innerText = (ov.attendance && ov.attendance.total_sessions) || 0;
-          document.getElementById('stat-platform-active-sessions').innerText = `${(ov.attendance && ov.attendance.active_sessions) || 0} جلسة مفتوحة حالياً`;
+        if (!resOverview.ok) {
+          if (coursesBody) coursesBody.innerHTML = renderAnalyticsErrorRow(8, resOverview.status, null, 'loadPlatformAnalytics');
+          if (attBody) attBody.innerHTML = renderAnalyticsErrorRow(7, resOverview.status, null, 'loadPlatformAnalytics');
+          return;
+        }
+        const ov = await resOverview.json();
+        lastPlatformOverviewData = ov;
+
+        // Primary KPI cards
+        document.getElementById('stat-platform-files').innerText = (ov.materials && ov.materials.total_files) || 0;
+        document.getElementById('stat-platform-size').innerText = `حجم التخزين: ${(ov.materials && ov.materials.size_mb) || 0} MB`;
+        document.getElementById('stat-platform-sessions').innerText = (ov.attendance && ov.attendance.total_sessions) || 0;
+        const attRecsEl = document.getElementById('stat-platform-att-records');
+        if (attRecsEl) attRecsEl.innerText = (ov.attendance && ov.attendance.total_records) || 0;
+        document.getElementById('stat-platform-active-sessions').innerText = `${(ov.attendance && ov.attendance.active_sessions) || 0} مفتوحة • متوسط ${(ov.attendance && ov.attendance.avg_attendees_per_session) || 0}/جلسة`;
+
+        const coursesList = (ov.courses && ov.courses.list) || [];
+        const coursesEl = document.getElementById('stat-platform-courses');
+        if (coursesEl) coursesEl.innerText = (ov.courses && ov.courses.total_courses) ?? coursesList.length;
+        const coursesSubEl = document.getElementById('stat-platform-courses-sub');
+        if (coursesSubEl && coursesList.length) {
+          coursesSubEl.innerText = coursesList.slice(0, 4).map(c => c.course_id).join(' • ') + (coursesList.length > 4 ? ` +${coursesList.length - 4}` : '');
         }
 
-        const resAtt = await fetch(`${API_BASE}/admin/api/attendance/sessions?limit=50`, { headers: getAuthHeaders() });
-        if (resAtt.ok) {
-          const sessions = await resAtt.json();
-          const tbody = document.getElementById('attendance-table-body');
-          if (!sessions || sessions.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400 text-xs">لا توجد جلسات حضور مسجلة</td></tr>`;
-            return;
-          }
+        const avgScoreEl = document.getElementById('stat-platform-avg-score');
+        if (avgScoreEl) avgScoreEl.innerText = `${(ov.quizzes && ov.quizzes.avg_score) || 0}%`;
+        const passRateEl = document.getElementById('stat-platform-pass-rate');
+        if (passRateEl) passRateEl.innerText = `نجاح ${(ov.quizzes && ov.quizzes.pass_rate) || 0}%`;
+        const testedSubEl = document.getElementById('stat-platform-tested-sub');
+        if (testedSubEl) testedSubEl.innerText = `${(ov.quizzes && ov.quizzes.total_attempts) || 0} محاولة • ${(ov.quizzes && ov.quizzes.tested_students) || 0} طالب`;
 
-          tbody.innerHTML = sessions.map(s => `
-            <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
-              <td class="py-3 px-4 font-bold text-brand-700 dark:text-brand-300 font-mono">${escapeHtml(s.course_id || '--')}</td>
-              <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">${escapeHtml(s.title || 'جلسة حضور')}</td>
-              <td class="py-3 px-4 text-slate-600 dark:text-slate-300">${escapeHtml(s.teacher_name || 'المعلم')}</td>
-              <td class="py-3 px-4 text-xs font-mono">${s.duration_minutes} دقيقة</td>
-              <td class="py-3 px-4 font-bold text-emerald-600">${s.attendees_count} طالب حاضر</td>
-              <td class="py-3 px-4 text-xs text-slate-400 font-mono">${formatChatTime(s.created_at)}</td>
-              <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${s.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}">
-                  ${s.is_active ? 'مفتوحة الآن' : 'مغلقة'}
-                </span>
-              </td>
-            </tr>
-          `).join('');
+        // Secondary strip
+        const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        setTxt('stat-platform-announcements', (ov.content && ov.content.announcements_count) || 0);
+        setTxt('stat-platform-assignments', (ov.content && ov.content.assignments_count) || 0);
+        setTxt('stat-platform-chats', (ov.chats && ov.chats.total_messages) || 0);
+        setTxt('stat-platform-support', (ov.content && ov.content.support_messages_count) || 0);
+        setTxt('stat-platform-active-7d', (ov.users && ov.users.active_last_7d) || 0);
+
+        // Render charts & courses table
+        renderPlatformCharts(ov);
+        renderCoursesAnalyticsTable(coursesList);
+
+        // Fetch Attendance Sessions
+        const resAtt = await fetch(`${API_BASE}/admin/api/attendance/sessions?limit=100`, { headers: getAuthHeaders() });
+        if (resAtt.ok) {
+          allAttendanceSessionsList = await resAtt.json();
+          const courseFilter = document.getElementById('attendance-course-filter');
+          if (courseFilter) {
+            const cur = courseFilter.value;
+            const cids = [...new Set(allAttendanceSessionsList.map(s => s.course_id).filter(Boolean))].sort();
+            courseFilter.innerHTML = '<option value="">جميع المقررات</option>' +
+              cids.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+            courseFilter.value = cur;
+          }
+          filterAttendanceSessions();
+        } else if (attBody) {
+          attBody.innerHTML = renderAnalyticsErrorRow(7, resAtt.status, null, 'loadPlatformAnalytics');
         }
       } catch (err) {
         console.error('Failed to load platform analytics:', err);
+        if (coursesBody) coursesBody.innerHTML = renderAnalyticsErrorRow(8, 0, 'تعذر الاتصال بالسيرفر لجلب تحليلات المنصة', 'loadPlatformAnalytics');
+        if (attBody) attBody.innerHTML = renderAnalyticsErrorRow(7, 0, 'تعذر الاتصال بالسيرفر لجلب جلسات الحضور', 'loadPlatformAnalytics');
       }
     }
 

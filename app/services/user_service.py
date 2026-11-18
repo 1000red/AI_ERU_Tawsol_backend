@@ -398,7 +398,7 @@ def get_dashboard_stats(db: Session) -> dict:
     try:
         stats["total_users"] = db.query(func.count(User.user_id)).scalar() or 0
         stats["students_count"] = db.query(func.count(User.user_id)).filter(User.type_code == "STU").scalar() or 0
-        stats["doctors_count"] = db.query(func.count(User.user_id)).filter(User.type_code == "DR").scalar() or 0
+        stats["doctors_count"] = db.query(func.count(User.user_id)).filter(User.type_code.in_(("DR", "TA"))).scalar() or 0
         stats["admins_count"] = db.query(func.count(User.user_id)).filter(User.type_code == "ADM").scalar() or 0
     except Exception as e:
         print("[Stats] Error querying users:", e)
