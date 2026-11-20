@@ -46,6 +46,7 @@ MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB
 @router.post("/upload/voice", status_code=status.HTTP_201_CREATED)
 async def upload_voice(
     file: UploadFile = File(...),
+    user_id: int = Depends(get_current_user_id),
 ):
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_AUDIO_EXTENSIONS:
@@ -88,6 +89,7 @@ async def upload_voice(
 @router.post("/upload/file", status_code=status.HTTP_201_CREATED)
 async def upload_file(
     file: UploadFile = File(...),
+    user_id: int = Depends(get_current_user_id),
 ):
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_FILE_EXTENSIONS:

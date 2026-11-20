@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
+from app.core.security import require_admin_role
 from app.schemas.material import (
     MaterialOut,
     MaterialCreate,
@@ -24,8 +25,12 @@ def list_materials(db: Session = Depends(get_db)):
 
 @router.post("", response_model=MaterialOut, status_code=status.HTTP_201_CREATED)
 @router.post("/", response_model=MaterialOut, status_code=status.HTTP_201_CREATED)
-def create_material(data: MaterialCreate, db: Session = Depends(get_db)):
-    """Add a new course / material."""
+def create_material(
+    data: MaterialCreate,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(require_admin_role),
+):
+    """Add a new course / material (Admin only)."""
     return svc.create_material(db, data)
 
 
@@ -48,25 +53,42 @@ def get_material(material_id: str, db: Session = Depends(get_db)):
 
 
 @router.put("/{material_id}", response_model=MaterialOut)
-def update_material(material_id: str, data: MaterialUpdate, db: Session = Depends(get_db)):
-    """Update a course."""
+def update_material(
+    material_id: str,
+    data: MaterialUpdate,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(require_admin_role),
+):
+    """Update a course (Admin only)."""
     return svc.update_material(db, material_id, data)
 
 
 @router.delete("/{material_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_material(material_id: str, db: Session = Depends(get_db)):
-    """Delete a course."""
+def delete_material(
+    material_id: str,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(require_admin_role),
+):
+    """Delete a course (Admin only)."""
     svc.delete_material(db, material_id)
     return None
 
 
 @router.post("/enroll", response_model=EnrollmentOut)
-def enroll_student(data: EnrollStudentIn, db: Session = Depends(get_db)):
-    """Enroll a student in a course."""
+def enroll_student(
+    data: EnrollStudentIn,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(require_admin_role),
+):
+    """Enroll a student in a course (Admin only)."""
     return svc.enroll_student(db, data)
 
 
 @router.post("/assign-teacher", response_model=EnrollmentOut)
-def assign_teacher(data: AssignTeacherIn, db: Session = Depends(get_db)):
-    """Assign a doctor/teacher to a course."""
+def assign_teacher(
+    data: AssignTeacherIn,
+    db: Session = Depends(get_db),
+    admin_id: int = Depends(require_admin_role),
+):
+    """Assign a doctor/teacher to a course (Admin only)."""
     return svc.assign_teacher(db, data)

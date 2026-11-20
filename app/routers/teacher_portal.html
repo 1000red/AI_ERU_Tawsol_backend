@@ -145,10 +145,10 @@
             <span id="voiceover-label" class="hidden sm:inline">صوت معلق</span>
           </button>
 
-          <!-- Credentials Drawer Toggle -->
-          <button onclick="toggleCredentialsDrawer()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 text-xs font-bold transition flex items-center gap-1.5" title="عرض حسابات المعلمين للدخول الفوري">
-            <i class="fa-solid fa-id-badge text-amber-500"></i>
-            <span class="hidden sm:inline">بيانات الدخول</span>
+          <!-- Teacher Directory Drawer Toggle -->
+          <button onclick="toggleCredentialsDrawer()" class="px-2.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 text-xs font-bold transition flex items-center gap-1.5" title="عرض دليل أعضاء هيئة التدريس ومقرراتهم">
+            <i class="fa-solid fa-id-badge text-purple-600 dark:text-purple-400"></i>
+            <span class="hidden sm:inline">دليل المعلمين</span>
           </button>
 
           <!-- SQBS Competition Pitch Link -->
@@ -173,21 +173,21 @@
   </header>
 
   <!-- ========================================================================= -->
-  <!-- TEACHER LOGIN CREDENTIALS DRAWER / BANNER (QUICK 1-CLICK ACCESS)          -->
+  <!-- TEACHER DIRECTORY DRAWER (ROSTER & COURSES)                               -->
   <!-- ========================================================================= -->
   <section id="credentials-drawer" class="hidden bg-gradient-to-b from-purple-50/90 to-indigo-50/50 dark:from-slate-900/90 dark:to-slate-950/90 border-b border-purple-200 dark:border-purple-900/50 p-4 transition-all duration-300 shadow-inner">
     <div class="max-w-7xl mx-auto space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <div class="w-7 h-7 rounded-lg bg-brand-800 text-white flex items-center justify-center text-xs">
-            <i class="fa-solid fa-key"></i>
+            <i class="fa-solid fa-id-badge"></i>
           </div>
           <div>
             <h3 class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
-              بيانات الدخول المعتمدة للمعلمين والمهندسين (One-Click Teacher Logins)
+              دليل أعضاء هيئة التدريس والمهندسين (Teacher Directory)
             </h3>
             <p class="text-[11px] text-slate-500 dark:text-slate-400">
-              انقر على أي حساب لتسجيل الدخول الفوري واستعراض المقررات والمحاضرات الخاصة به
+              اختر الحساب الأكاديمي للانتقال المباشر لنافذة تسجيل الدخول الآمن الخاصة به
             </p>
           </div>
         </div>
@@ -234,9 +234,9 @@
             <i class="fa-solid fa-right-to-bracket"></i>
             <span>تسجيل دخول المعلم</span>
           </button>
-          <button type="button" onclick="toggleCredentialsDrawer()" class="w-full sm:w-auto px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs transition flex items-center justify-center gap-2" title="عرض حسابات المعلمين للدخول التجريبي السريع">
-            <i class="fa-solid fa-id-badge text-amber-500"></i>
-            <span>حسابات التجربة السريعة</span>
+          <button type="button" onclick="toggleCredentialsDrawer()" class="w-full sm:w-auto px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs transition flex items-center justify-center gap-2" title="عرض دليل أعضاء هيئة التدريس ومقرراتهم">
+            <i class="fa-solid fa-id-badge text-purple-500"></i>
+            <span>دليل المعلمين المعتمد</span>
           </button>
         </div>
       </div>
@@ -1850,14 +1850,13 @@
       return fallbackMsg;
     }
 
-    // ── VERIFIED TEACHER CREDENTIALS DIRECTORY ───────────────────────────────
+    // ── VERIFIED TEACHER DIRECTORY ──────────────────────────────────────────
     const TEACHER_DIRECTORY = [
       {
         name: 'Dr. Nada',
         role: 'أستاذ دكتور (DR)',
         dept: 'Networking',
         email: 'nada@weschool-suez.edu.eg',
-        pass: 'Nada@123456',
         courses: 'C2'
       },
       {
@@ -1865,7 +1864,6 @@
         role: 'أستاذ دكتور (DR)',
         dept: 'Software Development',
         email: 'mohaned@weschool-suez.edu.eg',
-        pass: 'Mohaned@123456',
         courses: 'C4'
       },
       {
@@ -1873,7 +1871,6 @@
         role: 'أستاذ دكتور (DR)',
         dept: 'AI',
         email: 'alfred@weschool-suez.edu.eg',
-        pass: 'Alfred@123456',
         courses: 'B3'
       },
       {
@@ -1881,7 +1878,6 @@
         role: 'مهندسة (ENG)',
         dept: 'Telecommunications',
         email: 'ekramezzeldien@gmail.com',
-        pass: 'Eekram@123456',
         courses: 'C6'
       },
       {
@@ -1889,7 +1885,6 @@
         role: 'مهندسة (ENG)',
         dept: 'General IT',
         email: 'linaashraf.weschool@gmail.com',
-        pass: 'Pass@123456',
         courses: 'A4'
       },
       {
@@ -1897,7 +1892,6 @@
         role: 'مهندسة (ENG)',
         dept: 'Networking',
         email: 'fw21508@gmail.com',
-        pass: 'Pass@123456',
         courses: 'C3, B1'
       },
       {
@@ -1905,7 +1899,6 @@
         role: 'مهندسة (ENG)',
         dept: 'Networking',
         email: 'fatmaadelbadawy@gmail.com',
-        pass: 'Pass@123456',
         courses: 'C1, B1'
       },
       {
@@ -1913,7 +1906,6 @@
         role: 'مهندس أول (Lead)',
         dept: 'Software Development',
         email: 'abdulla.alwahap@gmail.com',
-        pass: 'Pass@123456',
         courses: 'C5, CS201'
       }
     ];
@@ -2047,17 +2039,11 @@
             <p class="text-[10px] text-slate-400 mt-1">المواد: <span class="font-semibold text-slate-600 dark:text-slate-300">${t.courses}</span></p>
           </div>
           <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-            <span class="text-[10px] font-mono-code text-slate-400">${t.pass ? 'كلمة المرور متوفرة' : 'كلمة المرور الخاصة'}</span>
-            ${t.pass ? `
-              <button onclick="quickLoginAs('${t.email}', '${t.pass}')" class="px-2.5 py-1 rounded-lg bg-brand-800 hover:bg-brand-900 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-sm">
-                <i class="fa-solid fa-bolt text-[10px] text-amber-300"></i>
-                <span>دخول فوري</span>
-              </button>
-            ` : `
-              <button onclick="openLoginModal('${t.email}')" class="px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                تسجيل
-              </button>
-            `}
+            <span class="text-[10px] text-slate-400">${t.role}</span>
+            <button onclick="openLoginModal('${t.email}')" class="px-2.5 py-1 rounded-lg bg-brand-800 hover:bg-brand-900 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-sm">
+              <i class="fa-solid fa-right-to-bracket text-[10px]"></i>
+              <span>تسجيل الدخول</span>
+            </button>
           </div>
         </div>
       `).join('');
@@ -2140,33 +2126,6 @@
             <span>دخول المعلم</span>
           </button>
         `;
-      }
-    }
-
-    async function quickLoginAs(email, password) {
-      showToast('جاري تسجيل الدخول كـ ' + email + '...', 'info');
-      try {
-        const res = await fetch(`${API_BASE}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(formatApiError(data, 'فشل تسجيل الدخول'));
-
-        localStorage.setItem('teacher_token', data.access_token);
-        localStorage.setItem('teacher_user', JSON.stringify(data.user));
-        currentTeacher = data.user;
-
-        showToast('مرحباً بك د./م. ' + data.user.name + ' ✨', 'success');
-        updateTeacherUI();
-        loadTeacherCourses();
-
-        // Close drawer automatically on success
-        const drawer = document.getElementById('credentials-drawer');
-        if (drawer && !drawer.classList.contains('hidden')) drawer.classList.add('hidden');
-      } catch (err) {
-        showToast(err.message, 'error');
       }
     }
 

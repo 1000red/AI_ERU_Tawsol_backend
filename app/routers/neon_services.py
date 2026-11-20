@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
 
 from app.core.config import settings
+from app.core.security import get_current_user_id, require_admin_role
 from app.db.database import get_db, check_connection
 from app.services.neon_storage import neon_storage
 from app.services.neon_ai_gateway import neon_ai
@@ -64,8 +65,11 @@ def get_neon_status() -> Dict[str, Any]:
 
 
 @router.post("/storage/upload")
-async def upload_to_storage(file: UploadFile = File(...)):
-    """Upload a file to the Neon Object Storage bucket."""
+async def upload_to_storage(
+    file: UploadFile = File(...),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Upload a file to the Neon Object Storage bucket (Authenticated)."""
     if not neon_storage.is_configured:
         raise HTTPException(status_code=503, detail="Neon Object Storage not configured")
 
@@ -85,8 +89,11 @@ async def upload_to_storage(file: UploadFile = File(...)):
 
 
 @router.get("/storage/list")
-def list_storage_objects(prefix: str = ""):
-    """List objects in the configured Neon storage bucket."""
+def list_storage_objects(
+    prefix: str = "",
+    admin_id: int = Depends(require_admin_role),
+):
+    """List objects in the configured Neon storage bucket (Admin only)."""
     if not neon_storage.is_configured:
         raise HTTPException(status_code=503, detail="Neon Object Storage not configured")
 
@@ -95,8 +102,12 @@ def list_storage_objects(prefix: str = ""):
 
 
 @router.get("/storage/presigned-url")
-def get_presigned_url(key: str, expires_in: int = 3600):
-    """Generate a presigned GET URL for an object in Neon storage."""
+def get_presigned_url(
+    key: str,
+    expires_in: int = 3600,
+    user_id: int = Depends(get_current_user_id),
+):
+    """Generate a presigned GET URL for an object in Neon storage (Authenticated)."""
     if not neon_storage.is_configured:
         raise HTTPException(status_code=503, detail="Neon Object Storage not configured")
     url = neon_storage.get_presigned_url(key, expires_in=expires_in)
@@ -109,8 +120,9 @@ def get_presigned_url(key: str, expires_in: int = 3600):
 def seal_realtime_query(
     query: str,
     params: Optional[Dict[str, Any]] = None,
+    user_id: int = Depends(get_current_user_id),
 ):
-    """Seal a SQL query for Neon Realtime live subscription."""
+    """Seal a SQL query for Neon Realtime live subscription (Authenticated)."""
     import time
     sealed = neon_realtime.seal_query(query, params)
     try:
@@ -144,7 +156,11 @@ async def list_ai_models():
 
 
 @router.post("/functions/invoke")
-async def invoke_neon_function(slug: str = "hello", path: str = "/"):
-    """Invoke a deployed Neon Function."""
+async def invoke_neon_function(
+    slug: str = "hello",
+    path: str = "/",
+    admin_id: int = Depends(require_admin_role),
+):
+    """Invoke a deployed Neon Function (Admin only)."""
     result = await neon_functions.invoke(slug=slug, path=path)
     return result

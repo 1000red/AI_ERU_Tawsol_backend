@@ -82,16 +82,26 @@ def download_material_file(
 
         return RedirectResponse(url=public_url, status_code=302)
 
-    # Check local disk
+    # Check local disk with directory traversal defense
     if mf.file_path:
+        allowed_bases = [
+            os.path.realpath(os.getcwd()),
+            os.path.realpath("/tmp"),
+            os.path.realpath("uploads"),
+        ]
         for candidate in (
             mf.file_path,
-            os.path.join(os.getcwd(), mf.file_path),
+            os.path.join(os.getcwd(), mf.file_path.lstrip("/")),
             os.path.join("/tmp", mf.file_path.lstrip("/")),
             os.path.join("uploads", mf.file_path.lstrip("/")),
         ):
-            if os.path.exists(candidate) and os.path.isfile(candidate):
-                return FileResponse(candidate, filename=mf.title or os.path.basename(candidate))
+            try:
+                resolved = os.path.realpath(candidate)
+                if any(resolved.startswith(base) for base in allowed_bases):
+                    if os.path.exists(resolved) and os.path.isfile(resolved):
+                        return FileResponse(resolved, filename=mf.title or os.path.basename(resolved))
+            except Exception:
+                continue
 
     raise HTTPException(status_code=404, detail="File content not found on server or storage.")
 
@@ -102,6 +112,16 @@ def get_files(
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
+    user = svc.get_user_info(db, user_id)
+    if user.type_code == "STU":
+        from app.models.material import MaterialStudent
+        is_enrolled = db.query(MaterialStudent).filter(
+            MaterialStudent.material_id == material_id,
+            MaterialStudent.user_id == user_id,
+        ).first()
+        if not is_enrolled:
+            raise HTTPException(status_code=403, detail="Not enrolled in this course")
+
     return svc.get_material_files(db, material_id)
 
 
