@@ -1,4 +1,5 @@
 import os
+import secrets
 from fastapi import APIRouter, Depends, Query, Request, HTTPException, status
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
@@ -24,19 +25,30 @@ router = APIRouter(prefix="/admin", tags=["Admin Dashboard"])
 
 
 def require_admin_access(request: Request, db: Session = Depends(get_db)) -> int:
-    """Security guard requiring authenticated Administrator role or admin API key."""
-    # Check X-Admin-Key header or query parameter
-    admin_key = request.headers.get("x-admin-key") or request.query_params.get("admin_key") or request.query_params.get("key")
-    if admin_key and admin_key == settings.SECRET_KEY:
-        return 1
+    """Security guard requiring authenticated Administrator role or admin API key.
+    Enforces header-only credentials (rejects URL query parameters) and timing-safe comparisons.
+    """
+    # 1. Reject credentials in URL query parameters to prevent leakage in proxy/access logs
+    if "admin_key" in request.query_params or "token" in request.query_params or "key" in request.query_params:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="إرسال بيانات الاعتماد عبر الرابط محظور أمنياً. يرجى استخدام ترويسة Authorization أو X-Admin-Key.",
+        )
 
-    # Check Bearer token from header, query param, or cookie
+    # 2. Check X-Admin-Key header with timing-safe constant-time comparison
+    admin_key = request.headers.get("x-admin-key")
+    if admin_key:
+        dedicated_key = os.getenv("ADMIN_API_KEY", "")
+        fallback_key = settings.SECRET_KEY if settings.SECRET_KEY and "change-this" not in settings.SECRET_KEY else ""
+        valid_key = dedicated_key or fallback_key
+        if valid_key and secrets.compare_digest(admin_key, valid_key):
+            return 1
+
+    # 3. Check Bearer token from Authorization header or HttpOnly/secure cookie
     token = None
     auth = request.headers.get("authorization")
     if auth and auth.startswith("Bearer "):
         token = auth.split(" ")[1]
-    elif request.query_params.get("token"):
-        token = request.query_params.get("token")
     elif request.cookies.get("admin_token"):
         token = request.cookies.get("admin_token")
 

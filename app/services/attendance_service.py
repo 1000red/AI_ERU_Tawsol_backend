@@ -224,15 +224,9 @@ def student_public_check_in(db: Session, raw_token: str, student_identifier: str
         ).first()
 
     if not student:
-        student = db.query(User).filter(
-            User.name.ilike(f"%{clean_id}%"),
-            User.type_code == "STU"
-        ).first()
-
-    if not student:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="لم يتم العثور على طالب بهذا الكود أو البريد الإلكتروني. يرجى التأكد من كتابة كود الطالب بدقة."
+            detail="لم يتم العثور على طالب بهذا الكود أو البريد الإلكتروني. يرجى التأكد من كتابة كود الطالب أو البريد الرسمي بدقة."
         )
 
     return student_check_in(db, student, raw_token)
