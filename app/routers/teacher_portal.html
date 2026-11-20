@@ -121,6 +121,12 @@
 
         <!-- Right Controls: Teacher Profile, Dark Mode, Quick Login -->
         <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Teacher Interactive Gateway & Live Arena Link -->
+          <a href="/teacher-gateway" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-700 via-indigo-600 to-teal-600 hover:opacity-95 text-white font-black text-xs shadow-md shadow-purple-500/20 transition flex items-center gap-1.5" title="فتح ساحة التحدي التفاعلية وسجل نقاط الطلاب (Teacher Gateway)">
+            <i class="fa-solid fa-gamepad text-amber-300"></i>
+            <span class="hidden lg:inline">استوديو التحدي وسجل النقاط 👑</span>
+          </a>
+
           <!-- Student QR Check-In Gateway Link -->
           <a href="Student_CheckIn.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold transition flex items-center gap-1.5" title="بوابة مسح رمز QR حضور الطلاب">
             <i class="fa-solid fa-qrcode text-emerald-600 dark:text-emerald-400"></i>
@@ -339,6 +345,11 @@
         <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
         <span>اختبارات AI (Gemini)</span>
       </button>
+
+      <a href="/teacher-gateway" target="_blank" class="nav-tab px-4 py-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-[#4A154B] dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition flex items-center gap-2 shrink-0 border border-purple-200 dark:border-purple-800 font-extrabold" title="فتح ساحة التحدي التفاعلية وسجل نقاط الطلاب">
+        <i class="fa-solid fa-gamepad text-amber-500"></i>
+        <span>ساحة التحدي وسجل النقاط 👑</span>
+      </a>
 
       <button onclick="switchTab('attendance')" id="tab-btn-attendance" class="nav-tab px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-2 shrink-0">
         <i class="fa-solid fa-clipboard-user"></i>

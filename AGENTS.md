@@ -28,3 +28,9 @@ Recent commit messages are short and informal, for example `the finall edit_02`.
 ## Security & Configuration Tips
 
 Configuration is loaded from `.env` through `app/core/config.py`. Set `DATABASE_URL`, `SECRET_KEY`, SMTP settings (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `FROM_EMAIL`), and `GEMINI_API_KEY` locally as needed. Never commit real secrets, database dumps, virtual environments, or `uploads/` contents.
+
+## Competition Presentation & AI Safety Rules
+
+- For neural voiceover synthesis and audio generation guardrails, refer to [.agents/rules/gemini-tts-audio.md](.agents/rules/gemini-tts-audio.md).
+- For competition slide decks, pitch videos, and defense metrics, refer to [.agents/rules/competition-pitch-rigor.md](.agents/rules/competition-pitch-rigor.md).
+
