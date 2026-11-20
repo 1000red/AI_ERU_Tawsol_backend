@@ -1744,6 +1744,18 @@ def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)
     }
 
     function init() {
+      // Sync logged-in teacher from WE School portal session if present
+      try {
+        const saved = localStorage.getItem('teacher_user');
+        if (saved) {
+          const user = JSON.parse(saved);
+          if (user && user.name) {
+            const el = $("header-teacher-name");
+            if (el) el.textContent = `${user.type_code === 'DR' ? 'د.' : 'م.'} ${user.name} (${user.department || 'IT'})`;
+          }
+        }
+      } catch (_) {}
+
       setupSourceSwitcher();
       loadLedger();
       setupSnippets();

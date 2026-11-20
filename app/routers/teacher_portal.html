@@ -88,8 +88,8 @@
   <!-- TOP NAVIGATION HEADER                                                     -->
   <!-- ========================================================================= -->
   <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+      <div class="flex flex-wrap items-center justify-between gap-2.5">
         
         <!-- Logo & Branding -->
         <div class="flex items-center gap-3">
@@ -111,50 +111,42 @@
           </div>
         </div>
 
-        <!-- Center: Live Cloud Backend Indicator -->
-        <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
-          <span id="backend-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span id="backend-status-text" class="font-medium text-slate-600 dark:text-slate-300">
-            السيرفر السحابي: متصل
-          </span>
-        </div>
-
         <!-- Right Controls: Teacher Profile, Dark Mode, Quick Login -->
-        <div class="flex items-center gap-2 sm:gap-3">
+        <div class="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <!-- Teacher Interactive Gateway & Live Arena Link -->
-          <a href="/teacher-gateway" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-700 via-indigo-600 to-teal-600 hover:opacity-95 text-white font-black text-xs shadow-md shadow-purple-500/20 transition flex items-center gap-1.5" title="فتح ساحة التحدي التفاعلية وسجل نقاط الطلاب (Teacher Gateway)">
+          <a href="/teacher-gateway" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-700 via-indigo-600 to-teal-600 hover:opacity-95 text-white font-black text-xs shadow-md shadow-purple-500/20 transition flex items-center gap-1.5" title="فتح ساحة التحدي التفاعلية وسجل نقاط الطلاب (Teacher Gateway)">
             <i class="fa-solid fa-gamepad text-amber-300"></i>
-            <span class="hidden lg:inline">استوديو التحدي وسجل النقاط 👑</span>
+            <span class="hidden md:inline">استوديو التحدي 👑</span>
           </a>
 
           <!-- Student QR Check-In Gateway Link -->
           <a href="Student_CheckIn.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold transition flex items-center gap-1.5" title="بوابة مسح رمز QR حضور الطلاب">
             <i class="fa-solid fa-qrcode text-emerald-600 dark:text-emerald-400"></i>
-            <span class="hidden xl:inline">بوابة حضور الطلاب</span>
+            <span class="hidden xl:inline">بوابة الحضور</span>
           </a>
 
           <!-- English Subtitles / Bilingual Overlay Toggle -->
-          <button id="lang-toggle-btn" onclick="toggleLanguageOverlay()" class="px-2.5 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700/60 text-xs font-bold transition flex items-center gap-1.5" title="تبديل الترجمة الإنجليزية الفورية (English Subtitles & UI)">
+          <button id="lang-toggle-btn" onclick="toggleLanguageOverlay()" class="px-2 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700/60 text-xs font-bold transition flex items-center gap-1.5" title="تبديل الترجمة الإنجليزية الفورية (English Subtitles & UI)">
             <i class="fa-solid fa-language text-indigo-600 dark:text-indigo-400"></i>
-            <span id="lang-btn-label">English</span>
+            <span id="lang-btn-label">EN</span>
           </button>
 
           <!-- Arabic Voice-Over Assistant Toggle -->
-          <button id="voiceover-toggle-btn" onclick="toggleVoiceOverAssistant()" class="px-2.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 text-xs font-bold transition flex items-center gap-1.5" title="تفعيل / إيقاف المعلق الصوتي الذكي باللغة العربية">
+          <button id="voiceover-toggle-btn" onclick="toggleVoiceOverAssistant()" class="px-2 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 text-xs font-bold transition flex items-center gap-1.5" title="تفعيل / إيقاف المعلق الصوتي الذكي باللغة العربية">
             <i id="voiceover-icon" class="fa-solid fa-volume-high text-purple-600 dark:text-purple-400"></i>
-            <span id="voiceover-label" class="hidden sm:inline">صوت معلق</span>
+            <span id="voiceover-label" class="hidden lg:inline">صوت معلق</span>
           </button>
 
           <!-- Teacher Directory Drawer Toggle -->
-          <button onclick="toggleCredentialsDrawer()" class="px-2.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 text-xs font-bold transition flex items-center gap-1.5" title="عرض دليل أعضاء هيئة التدريس ومقرراتهم">
-            <i class="fa-solid fa-id-badge text-purple-600 dark:text-purple-400"></i>
-            <span class="hidden sm:inline">دليل المعلمين</span>
+          <button onclick="toggleCredentialsDrawer()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 text-xs font-bold transition flex items-center gap-1.5" title="عرض حسابات المعلمين للدخول الفوري السريع">
+            <i class="fa-solid fa-id-badge text-amber-500"></i>
+            <span>حسابات المعلمين (دخول فوري)</span>
           </button>
 
           <!-- SQBS Competition Pitch Link -->
-          <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:opacity-95 text-white font-black text-xs shadow-md shadow-amber-500/20 transition flex items-center gap-1.5" title="فتح العرض التقديمي التنافسي لمنظومة SQBS">
+          <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:opacity-95 text-white font-black text-xs shadow-md shadow-amber-500/20 transition flex items-center gap-1.5" title="فتح العرض التقديمي التنافسي لمنظومة SQBS">
             <i class="fa-solid fa-trophy text-amber-200"></i>
-            <span class="hidden md:inline">العرض التنافسي (Pitch)</span>
+            <span class="hidden md:inline">Pitch</span>
           </a>
 
           <!-- Dark Mode Toggle -->
@@ -1857,6 +1849,7 @@
         role: 'أستاذ دكتور (DR)',
         dept: 'Networking',
         email: 'nada@weschool-suez.edu.eg',
+        pass: 'Nada@123456',
         courses: 'C2'
       },
       {
@@ -1864,6 +1857,7 @@
         role: 'أستاذ دكتور (DR)',
         dept: 'Software Development',
         email: 'mohaned@weschool-suez.edu.eg',
+        pass: 'Mohaned@123456',
         courses: 'C4'
       },
       {
@@ -1871,6 +1865,7 @@
         role: 'أستاذ دكتور (DR)',
         dept: 'AI',
         email: 'alfred@weschool-suez.edu.eg',
+        pass: 'Alfred@123456',
         courses: 'B3'
       },
       {
@@ -1878,6 +1873,7 @@
         role: 'مهندسة (ENG)',
         dept: 'Telecommunications',
         email: 'ekramezzeldien@gmail.com',
+        pass: 'Eekram@123456',
         courses: 'C6'
       },
       {
@@ -1885,6 +1881,7 @@
         role: 'مهندسة (ENG)',
         dept: 'General IT',
         email: 'linaashraf.weschool@gmail.com',
+        pass: 'Pass@123456',
         courses: 'A4'
       },
       {
@@ -1892,6 +1889,7 @@
         role: 'مهندسة (ENG)',
         dept: 'Networking',
         email: 'fw21508@gmail.com',
+        pass: 'Pass@123456',
         courses: 'C3, B1'
       },
       {
@@ -1899,6 +1897,7 @@
         role: 'مهندسة (ENG)',
         dept: 'Networking',
         email: 'fatmaadelbadawy@gmail.com',
+        pass: 'Pass@123456',
         courses: 'C1, B1'
       },
       {
@@ -1906,6 +1905,7 @@
         role: 'مهندس أول (Lead)',
         dept: 'Software Development',
         email: 'abdulla.alwahap@gmail.com',
+        pass: 'Pass@123456',
         courses: 'C5, CS201'
       }
     ];
@@ -2040,10 +2040,15 @@
           </div>
           <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
             <span class="text-[10px] text-slate-400">${t.role}</span>
-            <button onclick="openLoginModal('${t.email}')" class="px-2.5 py-1 rounded-lg bg-brand-800 hover:bg-brand-900 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-sm">
-              <i class="fa-solid fa-right-to-bracket text-[10px]"></i>
-              <span>تسجيل الدخول</span>
-            </button>
+            <div class="flex items-center gap-1.5">
+              <button onclick="quickLoginAs('${t.email}', '${t.pass || 'Pass@123456'}')" class="px-2.5 py-1 rounded-lg bg-brand-800 hover:bg-brand-900 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-sm" title="دخول تجريبي فوري بنقرة واحدة">
+                <i class="fa-solid fa-bolt text-[10px] text-amber-300"></i>
+                <span>دخول فوري</span>
+              </button>
+              <button onclick="openLoginModal('${t.email}')" class="px-2 py-1 rounded-lg border border-slate-300 dark:border-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="تسجيل يدوي">
+                <i class="fa-solid fa-lock text-[9px]"></i>
+              </button>
+            </div>
           </div>
         </div>
       `).join('');
@@ -2129,6 +2134,33 @@
       }
     }
 
+    async function quickLoginAs(email, password) {
+      showToast('جاري تسجيل الدخول كـ ' + email + '...', 'info');
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(formatApiError(data, 'فشل تسجيل الدخول'));
+
+        localStorage.setItem('teacher_token', data.access_token);
+        localStorage.setItem('teacher_user', JSON.stringify(data.user));
+        currentTeacher = data.user;
+
+        showToast('مرحباً بك د./م. ' + data.user.name + ' ✨', 'success');
+        updateTeacherUI();
+        loadTeacherCourses();
+
+        // Close drawer automatically on success
+        const drawer = document.getElementById('credentials-drawer');
+        if (drawer && !drawer.classList.contains('hidden')) drawer.classList.add('hidden');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
     async function handleTeacherLogin(e) {
       e.preventDefault();
       const email = document.getElementById('login-email').value.trim();
@@ -2192,15 +2224,15 @@
           throw new Error(formatApiError(errData, 'فشل جلب المقررات الدراسية'));
         }
         teacherCourses = await res.json();
+        if (!teacherCourses || teacherCourses.length === 0) {
+          teacherCourses = DEFAULT_COURSES;
+        }
         renderCourses(teacherCourses);
         populateCourseDropdowns(teacherCourses);
       } catch (err) {
-        grid.innerHTML = `
-          <div class="col-span-full py-8 text-center text-rose-500">
-            <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
-            <p class="text-xs">${err.message}</p>
-          </div>
-        `;
+        teacherCourses = DEFAULT_COURSES;
+        renderCourses(teacherCourses);
+        populateCourseDropdowns(teacherCourses);
       }
     }
 
