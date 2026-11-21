@@ -55,11 +55,9 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
     return result
 
 
-@router.get("/login", response_class=HTMLResponse, include_in_schema=False)
+@router.get("/login", include_in_schema=False)
 def auth_login_page():
-    """Serve User Management web portal when accessed via browser GET."""
-    from app.routers.user_management_web import USER_MANAGEMENT_HTML
-    return HTMLResponse(content=USER_MANAGEMENT_HTML)
+    return {"message": "Use POST /auth/login for authentication."}
 
 
 @router.post("/logout")

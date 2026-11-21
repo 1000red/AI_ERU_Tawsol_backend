@@ -139,8 +139,6 @@ class PlatformMaintenanceMiddleware(BaseHTTPMiddleware):
         "/api/platform/status",
         "/admin",
         "/dashboard",
-        "/users-management",
-        "/users-portal",
         "/login",
         "/auth/login",
         "/auth/logout",
@@ -173,9 +171,6 @@ class PlatformMaintenanceMiddleware(BaseHTTPMiddleware):
         if norm_path in cls._ALWAYS_ALLOWED_EXACT:
             return True
         if norm_path.startswith("/admin/"):
-            return True
-        # GET /users serves the admin user-management HTML portal; /users/me etc. are blocked
-        if norm_path == "/users" and method == "GET":
             return True
         return False
 

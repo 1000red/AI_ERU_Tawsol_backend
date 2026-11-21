@@ -21,11 +21,10 @@ def test_admin_endpoints_require_admin():
         assert res.status_code == 403, f"Endpoint {ep} should require admin access"
 
 
-def test_admin_html_endpoints():
+def test_admin_gateway_endpoint():
     res = client.get("/admin")
     assert res.status_code == 200
-    assert "لوحة التحكم" in res.text
-
-    res_users = client.get("/users-management")
-    assert res_users.status_code == 200
-    assert "لوحة التحكم" in res_users.text
+    data = res.json()
+    assert data["status"] == "operational"
+    assert "/admin/api" in data["api_endpoints"]
+    assert client.get("/users-management").status_code in (404, 503)

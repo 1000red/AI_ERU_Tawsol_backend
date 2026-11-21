@@ -206,13 +206,12 @@ def test_stop_blocks_non_admin_and_allows_admin_and_resumes_cleanly(test_ctx):
         assert payload["detail"] == custom_msg
         assert r.headers.get("retry-after") == "60"
 
-    # 4. Browser HTML portals return branded 503 Maintenance HTML page
-    for portal_path in ["/teacher", "/checkin", "/"]:
-        r = client.get(portal_path, headers={"Accept": "text/html"})
-        assert r.status_code == 503, f"Expected 503 HTML on {portal_path}, got {r.status_code}"
-        assert "text/html" in r.headers.get("content-type", "")
-        assert custom_msg in r.text
-        assert "مدرسة WE للتكنولوجيا التطبيقية بالسويس" in r.text
+    # 4. Browser HTML requests to / return branded 503 Maintenance HTML page
+    r = client.get("/", headers={"Accept": "text/html"})
+    assert r.status_code == 503, f"Expected 503 HTML on /, got {r.status_code}"
+    assert "text/html" in r.headers.get("content-type", "")
+    assert custom_msg in r.text
+    assert "مدرسة WE للتكنولوجيا التطبيقية بالسويس" in r.text
 
     # 5. Login rules while stopped:
     # - Admin CAN still log in (so admin is never locked out!)
@@ -254,11 +253,9 @@ def test_stop_blocks_non_admin_and_allows_admin_and_resumes_cleanly(test_ctx):
     )
     assert bad_login.status_code == 401
 
-    # 6. Admin panel & admin APIs stay 100% accessible while stopped
-    assert client.get("/admin", headers={"Accept": "text/html"}).status_code == 200
-    assert client.get("/dashboard", headers={"Accept": "text/html"}).status_code == 200
-    assert client.get("/users-management", headers={"Accept": "text/html"}).status_code == 200
-    assert client.get("/users", headers={"Accept": "text/html"}).status_code == 200
+    # 6. Admin gateway & admin APIs stay 100% accessible while stopped
+    assert client.get("/admin").status_code == 200
+    assert client.get("/dashboard").status_code == 200
     assert client.get(
         "/admin/api/stats",
         headers={"Authorization": f"Bearer {tokens['adm']}"},
@@ -299,8 +296,6 @@ def test_stop_blocks_non_admin_and_allows_admin_and_resumes_cleanly(test_ctx):
     assert resume_res.json()["stopped_at"] is None
 
     assert client.get("/").status_code == 200
-    assert client.get("/teacher", headers={"Accept": "text/html"}).status_code == 200
-    assert client.get("/checkin", headers={"Accept": "text/html"}).status_code == 200
     assert client.get("/users/me", headers={"Authorization": f"Bearer {tokens['stu']}"}).status_code == 200
     assert client.post(
         "/auth/login",
@@ -458,30 +453,15 @@ def test_announcements_ws_mid_session_stop_and_disconnect_all(test_ctx):
     asyncio.run(_check_managers())
 
 
-def test_html_portals_include_killswitch_and_lockout_ui(test_ctx):
+def test_no_website_portals_in_backend(test_ctx):
+    """Verify that all website frontend portals are removed and admin root returns API gateway JSON."""
     client, _ = test_ctx
 
-    admin_html = client.get("/admin").text
-    assert "platform-killswitch-card" in admin_html
-    assert "modal-platform-killswitch" in admin_html
-    assert "submitPlatformStatusChange" in admin_html
+    admin_info = client.get("/admin").json()
+    assert admin_info["status"] == "operational"
+    assert "/admin/api" in admin_info["api_endpoints"]
 
-    dash_html = client.get("/dashboard").text
-    assert "platform-control-card" in dash_html
-    assert "togglePlatformStatus" in dash_html
-    assert "/admin/api/platform/status" in dash_html
-    assert "!window.location.origin.includes('localhost')" not in dash_html
-
-    teacher_html = client.get("/teacher").text
-    assert "platform-stopped-overlay" in teacher_html
-    assert "checkPlatformOperationalStatus" in teacher_html
-    assert "installPlatformMaintenanceInterceptor" in teacher_html
-    assert "function escapeHtml(" in teacher_html
-    assert "this.dataset.fileTitle" in teacher_html
-    assert "'${escapeHtml(f.title)}'" not in teacher_html
-    assert "'${escapeHtml(fileTitle)}'" not in teacher_html
-
-    checkin_html = client.get("/checkin").text
-    assert "platform-stopped-overlay" in checkin_html
-    assert "checkPlatformOperationalStatus" in checkin_html
-    assert "installPlatformMaintenanceInterceptor" in checkin_html
+    # Deleted website routes return 404
+    assert client.get("/teacher").status_code == 404
+    assert client.get("/checkin").status_code == 404
+    assert client.get("/users-management").status_code == 404
