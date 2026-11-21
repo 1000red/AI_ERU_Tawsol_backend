@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, Response, HTTPException, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -189,10 +189,42 @@ def login_get_view():
 
 
 @app.post("/login", response_model=auth.TokenOut, tags=["Auth"], include_in_schema=False)
-def login_alias(data: auth.UserLogin, db: Session = Depends(get_db)):
+def login_alias(data: auth.UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     """Allow direct POST /login in addition to /auth/login."""
+    import os
+    import secrets
     from app.services import user_service as svc
-    return svc.login_user(db, data.email, data.password)
+    ip = request.headers.get("x-forwarded-for")
+    if ip:
+        ip = ip.split(",")[0].strip()
+    elif request.client:
+        ip = request.client.host
+    user_agent = request.headers.get("user-agent")
+
+    result = svc.login_user(db, data.email, data.password, ip=ip, user_agent=user_agent)
+    csrf_token = secrets.token_urlsafe(32)
+    result["csrf_token"] = csrf_token
+    is_secure = request.url.scheme == "https" or os.getenv("ENVIRONMENT") == "production"
+
+    response.set_cookie(
+        key="admin_token",
+        value=result["access_token"],
+        httponly=True,
+        secure=is_secure,
+        samesite="lax",
+        max_age=1800,
+        path="/",
+    )
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        httponly=False,
+        secure=is_secure,
+        samesite="lax",
+        max_age=1800,
+        path="/",
+    )
+    return result
 
 
 # ── Health check ──────────────────────────────────────────────────────────────

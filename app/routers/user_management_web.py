@@ -20,4 +20,10 @@ else:
 @router.get("/admin/users", response_class=HTMLResponse)
 def get_user_management_portal():
     """Serve the interactive User Management Web Portal."""
+    if os.path.exists(_HTML_FILE):
+        try:
+            with open(_HTML_FILE, "r", encoding="utf-8") as _f:
+                return HTMLResponse(content=_f.read())
+        except Exception:
+            pass
     return HTMLResponse(content=USER_MANAGEMENT_HTML)

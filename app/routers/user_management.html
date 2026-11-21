@@ -191,6 +191,28 @@
       </button>
     </div>
 
+    <!-- PLATFORM STOPPED WARNING BANNER -->
+    <div id="platform-stopped-alert-banner" class="hidden rounded-2xl bg-gradient-to-r from-rose-500/15 via-red-500/15 to-orange-500/15 border-2 border-rose-500/60 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-rose-500/10">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-triangle-exclamation text-2xl animate-pulse"></i>
+        </div>
+        <div>
+          <h4 class="font-bold text-sm sm:text-base text-rose-800 dark:text-rose-200 flex items-center gap-2">
+            <span>⚠️ تنبيه إداري: المنصة متوقفة حالياً عن استقبال الطلاب والمعلمين</span>
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-rose-600 text-white font-mono font-bold">وضع الصيانة نشط</span>
+          </h4>
+          <p id="platform-stopped-alert-msg" class="text-xs text-rose-700 dark:text-rose-300 mt-0.5 font-medium">
+            النظام لا يستقبل الطلاب والمعلمين حالياً. الوصول مقتصر حصرياً على لوحة تحكم المسؤولين.
+          </p>
+        </div>
+      </div>
+      <button onclick="document.getElementById('platform-killswitch-card').scrollIntoView({behavior: 'smooth'})" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-500/30 transition shrink-0 flex items-center gap-2">
+        <i class="fa-solid fa-power-off"></i>
+        <span>إدارة قفل المنصة</span>
+      </button>
+    </div>
+
     <!-- ======================================================================= -->
     <!-- PLATFORM MASTER KILL-SWITCH CONTROL CARD                                -->
     <!-- ======================================================================= -->
@@ -2182,18 +2204,12 @@
       <form onsubmit="handleAdminLogin(event)" class="mt-4 space-y-4 text-xs sm:text-sm">
         <div>
           <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">البريد الإلكتروني للمسؤول</label>
-          <input type="email" id="login-email" required value="admin@weschool-suez.edu.eg" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none">
+          <input type="email" id="login-email" required placeholder="name@weschool-suez.edu.eg" autocomplete="username" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none">
         </div>
 
         <div>
           <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">كلمة المرور</label>
-          <input type="password" id="login-password" required value="Admin@123456" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono-code focus:ring-2 focus:ring-brand-500 outline-none">
-        </div>
-
-        <div class="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900 text-xs text-purple-900 dark:text-purple-300">
-          <p class="font-bold mb-0.5"><i class="fa-solid fa-circle-info"></i> حساب المسؤول الافتراضي:</p>
-          <p>البريد: <span class="font-mono">admin@weschool-suez.edu.eg</span></p>
-          <p>كلمة المرور: <span class="font-mono">Admin@123456</span></p>
+          <input type="password" id="login-password" required placeholder="••••••••••••" autocomplete="current-password" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono-code focus:ring-2 focus:ring-brand-500 outline-none">
         </div>
 
         <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
@@ -2732,15 +2748,28 @@
     }
 
     // ── AUTHENTICATION & TOKEN HELPERS ───────────────────────────────────────
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+      return match ? decodeURIComponent(match[3]) : null;
+    }
+
+    function getCsrfToken() {
+      return getCookie('csrf_token') || sessionStorage.getItem('csrf_token') || localStorage.getItem('csrf_token') || '';
+    }
+
     function getAdminToken() {
       return localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token') || '';
     }
 
     function getAuthHeaders() {
-      const token = getAdminToken();
       const headers = { 'Content-Type': 'application/json' };
+      const token = getAdminToken();
       if (token) {
         headers['Authorization'] = 'Bearer ' + token;
+      }
+      const csrf = getCsrfToken();
+      if (csrf) {
+        headers['X-CSRF-Token'] = csrf;
       }
       return headers;
     }
@@ -2801,6 +2830,9 @@
           throw new Error('هذا الحساب ليس مسؤول نظام (ADM). يتطلب الوصول صلاحية مسؤول.');
         }
 
+        if (data.csrf_token) {
+          sessionStorage.setItem('csrf_token', data.csrf_token);
+        }
         localStorage.setItem('admin_token', data.access_token);
         localStorage.setItem('admin_user', JSON.stringify(data.user));
         
@@ -2816,13 +2848,43 @@
       }
     }
 
-    function handleLogout() {
+    async function handleLogout() {
+      try {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+        });
+      } catch (e) {
+        console.warn('Logout network notice:', e);
+      }
       localStorage.removeItem('admin_token');
+      sessionStorage.removeItem('admin_token');
+      sessionStorage.removeItem('csrf_token');
       localStorage.removeItem('admin_user');
       showToast('تم تسجيل الخروج بنجاح', 'info');
       updateAuthUI();
       refreshData();
     }
+
+    // Intercept 401s on admin endpoints to prompt re-login when session expires
+    const _origFetch = window.fetch;
+    window.fetch = async function(...args) {
+      const res = await _origFetch.apply(this, args);
+      try {
+        const url = typeof args[0] === 'string' ? args[0] : (args[0] && args[0].url ? args[0].url : '');
+        if (res.status === 401 && url.includes('/admin/api')) {
+          if (getAdminToken()) {
+            localStorage.removeItem('admin_token');
+            sessionStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            updateAuthUI();
+            showToast('انتهت صلاحية جلسة المسؤول. يرجى تسجيل الدخول مجدداً.', 'warning');
+            openLoginModal();
+          }
+        }
+      } catch (e) {}
+      return res;
+    };
 
     // ── BACKEND HEALTH STATUS ────────────────────────────────────────────────
     async function checkBackendHealth() {
@@ -3001,6 +3063,8 @@
           actionBtn.innerHTML = '<i class="fa-solid fa-power-off"></i><span>إيقاف عمل المنصة</span>';
         }
         if (stoppedBar) stoppedBar.classList.add('hidden');
+        const alertBannerOn = document.getElementById('platform-stopped-alert-banner');
+        if (alertBannerOn) alertBannerOn.classList.add('hidden');
         if (headerBtn) {
           headerBtn.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold transition';
         }
@@ -3025,6 +3089,14 @@
         }
         if (stoppedBar) stoppedBar.classList.remove('hidden');
         if (stoppedMsgText) stoppedMsgText.innerText = state.maintenance_message || '';
+        const alertBannerOff = document.getElementById('platform-stopped-alert-banner');
+        const alertMsg = document.getElementById('platform-stopped-alert-msg');
+        if (alertBannerOff) {
+          alertBannerOff.classList.remove('hidden');
+          if (alertMsg && state.maintenance_message) {
+            alertMsg.innerText = state.maintenance_message;
+          }
+        }
         if (headerBtn) {
           headerBtn.className = 'flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white border border-rose-500 text-xs font-extrabold shadow-sm animate-pulse transition';
         }

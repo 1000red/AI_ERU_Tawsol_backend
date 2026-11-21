@@ -46,23 +46,40 @@ def require_admin_access(request: Request, db: Session = Depends(get_db)) -> int
 
     # 3. Check Bearer token from Authorization header or HttpOnly/secure cookie
     token = None
+    is_cookie_auth = False
     auth = request.headers.get("authorization")
     if auth and auth.startswith("Bearer "):
         token = auth.split(" ")[1]
     elif request.cookies.get("admin_token"):
         token = request.cookies.get("admin_token")
+        is_cookie_auth = True
 
     if token:
         try:
             payload = decode_token(token)
             user_type = payload.get("type")
             user_id = int(payload.get("sub", 0))
+            is_adm = False
             if user_type == "ADM":
-                return user_id
-            if user_id > 0:
+                is_adm = True
+            elif user_id > 0:
                 user = user_svc.get_user_by_id(db, user_id)
                 if user and user.type_code == "ADM":
-                    return user_id
+                    is_adm = True
+
+            if is_adm:
+                # If authenticated via ambient cookie, verify double-submit CSRF token on mutating methods
+                if is_cookie_auth and request.method in ("POST", "PUT", "DELETE", "PATCH"):
+                    csrf_header = request.headers.get("x-csrf-token")
+                    csrf_cookie = request.cookies.get("csrf_token")
+                    if not csrf_header or not csrf_cookie or not secrets.compare_digest(csrf_header, csrf_cookie):
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="رمز الحماية ضد التزوير (CSRF Token) غير صالح أو مفقود.",
+                        )
+                return user_id
+        except HTTPException:
+            raise
         except Exception:
             pass
 
@@ -74,16 +91,32 @@ def require_admin_access(request: Request, db: Session = Depends(get_db)) -> int
 
 def require_super_admin_access(request: Request, db: Session = Depends(get_db)) -> int:
     """Security guard requiring authenticated Root/Super Administrator role.
-    Strictly required for permanent destructive operations (Hard Delete).
+    Strictly required for permanent destructive operations and platform kill-switch.
     """
     admin_id = require_admin_access(request, db)
-    user = user_svc.get_user_by_id(db, admin_id)
-    if not user or user.type_code != "ADM":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="صلاحية المشرف الأعلى (SUPER_ADMIN) مطلوبة لتنفيذ الحذف النهائي غير القابل للتراجع.",
-        )
-    return admin_id
+    # Root API key access is always super admin
+    admin_key = request.headers.get("x-admin-key")
+    if admin_key:
+        return admin_id
+
+    try:
+        user = user_svc.get_user_by_id(db, admin_id)
+        if user and user.type_code == "ADM":
+            return admin_id
+    except Exception:
+        pass
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="صلاحية المشرف الأعلى (SUPER_ADMIN) مطلوبة لتنفيذ هذا الإجراء.",
+    )
+
+
+def _get_client_ip(request: Request) -> Optional[str]:
+    ip = request.headers.get("x-forwarded-for")
+    if ip:
+        return ip.split(",")[0].strip()
+    return request.client.host if request.client else None
 
 
 # ── API Endpoints ─────────────────────────────────────────────────────────────
@@ -101,7 +134,8 @@ def get_platform_status_admin(
 @router.post("/api/platform/status", response_model=PlatformStatusOut)
 async def update_platform_status_admin(
     data: PlatformStatusUpdate,
-    admin_id: int = Depends(require_admin_access),
+    request: Request,
+    admin_id: int = Depends(require_super_admin_access),
     db: Session = Depends(get_db),
 ):
     """Stop or resume the entire platform globally from the Admin Panel."""
@@ -110,6 +144,24 @@ async def update_platform_status_admin(
         is_active=data.is_active,
         maintenance_message=data.maintenance_message,
         admin_id=admin_id,
+    )
+    from app.services.admin_audit_service import admin_audit_service
+    admin_user = None
+    try:
+        admin_user = user_svc.get_user_by_id(db, admin_id)
+    except Exception:
+        pass
+
+    admin_audit_service.log_action(
+        db,
+        action="PLATFORM_START" if data.is_active else "PLATFORM_STOP",
+        admin_id=admin_id,
+        admin_email=admin_user.email if admin_user else None,
+        admin_name=admin_user.name if admin_user else None,
+        target_resource="platform:killswitch",
+        ip_address=_get_client_ip(request),
+        user_agent=request.headers.get("user-agent"),
+        details=f"is_active={data.is_active}, maintenance_message={data.maintenance_message}",
     )
     if not data.is_active:
         try:
@@ -148,28 +200,53 @@ def get_users(
 @router.post("/api/users", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def create_user(
     data: AdminUserCreate,
+    request: Request,
     admin_id: int = Depends(require_admin_access),
     db: Session = Depends(get_db),
 ):
     """Create a new user (student, doctor, admin) with encrypted password."""
-    return user_svc.create_user_admin(db, data)
+    new_user = user_svc.create_user_admin(db, data)
+    from app.services.admin_audit_service import admin_audit_service
+    admin_audit_service.log_action(
+        db,
+        action="USER_CREATE",
+        admin_id=admin_id,
+        target_resource=f"user:{new_user.user_id}",
+        ip_address=_get_client_ip(request),
+        user_agent=request.headers.get("user-agent"),
+        details=f"Created user {new_user.email} (type={new_user.type_code}, name={new_user.name})",
+    )
+    return new_user
 
 
 @router.put("/api/users/{user_id}", response_model=UserOut)
 def update_user(
     user_id: int,
     data: AdminUserUpdate,
+    request: Request,
     admin_id: int = Depends(require_admin_access),
     db: Session = Depends(get_db),
 ):
     """Update user information."""
-    return user_svc.update_user_admin(db, user_id, data)
+    updated = user_svc.update_user_admin(db, user_id, data)
+    from app.services.admin_audit_service import admin_audit_service
+    admin_audit_service.log_action(
+        db,
+        action="USER_UPDATE",
+        admin_id=admin_id,
+        target_resource=f"user:{user_id}",
+        ip_address=_get_client_ip(request),
+        user_agent=request.headers.get("user-agent"),
+        details=f"Updated profile for user {user_id}",
+    )
+    return updated
 
 
 @router.put("/api/users/{user_id}/courses", response_model=UserOut)
 def update_teacher_courses(
     user_id: int,
     data: TeacherAssignmentUpdate,
+    request: Request,
     admin_id: int = Depends(require_admin_access),
     db: Session = Depends(get_db),
 ):
@@ -190,6 +267,17 @@ def update_teacher_courses(
 
     rows = db.query(MaterialTeacher.material_id).filter(MaterialTeacher.user_id == user_id).all()
     user.assigned_courses = [r[0] for r in rows]
+
+    from app.services.admin_audit_service import admin_audit_service
+    admin_audit_service.log_action(
+        db,
+        action="ASSIGN_COURSES",
+        admin_id=admin_id,
+        target_resource=f"user:{user_id}",
+        ip_address=_get_client_ip(request),
+        user_agent=request.headers.get("user-agent"),
+        details=f"Assigned courses {data.assigned_courses} to user {user_id}",
+    )
     return user
 
 
@@ -197,23 +285,57 @@ def update_teacher_courses(
 def reset_password(
     user_id: int,
     data: AdminPasswordReset,
+    request: Request,
     admin_id: int = Depends(require_admin_access),
     db: Session = Depends(get_db),
 ):
     """Reset any user's password directly."""
     user_svc.reset_password_admin(db, user_id, data.new_password)
+    from app.services.admin_audit_service import admin_audit_service
+    admin_audit_service.log_action(
+        db,
+        action="PASSWORD_RESET",
+        admin_id=admin_id,
+        target_resource=f"user:{user_id}",
+        ip_address=_get_client_ip(request),
+        user_agent=request.headers.get("user-agent"),
+        details=f"Admin reset password for user {user_id}",
+    )
     return {"message": "Password reset successfully", "user_id": user_id}
 
 
 @router.delete("/api/users/{user_id}", status_code=status.HTTP_200_OK)
 def delete_user(
     user_id: int,
+    request: Request,
     admin_id: int = Depends(require_admin_access),
     db: Session = Depends(get_db),
 ):
     """Delete a user."""
     user_svc.delete_user_admin(db, user_id)
+    from app.services.admin_audit_service import admin_audit_service
+    admin_audit_service.log_action(
+        db,
+        action="USER_DELETE",
+        admin_id=admin_id,
+        target_resource=f"user:{user_id}",
+        ip_address=_get_client_ip(request),
+        user_agent=request.headers.get("user-agent"),
+        details=f"Deleted user {user_id}",
+    )
     return {"message": "User deleted successfully", "user_id": user_id}
+
+
+@router.get("/api/audit")
+def get_audit_logs(
+    limit: int = Query(50, ge=1, le=200),
+    action: Optional[str] = None,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Query recent administrative security audit logs."""
+    from app.services.admin_audit_service import admin_audit_service
+    return admin_audit_service.get_recent_logs(db, limit=limit, action=action)
 
 
 @router.get("/api/courses", response_model=list[MaterialOut])
@@ -1953,11 +2075,11 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         <form id="form-auth-test" onsubmit="runAuthTest(event)" class="space-y-3 sm:space-y-4">
           <div>
             <label class="block text-xs font-semibold mb-1">البريد الإلكتروني أو كود الجامعة</label>
-            <input type="text" id="test-identifier" placeholder="مثال: admin@weschool-suez.edu.eg أو ADMIN001 أو 10524001" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm">
+            <input type="text" id="test-identifier" placeholder="مثال: user@weschool-suez.edu.eg أو 2026001" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm">
           </div>
           <div>
             <label class="block text-xs font-semibold mb-1">كلمة المرور</label>
-            <input type="password" id="test-password" placeholder="مثال: Admin@123456" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm">
+            <input type="password" id="test-password" placeholder="••••••••••••" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm">
           </div>
           <button type="submit" class="w-full py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md transition">
             🚀 اختبار تسجيل الدخول الآن

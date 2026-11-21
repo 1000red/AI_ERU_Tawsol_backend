@@ -71,6 +71,7 @@ class TokenOut(BaseModel):
     access_token: str
     token_type:   str = "bearer"
     user:         UserOut
+    csrf_token:   Optional[str] = None
 
 
 # ── OTP / Password reset ──────────────────────────────────────────────────────

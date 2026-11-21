@@ -1,4 +1,10 @@
 .env
+.env*
+.env.local
+.env.production
+.env.development
+*.pem
+*.key
 env/
 venv/
 pro_01/

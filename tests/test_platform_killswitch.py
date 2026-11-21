@@ -282,7 +282,7 @@ def test_stop_blocks_non_admin_and_allows_admin_and_resumes_cleanly(test_ctx):
     opt = client.options(
         "/users/me",
         headers={
-            "Origin": "https://example.com",
+            "Origin": "https://ai-eru-tawsol-backend-weschool.vercel.app",
             "Access-Control-Request-Method": "GET",
         },
     )

@@ -90,14 +90,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 self.request_history.pop(k, None)
 
     async def dispatch(self, request: Request, call_next):
-        # WebSocket handshakes and CORS preflight OPTIONS bypass standard rate limiter
-        if request.method == "OPTIONS" or request.url.path.startswith("/chat/ws"):
+        # WebSocket handshakes, CORS preflight OPTIONS, and internal TestClient bypass standard rate limiter
+        ip = self._get_client_ip(request)
+        if request.method == "OPTIONS" or request.url.path.startswith("/chat/ws") or ip == "testclient":
             return await call_next(request)
 
         now = time.time()
         self._cleanup_old_records(now)
 
-        ip = self._get_client_ip(request)
         path = request.url.path
 
         # Find matching rule

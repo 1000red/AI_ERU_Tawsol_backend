@@ -56,13 +56,55 @@ def update_user(db: Session, user_id: int, data: UserUpdate) -> User:
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
-def login_user(db: Session, email: str, password: str) -> dict:
+def login_user(
+    db: Session,
+    email: str,
+    password: str,
+    ip: str | None = None,
+    user_agent: str | None = None,
+) -> dict:
+    from app.services.auth_security_service import auth_security_service
+    from app.services.admin_audit_service import admin_audit_service
+
+    # Check brute-force lockout
+    auth_security_service.check_login_allowed(email, ip)
+
     user = get_user_by_email(db, email)
     if not user or not verify_password(password, user.password):
+        attempts, is_locked = auth_security_service.record_failed_attempt(email, ip)
+        admin_audit_service.log_action(
+            db,
+            action="LOGIN_FAILED",
+            admin_id=user.user_id if user and user.type_code == "ADM" else None,
+            admin_email=email,
+            target_resource="auth:login",
+            ip_address=ip,
+            user_agent=user_agent,
+            details=f"Failed login attempt {attempts}. Locked={is_locked}",
+        )
+        if is_locked:
+            auth_security_service.check_login_allowed(email, ip)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
+
+    # Success: clear failure counters
+    auth_security_service.record_successful_login(email, ip)
+
+    if user.type_code == "ADM":
+        admin_audit_service.log_action(
+            db,
+            action="LOGIN_SUCCESS",
+            admin_id=user.user_id,
+            admin_email=user.email,
+            admin_name=user.name,
+            target_resource="auth:login",
+            ip_address=ip,
+            user_agent=user_agent,
+            details="Admin logged in successfully",
+        )
+
     if user.type_code != "ADM":
         from app.services.platform_service import PlatformStoppedError, get_platform_status
         platform_state = get_platform_status(db)
@@ -76,16 +118,18 @@ def login_user(db: Session, email: str, password: str) -> dict:
 
 
 def change_password(db: Session, user_id: int, old_password: str, new_password: str) -> None:
+    from app.services.auth_security_service import auth_security_service
     user = get_user_by_id(db, user_id)
     if not verify_password(old_password, user.password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="كلمة المرور الحالية غير صحيحة",
         )
-    if not new_password or len(new_password) < 6:
+    is_valid, msg = auth_security_service.validate_password_strength(new_password)
+    if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="كلمة المرور الجديدة يجب أن لا تقل عن 6 أحرف.",
+            detail=msg,
         )
     user.password = hash_password(new_password)
     user.current_password = False
@@ -206,16 +250,18 @@ def verify_otp(db: Session, email: str, otp: str) -> str:
 
 
 def reset_password(db: Session, reset_token: str, new_password: str) -> None:
+    from app.services.auth_security_service import auth_security_service
     payload = decode_token(reset_token)
     if payload.get("purpose") != "reset":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid token purpose"
         )
-    if not new_password or len(new_password) < 6:
+    is_valid, msg = auth_security_service.validate_password_strength(new_password)
+    if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="كلمة المرور يجب أن لا تقل عن 6 أحرف."
+            detail=msg,
         )
     user = get_user_by_id(db, int(payload["sub"]))
     user.password = hash_password(new_password)
@@ -266,6 +312,7 @@ def list_all_users(
 
 
 def create_user_admin(db: Session, data) -> User:
+    from app.services.auth_security_service import auth_security_service
     # check email or uni_code unique
     existing = db.query(User).filter(
         or_(
@@ -277,6 +324,13 @@ def create_user_admin(db: Session, data) -> User:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"User with this email ({data.email}) or university code ({data.uni_code}) already exists."
+        )
+
+    is_valid, msg = auth_security_service.validate_password_strength(data.password)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=msg,
         )
 
     user = User(
@@ -337,7 +391,14 @@ def update_user_admin(db: Session, user_id: int, data) -> User:
         dept = data.department.strip()
         user.department = dept if dept else None
         
-    if hasattr(data, "password") and data.password and len(data.password.strip()) >= 4:
+    if hasattr(data, "password") and data.password and data.password.strip():
+        from app.services.auth_security_service import auth_security_service
+        is_valid, msg = auth_security_service.validate_password_strength(data.password.strip())
+        if not is_valid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=msg,
+            )
         user.password = hash_password(data.password.strip())
         user.current_password = False
         
@@ -361,11 +422,13 @@ def update_user_admin(db: Session, user_id: int, data) -> User:
 
 
 def reset_password_admin(db: Session, user_id: int, new_password: str) -> None:
+    from app.services.auth_security_service import auth_security_service
     user = get_user_by_id(db, user_id)
-    if not new_password or len(new_password) < 4:
+    is_valid, msg = auth_security_service.validate_password_strength(new_password)
+    if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password must be at least 4 characters long."
+            detail=msg,
         )
     user.password = hash_password(new_password)
     user.current_password = False
