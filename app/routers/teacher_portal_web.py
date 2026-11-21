@@ -27,6 +27,12 @@ else:
 @router.get("/teachers-portal", response_class=HTMLResponse)
 def get_teacher_portal():
     """Serve the interactive Teacher Portal Web Application."""
+    if os.path.exists(_HTML_FILE):
+        try:
+            with open(_HTML_FILE, "r", encoding="utf-8") as _f:
+                return HTMLResponse(content=_f.read())
+        except Exception:
+            pass
     return HTMLResponse(content=TEACHER_PORTAL_HTML)
 
 
@@ -36,4 +42,10 @@ def get_teacher_portal():
 @router.get("/interactive-classroom", response_class=HTMLResponse)
 def get_teacher_gateway():
     """Serve the Teacher Interactive Gateway and Live Classroom Arena."""
+    if os.path.exists(_GATEWAY_FILE):
+        try:
+            with open(_GATEWAY_FILE, "r", encoding="utf-8") as _f:
+                return HTMLResponse(content=_f.read())
+        except Exception:
+            pass
     return HTMLResponse(content=TEACHER_GATEWAY_HTML)

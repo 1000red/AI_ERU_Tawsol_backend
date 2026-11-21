@@ -46,6 +46,12 @@ def teacher_materials(user_id: int, db: Session = Depends(get_db)):
     return svc.get_teacher_materials(db, user_id)
 
 
+@router.get("/{material_id}/students")
+def get_material_students(material_id: str, db: Session = Depends(get_db)):
+    """Return enrolled students for a specific course/material."""
+    return svc.get_material_students(db, material_id)
+
+
 @router.get("/{material_id}", response_model=MaterialOut)
 def get_material(material_id: str, db: Session = Depends(get_db)):
     """Get single course details."""

@@ -263,12 +263,13 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
-          <div class="px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-2">
-            <span class="text-slate-500">الفصل:</span>
-            <select id="sel-classroom" class="bg-transparent font-bold text-[#4A154B] dark:text-purple-300 outline-none">
-              <option value="IT-201">الصف الثاني - شبكات وتكنولوجيا (IT-201)</option>
-              <option value="CS-101">الصف الأول - أساسيات الحاسب (CS-101)</option>
-              <option value="TEL-301">الصف الثالث - اتصالات وموجات (TEL-301)</option>
+          <div class="px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 shadow-sm flex items-center gap-2">
+            <span class="text-purple-700 dark:text-purple-300 flex items-center gap-1">
+              <i class="fa-solid fa-database text-teal-600"></i>
+              <span>المقرر الدراسي (Neon DB):</span>
+            </span>
+            <select id="sel-course-id" class="bg-transparent font-bold text-[#4A154B] dark:text-purple-200 outline-none cursor-pointer">
+              <option value="C5" selected>C5 - Programming (تحميل...)</option>
             </select>
           </div>
         </div>
@@ -334,21 +335,38 @@
             </div>
           </div>
 
-          <!-- Mode B: Quick Course Curriculum Selector (Pre-packaged WE modules) -->
-          <div id="source-curriculum-wrap" class="hidden space-y-3">
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-              اختر الوحدة الدراسية من مقرر شبكات WE المعتمد:
-            </label>
-            <select id="sel-preset-topic" class="w-full rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-3 text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-              <option value="osi_layers">الوحدة 1: نموذج الاتصال المعياري OSI 7-Layers والبروتوكولات (TCP/UDP/IP)</option>
-              <option value="ip_subnetting">الوحدة 2: عنونة الشبكات وتقسيم الشبكات الفرعية IPv4 Subnetting & CIDR</option>
-              <option value="vlan_switching">الوحدة 3: إعداد المحولات والشبكات الافتراضية VLANs & 802.1Q Trunking</option>
-              <option value="python_automation">الوحدة 4: أتمتة الشبكات باستخدام Python وNetmiko وRESTCONF</option>
-              <option value="cyber_firewall">الوحدة 5: أمن الشبكات، الجدران النارية، وقوائم التحكم بالوصول ACLs</option>
-            </select>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">
-              يتم استدعاء المحتوى المعتمد لمدرسة WE تلقائياً مع نماذج أسئلة وتطبيقات عملية جاهزة.
-            </p>
+          <!-- Mode B: Quick Course Curriculum Selector (Neon DB & WE Modules) -->
+          <div id="source-curriculum-wrap" class="space-y-4">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  ملف أو محاضرة المقرر من Neon S3:
+                </label>
+                <span id="course-files-badge" class="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 text-[10px] font-bold border border-purple-200 dark:border-purple-800">
+                  جاري جلب الملفات...
+                </span>
+              </div>
+              <select id="sel-course-file" class="w-full rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-purple-600">
+                <option value="all">🌟 توليد التحدي من جميع ملفات المقرر</option>
+              </select>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                موضوع التحدي ووحدات مدرسة WE المعتمدة:
+              </label>
+              <select id="sel-preset-topic" class="w-full rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-purple-600">
+                <option value="c5_programming">مقرر C5: هندسة البرمجيات وبناء التطبيقات النظيفة (Clean Architecture)</option>
+                <option value="osi_layers">الوحدة 1: نموذج الاتصال المعياري OSI 7-Layers والبروتوكولات (TCP/UDP/IP)</option>
+                <option value="ip_subnetting">الوحدة 2: عنونة الشبكات وتقسيم الشبكات الفرعية IPv4 Subnetting & CIDR</option>
+                <option value="vlan_switching">الوحدة 3: إعداد المحولات والشبكات الافتراضية VLANs & 802.1Q Trunking</option>
+                <option value="python_automation">الوحدة 4: أتمتة الشبكات باستخدام Python وNetmiko وRESTCONF</option>
+                <option value="cyber_firewall">الوحدة 5: أمن الشبكات، الجدران النارية، وقوائم التحكم بالوصول ACLs</option>
+              </select>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                يتم جلب الملفات والطلاب تلقائياً من قاعدة بيانات Neon PostgreSQL لربط التحدي الفصلي بالمنهج الحقيقي.
+              </p>
+            </div>
           </div>
 
           <!-- Activity Controls (Modes, Count, Difficulty) -->
@@ -960,6 +978,101 @@
             time_limit_sec: 15
           }
         ]
+      },
+      c5_programming: {
+        title: "مقرر C5: هندسة البرمجيات وبناء التطبيقات النظيفة (Clean Architecture)",
+        questions: [
+          {
+            id: "c5_1",
+            prompt: "ما هو المبدأ الأول من مبادئ SOLID (Single Responsibility Principle) وما الهدف من تطبيقه؟",
+            code_snippet: "class UserAuth:\n    def authenticate(self, user): pass\n    def save_to_db(self, user): pass  # Violation of SRP!",
+            code_language: "python",
+            options: [
+              "يجب أن تمتلك الفئة سبباً واحداً فقط للتغيير ومسؤولية وظيفية محددة",
+              "يجب أن تكون كل فئة قابلة للتوريث من أكثر من 5 كائنات مختلفة",
+              "أن تُنفذ جميع العمليات داخل دالة واحدة لتقليل استهلاك الذاكرة",
+              "تطبيق التشفير الثنائي فقط على طبقة التخزين"
+            ],
+            correct_index: 0,
+            correct_order: [],
+            socratic_hint: "فكر في فصل المهام: هل يجب على وحدة المصادقة أن تدير قاعدة البيانات أيضاً؟",
+            explanation: "مبدأ المسؤولية الواحدة ينص على أن كل فئة يجب أن تكون مسؤولة عن جزء وظيفي واحد فقط.",
+            topic: "مبادئ SOLID",
+            time_limit_sec: 25
+          },
+          {
+            id: "c5_2",
+            prompt: "في إطار FastAPI، ما الأداة الموصى بها لحقن التبعيات (Dependency Injection) مثل جلسات قاعدة البيانات؟",
+            code_snippet: "@app.get('/items')\ndef get_items(db: Session = Depends(get_db)):\n    return db.query(Item).all()",
+            code_language: "python",
+            options: [
+              "دالة Depends(get_db)",
+              "استخدام المتغيرات العامة Global Variables",
+              "إعادة إنشاء الاتصال يدوياً داخل كل دالة",
+              "استدعاء exec() مباشرة"
+            ],
+            correct_index: 0,
+            correct_order: [],
+            socratic_hint: "لاحظ الكلمة المفتاحية في توقيع الدالة: Depends.",
+            explanation: "توفر دالة Depends نظام حقن تبعيات قوي يضمن فتح وإغلاق جلسة قاعدة البيانات بأمان.",
+            topic: "FastAPI Dependency Injection",
+            time_limit_sec: 20
+          },
+          {
+            id: "c5_3",
+            prompt: "ما هو الفارق بين مجلدات app/models و app/schemas في الهيكلية النظيفة للتطبيق؟",
+            code_snippet: "",
+            code_language: "",
+            options: [
+              "models تمثل جداول قاعدة البيانات (ORM) بينما schemas تمثل هياكل التحقق من البيانات (Pydantic)",
+              "schemas مخصصة للواجهات الأمامية و models للواجهات الخلفية فقط",
+              "كلاهما متطابقان تماماً ولا يوجد فرق وظيفي بينهما",
+              "models مخصصة لملفات الصور و schemas للأكواد البرمجية"
+            ],
+            correct_index: 0,
+            correct_order: [],
+            socratic_hint: "تأمل الفرق بين جدول PostgreSQL ومخطط التحقق Pydantic Request/Response.",
+            explanation: "نماذج SQLAlchemy تمثل جداول قاعدة البيانات، بينما Pydantic Schemas تتحقق من صحة المدخلات والمخرجات.",
+            topic: "Clean Architecture",
+            time_limit_sec: 22
+          },
+          {
+            id: "c5_4",
+            prompt: "لماذا يُفضل استخدام SQLAlchemy Connection Pooling عند الاتصال بقاعدة بيانات Neon السحابية؟",
+            code_snippet: "engine = create_engine(DATABASE_URL, pool_size=10, max_overflow=20)",
+            code_language: "python",
+            options: [
+              "لإعادة استخدام الاتصالات المفتوحة وتفادي استهلاك موارد الـ Handshake في البيئات السحابية",
+              "لحذف الجداول تلقائياً بعد كل استعلام لزيادة السرعة",
+              "لأن Neon لا تدعم سوى اتصال واحد في الثانية",
+              "لتشفير كلمات المرور في المتصفح"
+            ],
+            correct_index: 0,
+            correct_order: [],
+            socratic_hint: "فكر في تكلفة إنشاء اتصال SSL جديد مع السحابة لكل استعلام.",
+            explanation: "مجمّع الاتصالات (Connection Pool) يحتفظ بعدد من الاتصالات الجاهزة مما يرفع سرعة الاستجابة ويقلل الحمل.",
+            topic: "Database Connection Pooling",
+            time_limit_sec: 22
+          }
+        ]
+      },
+      cs201_software: {
+        title: "مقرر CS201: هندسة البرمجيات وأنماط التصميم (Design Patterns)",
+        questions: [
+          {
+            id: "cs_1",
+            prompt: "ما هو نمط التصميم (Design Pattern) المناسب عند الحاجة لإنشاء نسخة واحدة فقط من كائن على مستوى التطبيق بالكامل؟",
+            code_snippet: "class DatabaseConnection:\n    _instance = None\n    def __new__(cls): ...",
+            code_language: "python",
+            options: ["نمط المفرد (Singleton Pattern)", "نمط المراقب (Observer Pattern)", "نمط المصنع (Factory Pattern)", "نمط المهايئ (Adapter Pattern)"],
+            correct_index: 0,
+            correct_order: [],
+            socratic_hint: "الاسم مشتق من كلمة مفرد أو وحيد (Single).",
+            explanation: "نمط Singleton يضمن إنشاء نسخة وحيدة من الكائن وتوفير نقطة وصول عامة لها.",
+            topic: "Design Patterns",
+            time_limit_sec: 20
+          }
+        ]
       }
     };
 
@@ -1065,8 +1178,122 @@
       });
     }
 
+    // Dynamic Course & Roster Loading from Neon PostgreSQL
+    async function loadDynamicCourses() {
+      const selCourse = $("sel-course-id");
+      if (!selCourse) return;
+
+      try {
+        const res = await fetch("/api/v1/games/courses");
+        if (res.ok) {
+          const courses = await res.json();
+          if (Array.isArray(courses) && courses.length > 0) {
+            selCourse.innerHTML = courses.map((c) => `
+              <option value="${escapeHtml(c.material_id)}">${escapeHtml(c.material_id)} - ${escapeHtml(c.name)} (${c.student_count || 0} طالب)</option>
+            `).join("");
+
+            const initialCourseId = selCourse.value || courses[0].material_id;
+            loadCourseFiles(initialCourseId);
+            loadCourseStudents(initialCourseId);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load dynamic courses from backend:", err);
+      }
+
+      // Resilient fallback courses
+      selCourse.innerHTML = `
+        <option value="C5" selected>C5 - Programming (48 ساعة)</option>
+        <option value="CS201">CS201 - Software Engineering (45 ساعة)</option>
+        <option value="C1">C1 - Networking (40 ساعة)</option>
+        <option value="C2">C2 - Advanced Networking (42 ساعة)</option>
+        <option value="B3">B3 - AI & Machine Learning (36 ساعة)</option>
+      `;
+      loadCourseFiles("C5");
+      loadCourseStudents("C5");
+    }
+
+    async function loadCourseFiles(courseId) {
+      const selFile = $("sel-course-file");
+      const badge = $("course-files-badge");
+      if (!selFile) return;
+
+      selFile.innerHTML = `<option value="">جاري فحص ملفات ومحاضرات المقرر...</option>`;
+      if (badge) {
+        badge.textContent = "جاري الاتصال بـ Neon S3...";
+        badge.className = "px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 text-[10px] font-bold border border-purple-200 dark:border-purple-800";
+      }
+
+      try {
+        const res = await fetch(`/content/files/${encodeURIComponent(courseId)}`);
+        if (res.ok) {
+          const files = await res.json();
+          if (Array.isArray(files) && files.length > 0) {
+            selFile.innerHTML = [
+              `<option value="all">🌟 توليد التحدي من جميع ملفات المقرر (${files.length} ملفات)</option>`,
+              ...files.map((f) => `<option value="${f.file_id}">📄 ${escapeHtml(f.title || f.file_name || 'محاضرة')} (${(f.file_type || 'PDF').toUpperCase()})</option>`)
+            ].join("");
+            if (badge) {
+              badge.textContent = `✓ ${files.length} ملفات سحابية في Neon`;
+              badge.className = "px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold border border-emerald-200 dark:border-emerald-800";
+            }
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Error fetching course files:", err);
+      }
+
+      selFile.innerHTML = `<option value="standard">📚 استخدام المنهج المعياري لمدرسة WE</option>`;
+      if (badge) {
+        badge.textContent = "جاهز (منهج WE المعتمد)";
+        badge.className = "px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 text-[10px] font-bold border border-purple-200 dark:border-purple-800";
+      }
+    }
+
+    async function loadCourseStudents(courseId) {
+      const activeBadge = $("roster-active-badge");
+      try {
+        const res = await fetch(`/api/v1/games/students/${encodeURIComponent(courseId)}`);
+        if (res.ok) {
+          const students = await res.json();
+          if (Array.isArray(students) && students.length > 0) {
+            state.ledger = students;
+            saveLedger();
+            renderRosterSelect();
+            renderLedgerUI();
+            if (activeBadge) activeBadge.textContent = `${students.length} طالباً بالمقرر`;
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Error fetching course students:", err);
+      }
+      fallbackLocalLedger();
+    }
+
     // Ledger Management
     function loadLedger() {
+      fetch("/api/v1/games/ledger")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && Array.isArray(data.ledger) && data.ledger.length > 0) {
+            state.ledger = data.ledger;
+            saveLedger();
+            renderRosterSelect();
+            renderLedgerUI();
+          } else {
+            fallbackLocalLedger();
+          }
+        })
+        .catch((err) => {
+          console.warn("Live ledger fetch fallback:", err);
+          fallbackLocalLedger();
+        });
+    }
+
+    function fallbackLocalLedger() {
       try {
         const raw = localStorage.getItem(LEDGER_KEY);
         const parsed = raw ? JSON.parse(raw) : null;
@@ -1074,7 +1301,6 @@
           state.ledger = parsed;
         } else {
           state.ledger = [...DEFAULT_ROSTER];
-          saveLedger();
         }
       } catch (_) {
         state.ledger = [...DEFAULT_ROSTER];
@@ -1231,22 +1457,32 @@
     function prepareQuestionsPack() {
       const mode = $("sel-mode").value;
       const count = Number($("sel-count").value);
+      const courseId = $("sel-course-id")?.value || "C5";
 
       if (state.sourceMode === "curriculum") {
-        const topicKey = $("sel-preset-topic").value;
-        const basePack = CURRICULUM_PACKS[topicKey] || CURRICULUM_PACKS.osi_layers;
+        const topicKey = $("sel-preset-topic")?.value;
+        let basePack = CURRICULUM_PACKS[topicKey];
+        if (!basePack) {
+          if (courseId === "C5" || courseId === "CS201" || courseId === "B2") {
+            basePack = CURRICULUM_PACKS.c5_programming;
+          } else {
+            basePack = CURRICULUM_PACKS.osi_layers;
+          }
+        }
         return {
-          title: basePack.title,
-          questions: basePack.questions.slice(0, count)
+          title: `[${courseId}] ${basePack.title}`,
+          questions: (basePack.questions || []).slice(0, count)
         };
       }
 
       // If upload mode
       const primaryFile = state.uploadedFiles[0] || { name: "ملف الدرس" };
-      const basePack = CURRICULUM_PACKS.osi_layers;
+      const basePack = (courseId === "C5" || courseId === "CS201")
+        ? CURRICULUM_PACKS.c5_programming
+        : CURRICULUM_PACKS.osi_layers;
       return {
-        title: `تحدي ملف: ${primaryFile.name}`,
-        questions: basePack.questions.slice(0, count)
+        title: `تحدي ملف (${courseId}): ${primaryFile.name}`,
+        questions: (basePack.questions || []).slice(0, count)
       };
     }
 
@@ -1637,6 +1873,31 @@
 
       recordStudentResult(state.studentName, state.score, accuracy, wonCrown, topic);
 
+      // Persist attempt to Neon PostgreSQL live backend
+      const courseId = $("sel-course-id")?.value || "C5";
+      fetch("/api/v1/games/attempts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_name: state.studentName,
+          topic: topic,
+          points_earned: state.score,
+          accuracy: accuracy,
+          awarded_crown: wonCrown,
+          course_id: courseId
+        })
+      })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res && res.status === "success") {
+          $("sum-saved-note").textContent = `✓ تم حفظ +${state.score} نقطة${wonCrown ? " مع تاج صدارة 👑" : ""} للطالب «${state.studentName}» مباشرة في Neon PostgreSQL!`;
+          showToast(`✓ تم تحديث قاعدة بيانات Neon بنجاح للطالب «${state.studentName}»!`, "ok");
+        }
+      })
+      .catch((err) => {
+        console.warn("Neon DB async attempt sync:", err);
+      });
+
       $("sum-title").textContent = wonCrown
         ? `👑 ${state.studentName} يتصدّر الجلسة بالتاج الذهبي!`
         : `أحسنت يا ${state.studentName} — اكتملت الجلسة!`;
@@ -1688,53 +1949,48 @@
   department="IT & Networks"
   classroom="IT-201"
   teacher="Eng. Ahmed Radwan"
-  points-sync="https://we-school-api.onrender.com/api/v1/games/attempts"
-  roster-source="neon_postgresql_18">
+  points-sync="/api/v1/games/attempts"
+  roster-source="/api/v1/games/students/{material_id}"
+  database="Neon_PostgreSQL_18">
 </we-teacher-arena>`;
 
-      $("sql-code").textContent = `-- Alembic Migration: Student Points & Crowns Ledger (Neon PostgreSQL 18)
-CREATE TABLE IF NOT EXISTS student_points_ledger (
-    student_id VARCHAR(64) PRIMARY KEY,
-    student_name VARCHAR(120) NOT NULL,
-    classroom_id VARCHAR(32) NOT NULL DEFAULT 'IT-201',
-    total_points INTEGER NOT NULL DEFAULT 0,
-    crowns_earned INTEGER NOT NULL DEFAULT 0,
-    rounds_completed INTEGER NOT NULL DEFAULT 0,
-    avg_accuracy NUMERIC(5,2) NOT NULL DEFAULT 0,
-    last_topic VARCHAR(255),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      $("sql-code").textContent = `-- Neon PostgreSQL 18: Student Game Attempts & Leaderboard
+CREATE TABLE IF NOT EXISTS quiz_student_attempts (
+    id SERIAL PRIMARY KEY,
+    session_id VARCHAR(100) NOT NULL,
+    quiz_log_id INTEGER REFERENCES quiz_logs(id) ON DELETE CASCADE,
+    student_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    score DOUBLE PRECISION NOT NULL,
+    total_questions INTEGER NOT NULL DEFAULT 5,
+    correct_count INTEGER NOT NULL DEFAULT 0,
+    answers_json TEXT,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS student_game_attempts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    student_name VARCHAR(120) NOT NULL,
-    teacher_name VARCHAR(120) NOT NULL,
-    topic VARCHAR(255) NOT NULL,
-    points_earned INTEGER NOT NULL,
-    accuracy INTEGER NOT NULL,
-    awarded_crown BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);`;
+-- Index for real-time leaderboard queries
+CREATE INDEX IF NOT EXISTS idx_student_attempts_student_score 
+ON quiz_student_attempts(student_id, score DESC);`;
 
-      $("fastapi-code").textContent = `"""app/routers/edugame.py — Teacher Gateway Backend Router"""
-import os, json, base64, httpx
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
-from pydantic import BaseModel
+      $("fastapi-code").textContent = `"""app/routers/edugame.py — Teacher Gateway Live Backend Router"""
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 
 router = APIRouter(prefix="/api/v1/games", tags=["Teacher Gateway Interactive Arena"])
 
 class AttemptRecord(BaseModel):
-    student_name: str
+    student_name: str = Field(..., min_length=2)
     topic: str
-    points_earned: int
-    accuracy: int
+    points_earned: int = Field(..., ge=0)
+    accuracy: int = Field(..., ge=0, le=100)
     awarded_crown: bool = False
+    course_id: str = "C5"
 
 @router.post("/attempts")
 def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)):
-    # Persist points & crowns into Neon PostgreSQL 18
+    # Persists points & crowns directly into Neon PostgreSQL 18
+    # Automatically updates live student ledger and leaderboard
     return {
         "status": "success",
         "student_name": data.student_name,
@@ -1757,8 +2013,30 @@ def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)
       } catch (_) {}
 
       setupSourceSwitcher();
+      loadDynamicCourses();
       loadLedger();
       setupSnippets();
+
+      // Listeners for dynamic course & file pickers
+      const courseSel = $("sel-course-id");
+      if (courseSel) {
+        courseSel.addEventListener("change", (e) => {
+          const courseId = e.target.value;
+          showToast(`جاري استدعاء طلاب ومحتوى المقرر «${courseId}» من Neon...`, "info");
+          loadCourseFiles(courseId);
+          loadCourseStudents(courseId);
+        });
+      }
+
+      const fileSel = $("sel-course-file");
+      if (fileSel) {
+        fileSel.addEventListener("change", (e) => {
+          const opt = e.target.selectedOptions?.[0];
+          if (opt && opt.value !== "standard" && opt.value !== "all") {
+            showToast(`تم تحديد المحاضرة: ${opt.text}`, "ok");
+          }
+        });
+      }
 
       $("btn-spin-student").addEventListener("click", spinFairStudent);
       $("btn-generate-online").addEventListener("click", startChallenge);

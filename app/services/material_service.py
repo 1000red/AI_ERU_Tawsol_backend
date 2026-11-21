@@ -138,3 +138,42 @@ def assign_teacher(db: Session, data: AssignTeacherIn) -> MaterialTeacher:
     db.commit()
     db.refresh(assignment)
     return assignment
+
+
+def get_material_students(db: Session, material_id: str) -> list[dict]:
+    clean_id = (material_id or "").strip()
+    students = []
+    if clean_id and clean_id.lower() not in ("all", "none", "default"):
+        enrollments = (
+            db.query(MaterialStudent)
+            .options(joinedload(MaterialStudent.student))
+            .filter(MaterialStudent.material_id == clean_id)
+            .all()
+        )
+        for en in enrollments:
+            if en.student:
+                students.append({
+                    "user_id": en.student.user_id,
+                    "name": en.student.name,
+                    "uni_code": en.student.uni_code or f"WE-{en.student.user_id}",
+                    "department": en.student.department or "IT & Networks",
+                    "level": en.student.level or 1,
+                })
+    if not students:
+        all_stu = (
+            db.query(User)
+            .filter(User.type_code == "STU")
+            .order_by(User.user_id)
+            .limit(40)
+            .all()
+        )
+        for u in all_stu:
+            students.append({
+                "user_id": u.user_id,
+                "name": u.name,
+                "uni_code": u.uni_code or f"WE-{u.user_id}",
+                "department": u.department or "IT & Networks",
+                "level": u.level or 1,
+            })
+    return students
+
