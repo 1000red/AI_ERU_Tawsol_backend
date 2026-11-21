@@ -1,9 +1,9 @@
 import os
 import secrets
-from fastapi import APIRouter, Depends, Query, Request, HTTPException, status
+from fastapi import APIRouter, Depends, Query, Request, HTTPException, status, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, Dict, Any, List
 
 from app.core.config import settings
 from app.core.security import decode_token
@@ -70,6 +70,20 @@ def require_admin_access(request: Request, db: Session = Depends(get_db)) -> int
         status_code=status.HTTP_403_FORBIDDEN,
         detail="صلاحيات المسؤول مطلوبة لتنفيذ هذا الإجراء. يرجى تسجيل الدخول بحساب مسؤول أولاً.",
     )
+
+
+def require_super_admin_access(request: Request, db: Session = Depends(get_db)) -> int:
+    """Security guard requiring authenticated Root/Super Administrator role.
+    Strictly required for permanent destructive operations (Hard Delete).
+    """
+    admin_id = require_admin_access(request, db)
+    user = user_svc.get_user_by_id(db, admin_id)
+    if not user or user.type_code != "ADM":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="صلاحية المشرف الأعلى (SUPER_ADMIN) مطلوبة لتنفيذ الحذف النهائي غير القابل للتراجع.",
+        )
+    return admin_id
 
 
 # ── API Endpoints ─────────────────────────────────────────────────────────────
@@ -1415,6 +1429,231 @@ def get_attendance_sessions_admin(
         })
 
     return result
+
+
+# ── Storage Command Center (Vercel Blob / Neon Storage) Endpoints ─────────────
+
+@router.get("/api/storage/quota")
+def get_storage_quota_admin(
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Retrieve live storage quota, total used bytes, and recoverable orphan files."""
+    from app.services.storage_service import storage_service
+    summary = storage_service.get_quota_summary(db)
+    return {"quota": summary, **summary}
+
+
+@router.get("/api/storage/files")
+def get_storage_files_admin(
+    filter: Optional[str] = Query(None),
+    filter_mode: Optional[str] = Query(None),
+    type: Optional[str] = Query(None),
+    type_filter: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    sort: str = Query("size_desc"),
+    page: int = Query(1, ge=1),
+    limit: Optional[int] = Query(None, ge=1, le=100),
+    page_size: Optional[int] = Query(None, ge=1, le=100),
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """List storage files sorted descending by size with smart filtering & linkage state."""
+    from app.services.storage_service import storage_service
+    resolved_filter = filter or filter_mode or "all"
+    resolved_type = type or type_filter or "all"
+    resolved_search = q or search
+    resolved_limit = limit or page_size or 25
+
+    return storage_service.list_files(
+        db=db,
+        filter_mode=resolved_filter,
+        type_filter=resolved_type,
+        search=resolved_search,
+        sort=sort,
+        page=page,
+        page_size=resolved_limit,
+    )
+
+
+@router.post("/api/storage/upload-token")
+def generate_client_upload_token_admin(
+    payload: Dict[str, Any],
+    admin_id: int = Depends(require_admin_access),
+):
+    """Generate signed client-side direct upload token to bypass Vercel Functions 4.5 MB limit."""
+    from app.services.storage_service import storage_service
+    filename = str(payload.get("filename") or "file.bin")
+    content_type = str(payload.get("content_type") or "application/octet-stream")
+    file_size = int(payload.get("file_size") or 0)
+    return storage_service.generate_client_upload_token(
+        filename=filename,
+        content_type=content_type,
+        file_size=file_size,
+        admin_id=admin_id,
+    )
+
+
+@router.post("/api/storage/quarantine/{file_id}")
+def quarantine_storage_file_admin(
+    file_id: int,
+    payload: Optional[Dict[str, Any]] = None,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Soft-delete file into 7-day quarantine without breaking system database links."""
+    from app.services.storage_service import storage_service
+    reason = (payload or {}).get("reason", "عزل مؤقت بواسطة المشرف")
+    admin_user = user_svc.get_user_by_id(db, admin_id)
+    admin_name = admin_user.name if admin_user else f"مسؤول #{admin_id}"
+    try:
+        return storage_service.quarantine_file(
+            db=db,
+            file_id=file_id,
+            admin_id=admin_id,
+            admin_name=admin_name,
+            reason=reason,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/api/storage/restore/{file_id}")
+def restore_storage_file_admin(
+    file_id: int,
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Restore a quarantined file back to active operational state."""
+    from app.services.storage_service import storage_service
+    admin_user = user_svc.get_user_by_id(db, admin_id)
+    admin_name = admin_user.name if admin_user else f"مسؤول #{admin_id}"
+    try:
+        return storage_service.restore_file(
+            db=db,
+            file_id=file_id,
+            admin_id=admin_id,
+            admin_name=admin_name,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.delete("/api/storage/permanent/{file_id}")
+async def permanent_delete_file_admin(
+    file_id: int,
+    request: Request,
+    confirmation: Optional[str] = Query(None, description="Must type DELETE"),
+    admin_id: int = Depends(require_super_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Permanent immediate hard deletion (Restricted to SUPER_ADMIN with mandatory 'DELETE' confirmation)."""
+    from app.services.storage_service import storage_service
+    conf = confirmation
+    if not conf:
+        try:
+            body = await request.json()
+            conf = body.get("confirmation")
+        except Exception:
+            pass
+    if not conf or conf.strip() != "DELETE":
+        raise HTTPException(
+            status_code=400,
+            detail="لتأكيد الحذف النهائي غير القابل للتراجع، يجب إرسال confirmation='DELETE'."
+        )
+
+    admin_user = user_svc.get_user_by_id(db, admin_id)
+    admin_name = admin_user.name if admin_user else f"مشرف أعلى #{admin_id}"
+    try:
+        res = storage_service.permanent_delete_file(
+            db=db,
+            file_id=file_id,
+            admin_id=admin_id,
+            admin_name=admin_name,
+            confirmation=conf.strip(),
+        )
+        return {"success": True, **res}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/api/storage/replace/{file_id}")
+async def replace_storage_file_admin(
+    file_id: int,
+    request: Request,
+    file: Optional[UploadFile] = File(None),
+    new_url: Optional[str] = Form(None),
+    new_size: Optional[int] = Form(None),
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Atomic replacement of file blob preserving all course/lecture references with net savings calculation."""
+    from app.services.storage_service import storage_service
+    from app.routers.content._helpers import save_file
+
+    admin_user = user_svc.get_user_by_id(db, admin_id)
+    admin_name = admin_user.name if admin_user else f"مسؤول #{admin_id}"
+
+    resolved_path = None
+    resolved_size = 0
+
+    c_type = request.headers.get("content-type", "")
+    if "application/json" in c_type:
+        try:
+            body = await request.json()
+            resolved_path = body.get("new_url")
+            resolved_size = int(body.get("new_size") or 0)
+        except Exception:
+            pass
+
+    if not resolved_path:
+        if new_url and new_size is not None:
+            resolved_path = new_url
+            resolved_size = new_size
+        elif file:
+            saved_path, saved_size = save_file(file)
+            if not saved_path:
+                raise HTTPException(status_code=400, detail="فشل رفع الملف البديل.")
+            resolved_path = saved_path
+            resolved_size = saved_size or 0
+
+    if not resolved_path:
+        raise HTTPException(status_code=400, detail="يرجى توفير ملف جديد أو رابط الرفع المباشر.")
+
+    try:
+        return storage_service.replace_file(
+            db=db,
+            file_id=file_id,
+            admin_id=admin_id,
+            admin_name=admin_name,
+            new_file_path=resolved_path,
+            new_file_size=resolved_size,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/api/storage/audit")
+def get_storage_audit_logs_admin(
+    limit: int = Query(50, ge=1, le=200),
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Retrieve immutable audit trail of all storage operations and reclaimed space."""
+    from app.services.storage_service import storage_service
+    logs = storage_service.get_audit_logs(db=db, limit=limit)
+    return {"audit_logs": logs, "logs": logs}
+
+
+@router.post("/api/storage/sync")
+def sync_storage_admin(
+    admin_id: int = Depends(require_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Trigger manual synchronization of storage tallies and Vercel Blob quota."""
+    from app.services.storage_service import storage_service
+    return storage_service.trigger_sync(db)
 
 
 # ── Web Page UI ───────────────────────────────────────────────────────────────

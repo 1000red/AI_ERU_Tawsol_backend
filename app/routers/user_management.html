@@ -324,6 +324,12 @@
         <i class="fa-solid fa-award text-amber-500"></i>
         <span>لوحة الشرف وكرامة الطالب (SQBS)</span>
       </button>
+
+      <button onclick="switchAdminTab('storage')" id="btn-tab-storage" class="admin-tab-btn px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 flex items-center gap-2 transition shrink-0">
+        <i class="fa-solid fa-hard-drive text-cyan-600 dark:text-cyan-400"></i>
+        <span>مركز قيادة التخزين (Vercel Blob)</span>
+        <span id="badge-storage-usage" class="px-2 py-0.5 rounded-full text-[10px] bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 font-mono">0%</span>
+      </button>
     </nav>
 
     <!-- ======================================================================= -->
@@ -1443,6 +1449,251 @@
 
     </section>
 
+    <!-- ======================================================================= -->
+    <!-- TAB 6: VERCEL BLOB STORAGE COMMAND CENTER (#UI-4.0)                     -->
+    <!-- ======================================================================= -->
+    <section id="section-tab-storage" class="hidden space-y-6">
+
+      <!-- Mandatory State 1: Emergency Over-Quota Alert Banner (>=90%) -->
+      <div id="storage-overquota-banner" class="hidden rounded-2xl bg-gradient-to-r from-rose-600 to-red-700 text-white p-4 sm:p-5 shadow-xl border-2 border-rose-300 animate-pulse">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl shrink-0">
+              <i class="fa-solid fa-triangle-exclamation text-amber-300"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-sm sm:text-base">تحذير حرج: اقتراب استهلاك الحصة التخزينية (Vercel Blob) من الحد الأقصى!</h4>
+              <p class="text-xs text-rose-100 mt-0.5" id="storage-overquota-desc">
+                تم استهلاك أكثر من 90% من الحصة المحددة. يرجى عزل الملفات الضخمة أو تنظيف الملفات اليتيمة لتفادي حظر الرفع.
+              </p>
+            </div>
+          </div>
+          <button onclick="filterByOrphansQuick()" class="px-4 py-2 rounded-xl bg-white text-rose-700 hover:bg-rose-50 font-bold text-xs shadow-md transition shrink-0 flex items-center gap-1.5">
+            <i class="fa-solid fa-broom"></i>
+            <span>تنظيف الملفات اليتيمة فوراً</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Region 1: StorageQuotaHeader -->
+      <div class="rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-7 shadow-xl border border-indigo-900/60 relative overflow-hidden">
+        <div class="absolute -left-12 -top-12 w-64 h-64 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 space-y-5">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                <i class="fa-solid fa-hard-drive"></i>
+                <span id="sq-tier-name">Vercel Blob Hobby (1 GB)</span>
+              </div>
+              <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                <span>مركز قيادة التخزين السحابي</span>
+                <span class="text-xs font-normal text-slate-400 font-mono">(Storage Command Center #UI-4.0)</span>
+              </h2>
+              <p class="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                رصد آني للحصة التخزينية، استبدال ذري للملفات الضخمة (تجاوز حد 4.5 MB)، ونظام عزل مؤقت (7 أيام) لمنع الروابط المكسورة.
+              </p>
+            </div>
+
+            <!-- Sync Button -->
+            <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
+              <button onclick="syncStorageQuota()" id="btn-sync-storage" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-arrows-rotate" id="icon-sync-storage"></i>
+                <span>مزامنة مع Vercel Blob</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Progress Bar & Metrics -->
+          <div class="space-y-2 pt-2">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <span class="text-slate-300">مقياس الحصة التخزينية الحية:</span>
+              <span id="sq-usage-ratio" class="font-mono text-cyan-300 text-sm">0 B / 1.0 GB (0%)</span>
+            </div>
+            <div class="w-full h-3.5 rounded-full bg-slate-800/90 border border-slate-700/60 p-0.5 overflow-hidden">
+              <div id="sq-progress-bar" class="h-full rounded-full bg-gradient-to-r from-cyan-500 to-teal-400 transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span id="sq-used-summary">المستهلك: 0 B</span>
+              <span id="sq-remaining-summary">المتبقي: 1.0 GB</span>
+              <span id="sq-last-sync-time" class="font-mono">آخر مزامنة: الآن</span>
+            </div>
+          </div>
+
+          <!-- 3 Quick Cards Row -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            <!-- Card 1: Recoverable space -->
+            <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+              <div>
+                <span class="block text-[11px] text-slate-400">مساحة قابلة للاسترداد (ملفات يتيمة)</span>
+                <span id="sq-recoverable-text" class="text-base font-extrabold text-amber-400 font-mono">0 B</span>
+                <span id="sq-orphan-count-text" class="block text-[10px] text-slate-400">0 ملف يتيم غير مرتبط</span>
+              </div>
+              <button onclick="filterByOrphansQuick()" class="px-2.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 text-xs font-bold border border-amber-500/30 transition shrink-0">
+                فرز وتصفية
+              </button>
+            </div>
+
+            <!-- Card 2: Quarantine -->
+            <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+              <div>
+                <span class="block text-[11px] text-slate-400">سلة العزل المؤقت (7 أيام)</span>
+                <span id="sq-quarantined-text" class="text-base font-extrabold text-purple-300 font-mono">0 B</span>
+                <span id="sq-quarantined-count-text" class="block text-[10px] text-slate-400">0 ملف معزول حالياً</span>
+              </div>
+              <button onclick="filterByQuarantineQuick()" class="px-2.5 py-1.5 rounded-xl bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 text-xs font-bold border border-purple-500/30 transition shrink-0">
+                عرض العزل
+              </button>
+            </div>
+
+            <!-- Card 3: Audit history -->
+            <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+              <div>
+                <span class="block text-[11px] text-slate-400">سجل تدقيق العمليات</span>
+                <span class="text-xs font-bold text-slate-200">توثيق الحذف والاستبدال</span>
+                <span class="block text-[10px] text-emerald-400">سجل آمن غير قابل للتلاعب</span>
+              </div>
+              <button onclick="openStorageAuditDrawer()" class="px-2.5 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 text-xs font-bold border border-cyan-500/30 transition shrink-0 flex items-center gap-1">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>الدرج</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Region 2: SmartFilterBar -->
+      <div class="glass-card rounded-2xl p-4 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
+        
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          <!-- 1-Click Tabs -->
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 text-xs font-bold">
+            <button onclick="setStorageFilterTab('all')" id="sft-tab-all" class="storage-tab-filter px-3.5 py-2 rounded-xl bg-brand-800 text-white shadow-sm shrink-0 transition">
+              <span>جميع الملفات</span>
+            </button>
+            <button onclick="setStorageFilterTab('gt_5mb')" id="sft-tab-gt_5mb" class="storage-tab-filter px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 shrink-0 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-weight-hanging text-amber-500"></i>
+              <span>أكبر من 5 MB</span>
+            </button>
+            <button onclick="setStorageFilterTab('orphan')" id="sft-tab-orphan" class="storage-tab-filter px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 shrink-0 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-link-slash text-rose-500"></i>
+              <span>ملفات يتيمة (غير مرتبطة)</span>
+            </button>
+            <button onclick="setStorageFilterTab('quarantine')" id="sft-tab-quarantine" class="storage-tab-filter px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 shrink-0 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-shield-halved text-purple-500"></i>
+              <span>في العزل - 7 أيام</span>
+            </button>
+          </div>
+
+          <!-- Secondary Filters (Search & Type & Sort) -->
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Search Input -->
+            <div class="relative flex-1 sm:w-60">
+              <input type="text" id="storage-search-input" oninput="debounceStorageSearch()" placeholder="بحث بالاسم أو المسار..." class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white outline-none focus:border-brand-500" />
+              <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-slate-400"></i>
+            </div>
+
+            <!-- Type Filter -->
+            <select id="storage-type-select" onchange="applyStorageFilters()" class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 outline-none font-bold">
+              <option value="all">كل الأنواع</option>
+              <option value="pdf">مستندات PDF</option>
+              <option value="video">فيديو (MP4)</option>
+              <option value="image">صور</option>
+              <option value="doc">Word / PPT</option>
+              <option value="code">أكواد برمجية</option>
+            </select>
+
+            <!-- Sort Filter -->
+            <select id="storage-sort-select" onchange="applyStorageFilters()" class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 outline-none font-bold">
+              <option value="size_desc" selected>الأكبر حجماً أولاً</option>
+              <option value="size_asc">الأصغر حجماً</option>
+              <option value="date_desc">الأحدث رفعاً</option>
+              <option value="date_asc">الأقدم رفعاً</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Sticky Bulk Action Bar (When rows selected) -->
+      <div id="storage-bulk-bar" class="hidden p-3 rounded-2xl bg-slate-900 text-white flex items-center justify-between gap-3 shadow-xl border border-slate-800 transition">
+        <div class="flex items-center gap-2 text-xs font-bold">
+          <span class="w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center text-[10px] text-white" id="storage-bulk-count">0</span>
+          <span id="storage-bulk-text">تم تحديد 0 ملفات</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="bulkQuarantineSelected()" class="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm">
+            <i class="fa-solid fa-box-archive"></i>
+            <span>نقل المحدد للعزل المؤقت (7 أيام)</span>
+          </button>
+          <button onclick="clearStorageSelection()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 text-xs font-bold transition">
+            إلغاء التحديد
+          </button>
+        </div>
+      </div>
+
+      <!-- Region 3: LargestFilesTable -->
+      <div class="glass-card rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        
+        <!-- Skeletons State -->
+        <div id="storage-table-skeleton" class="hidden p-6 space-y-4">
+          <div class="h-6 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse w-1/3"></div>
+          <div class="space-y-3">
+            <div class="h-12 bg-slate-100 dark:bg-slate-800/60 rounded-xl animate-pulse"></div>
+            <div class="h-12 bg-slate-100 dark:bg-slate-800/60 rounded-xl animate-pulse"></div>
+            <div class="h-12 bg-slate-100 dark:bg-slate-800/60 rounded-xl animate-pulse"></div>
+            <div class="h-12 bg-slate-100 dark:bg-slate-800/60 rounded-xl animate-pulse"></div>
+            <div class="h-12 bg-slate-100 dark:bg-slate-800/60 rounded-xl animate-pulse"></div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="storage-table-empty" class="hidden py-16 text-center space-y-3 p-6">
+          <div class="w-16 h-16 rounded-2xl bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-2xl mx-auto shadow-inner">
+            <i class="fa-solid fa-check-double"></i>
+          </div>
+          <h4 class="font-bold text-base text-slate-800 dark:text-slate-200">المخزن التخزيني نظيف تماماً</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            لا توجد ملفات مطابقة للفلتر المحدد، أو تم تنظيف جميع الملفات بنجاح.
+          </p>
+        </div>
+
+        <!-- Table View -->
+        <div id="storage-table-wrap" class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-50 dark:bg-slate-900/60 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-bold">
+              <tr>
+                <th class="p-3.5 w-10 text-center">
+                  <input type="checkbox" id="th-select-all-storage" onchange="toggleSelectAllStorage(this.checked)" class="rounded border-slate-300 dark:border-slate-700" />
+                </th>
+                <th class="p-3.5">الملف والمسار</th>
+                <th class="p-3.5">الحجم ونسبته من الحصة</th>
+                <th class="p-3.5">حالة الارتباط بقاعدة البيانات</th>
+                <th class="p-3.5">حالة العزل</th>
+                <th class="p-3.5 text-center">الإجراءات المحصنة</th>
+              </tr>
+            </thead>
+            <tbody id="storage-files-table-body" class="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <!-- Dynamically rendered rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div class="p-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <span id="storage-pagination-info">عرض 0 من 0 ملف</span>
+          <div class="flex items-center gap-1.5">
+            <button onclick="storagePrevPage()" id="btn-storage-prev" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-xs disabled:opacity-40">السابق</button>
+            <span id="storage-page-num" class="px-2 font-mono font-bold text-slate-900 dark:text-white">1</span>
+            <button onclick="storageNextPage()" id="btn-storage-next" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold text-xs disabled:opacity-40">التالي</button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
   </main>
 
   <!-- ========================================================================= -->
@@ -2202,6 +2453,219 @@
 
 
   <!-- ========================================================================= -->
+  <!-- MODAL: ATOMIC FILE REPLACEMENT (#UI-4.0 SafeActionModal)                  -->
+  <!-- ========================================================================= -->
+  <div id="modal-replace-file" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">الاستبدال الذري للملف (Atomic Replace)</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400" id="replace-modal-sub">تحديث المحتوى والحجم دون كسر روابط المحاضرات أو الاختبارات</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-replace-file')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- File Dropzone -->
+      <div id="replace-dropzone" onclick="document.getElementById('replace-file-input').click()" class="rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 p-6 text-center space-y-3 cursor-pointer hover:border-cyan-500 transition">
+        <input type="file" id="replace-file-input" class="hidden" onchange="handleReplaceFileChosen(this.files)" />
+        <div class="w-12 h-12 rounded-2xl bg-cyan-100 dark:bg-cyan-950 text-cyan-600 dark:text-cyan-300 mx-auto flex items-center justify-center text-xl shadow-sm">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+        <div class="space-y-1">
+          <p class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200" id="replace-drop-text">اسحب الملف البديل هنا أو اضغط للاختيار</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">يدعم Client Upload لتجاوز حد 4.5 MB مع دعم multipart: true</p>
+        </div>
+      </div>
+
+      <!-- Direct Client Upload Progress Bar -->
+      <div id="replace-progress-wrap" class="hidden space-y-1.5">
+        <div class="flex items-center justify-between text-xs font-bold">
+          <span class="text-cyan-600 dark:text-cyan-400">جاري الرفع المباشر لـ Vercel Blob...</span>
+          <span id="replace-progress-pct" class="font-mono">0%</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+          <div id="replace-progress-bar" class="h-full rounded-full bg-cyan-600 transition-all duration-200" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Comparison Card: Old vs New Size & Net Savings -->
+      <div id="replace-comparison-card" class="hidden p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+        <span class="font-bold text-slate-700 dark:text-slate-300 block">مقارنة الحجم وصافي الأثر التخزيني:</span>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+            <span class="block text-[10px] text-slate-400">الحجم الحالي</span>
+            <span id="replace-old-size-label" class="font-bold text-rose-500 font-mono">0 MB</span>
+          </div>
+          <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+            <span class="block text-[10px] text-slate-400">الحجم البديل</span>
+            <span id="replace-new-size-label" class="font-bold text-slate-800 dark:text-slate-200 font-mono">0 MB</span>
+          </div>
+          <div class="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+            <span class="block text-[10px] text-slate-400">صافي التوفير</span>
+            <span id="replace-delta-label" class="font-bold text-emerald-600 font-mono">0 MB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal('modal-replace-file')" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          إلغاء
+        </button>
+        <button type="button" id="btn-confirm-replace" onclick="executeAtomicReplace()" disabled class="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 text-white text-xs font-bold hover:opacity-90 shadow-md transition flex items-center gap-1.5 disabled:opacity-50">
+          <i class="fa-solid fa-check"></i>
+          <span>تأكيد الاستبدال الذري</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: SAFE DELETE & QUARANTINE DIALOG (#UI-4.0 SafeActionModal)          -->
+  <!-- ========================================================================= -->
+  <div id="modal-delete-file" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 flex items-center justify-center text-sm font-bold">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm sm:text-base text-slate-900 dark:text-white">إجراءات الحذف والعزل المحصّن</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400" id="del-modal-filename">ملف الدرس</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-delete-file')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Linked Reference Warning if not orphan -->
+      <div id="del-linked-warning" class="hidden p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-xs space-y-1">
+        <div class="flex items-center gap-1.5 font-bold">
+          <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+          <span>تنبيه ارتباط الملف بالنظام:</span>
+        </div>
+        <p id="del-linked-desc" class="text-[11px]">هذا الملف مرتبط بمقرر دراسي نشط. حذفه النهائي قد يكسر روابط تنزيل المحاضرات للطلاب.</p>
+      </div>
+
+      <!-- Option A: Soft Quarantine (Recommended) -->
+      <div class="p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border-2 border-purple-200 dark:border-purple-800 space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-purple-600 dark:text-purple-400"></i>
+            <span class="font-bold text-xs text-purple-950 dark:text-purple-200">العزل المؤقت لـ 7 أيام (موصى به)</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px]">الخيار الآمن</span>
+        </div>
+        <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+          يتم حجب الملف وإيقافه مع إمكانية استعادته بنقرة واحدة خلال 7 أيام قبل الحذف التلقائي، دون كسر روابط قواعد البيانات.
+        </p>
+        <button type="button" onclick="executeQuarantineFile()" class="w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-sm transition">
+          نقل إلى سلة العزل المؤقت الآن
+        </button>
+      </div>
+
+      <!-- Option B: Hard Permanent Delete (SUPER_ADMIN only) -->
+      <div class="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/60 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-xs text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>حذف نهائي فوري (Hard Delete)</span>
+          </span>
+          <span class="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-mono text-[10px]">SUPER_ADMIN</span>
+        </div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+          إجراء لا رجعة فيه: يتم مسح الملف نهائياً من Vercel Blob وقاعدة البيانات. لتأكيد الحذف النهائي، اكتب كلمة <strong class="text-rose-600 font-mono">DELETE</strong>:
+        </p>
+        <input type="text" id="del-confirmation-input" placeholder="اكتب DELETE للتأكيد..." class="w-full px-3 py-1.5 rounded-xl border border-rose-300 dark:border-rose-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white font-mono text-center outline-none focus:border-rose-600" />
+        <button type="button" id="btn-confirm-permanent-delete" onclick="executePermanentDeleteFile()" class="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-40">
+          تأكيد الحذف النهائي غير القابل للتراجع
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- DRAWER: INSPECTOR & AUDIT HISTORY (#UI-4.0 Region 5)                      -->
+  <!-- ========================================================================= -->
+  <div id="storage-inspector-drawer" class="fixed inset-y-0 left-0 z-50 w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl border-r border-slate-200 dark:border-slate-800 transform -translate-x-full transition-transform duration-300 flex flex-col">
+    <!-- Drawer Header -->
+    <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-cyan-600 dark:text-cyan-400"></i>
+        <h3 class="font-bold text-sm text-slate-900 dark:text-white">درج التفاصيل وسجل التدقيق</h3>
+      </div>
+      <button onclick="closeStorageDrawer()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Drawer Tabs (Metadata vs Audit Log) -->
+    <div class="flex border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-center">
+      <button onclick="setDrawerSubTab('meta')" id="drawer-tab-meta" class="w-1/2 py-2.5 border-b-2 border-cyan-500 text-cyan-600 dark:text-cyan-400">تفاصيل الملف</button>
+      <button onclick="setDrawerSubTab('audit')" id="drawer-tab-audit" class="w-1/2 py-2.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">سجل التدقيق (Audit)</button>
+    </div>
+
+    <!-- Drawer Content Area -->
+    <div class="flex-1 overflow-y-auto p-5 space-y-4">
+      
+      <!-- Sub-Tab A: Metadata -->
+      <div id="drawer-content-meta" class="space-y-3.5 text-xs">
+        <div class="space-y-1">
+          <span class="block text-[11px] text-slate-400">اسم الملف:</span>
+          <p id="drawer-meta-title" class="font-bold text-slate-900 dark:text-white break-words">--</p>
+        </div>
+
+        <div class="space-y-1">
+          <span class="block text-[11px] text-slate-400">الرابط السحابي (URL):</span>
+          <div class="flex items-center gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+            <span id="drawer-meta-url" class="truncate font-mono text-[11px] text-cyan-600 dark:text-cyan-400 flex-1">--</span>
+            <button onclick="copyDrawerUrl()" class="text-slate-500 hover:text-slate-700 font-bold px-1.5 py-0.5 rounded text-[10px]" title="نسخ الرابط">
+              <i class="fa-solid fa-copy"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-center">
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800">
+            <span class="block text-[10px] text-slate-400">حجم الملف</span>
+            <span id="drawer-meta-size" class="font-bold font-mono text-slate-800 dark:text-slate-200">--</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800">
+            <span class="block text-[10px] text-slate-400">النوع</span>
+            <span id="drawer-meta-type" class="font-bold font-mono text-slate-800 dark:text-slate-200">--</span>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <span class="block text-[11px] text-slate-400">الارتباط في النظام:</span>
+          <p id="drawer-meta-linkage" class="font-bold text-slate-700 dark:text-slate-300">--</p>
+        </div>
+
+        <div class="space-y-1">
+          <span class="block text-[11px] text-slate-400">تاريخ الرفع:</span>
+          <p id="drawer-meta-date" class="font-mono text-slate-600 dark:text-slate-400">--</p>
+        </div>
+      </div>
+
+      <!-- Sub-Tab B: Audit Log -->
+      <div id="drawer-content-audit" class="hidden space-y-2.5">
+        <div id="drawer-audit-list" class="space-y-2 text-xs">
+          <!-- Dynamically populated audit log entries -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
   <!-- TOAST NOTIFICATIONS CONTAINER                                             -->
   <!-- ========================================================================= -->
   <div id="toast" class="fixed bottom-5 left-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
@@ -2439,6 +2903,15 @@
         const bQuizzes = document.getElementById('badge-quizzes-count');
         if (bQuizzes && ov.quizzes) bQuizzes.innerText = ov.quizzes.total_quizzes ?? 0;
       } catch (_) {}
+
+      try {
+        const resStorage = await fetch(`${API_BASE}/admin/api/storage/quota`, { headers: getAuthHeaders() });
+        if (resStorage.ok) {
+          const sq = await resStorage.json();
+          const bStorage = document.getElementById('badge-storage-usage');
+          if (bStorage && sq.quota) bStorage.innerText = `${sq.quota.used_percentage}%`;
+        }
+      } catch (_) {}
     }
 
     function refreshData() {
@@ -2448,6 +2921,7 @@
       if (currentAdminTab === 'chats') tasks.push(loadChatsMonitoring());
       else if (currentAdminTab === 'quizzes') tasks.push(loadQuizzesMonitoring());
       else if (currentAdminTab === 'platform') tasks.push(loadPlatformAnalytics());
+      else if (currentAdminTab === 'storage') tasks.push(loadStorageCommandCenter());
       Promise.all(tasks).finally(() => {
         if (icon) icon.classList.remove('fa-spin');
       });
@@ -3354,7 +3828,7 @@
 
     function switchAdminTab(tabId) {
       currentAdminTab = tabId;
-      const tabs = ['users', 'chats', 'quizzes', 'platform', 'honor-roll'];
+      const tabs = ['users', 'chats', 'quizzes', 'platform', 'honor-roll', 'storage'];
 
       tabs.forEach(t => {
         const sec = document.getElementById(`section-tab-${t}`);
@@ -3378,10 +3852,12 @@
         loadPlatformAnalytics();
       } else if (tabId === 'honor-roll') {
         renderAdminHonorRollTable();
+      } else if (tabId === 'storage') {
+        loadStorageCommandCenter();
       }
 
-      updateAdminLiveSubtitleForTab(tabId);
-      narrateAdminTabSwitch(tabId);
+      if (typeof updateAdminLiveSubtitleForTab === 'function') updateAdminLiveSubtitleForTab(tabId);
+      if (typeof narrateAdminTabSwitch === 'function') narrateAdminTabSwitch(tabId);
     }
 
     // ── CHATS & MESSAGES MONITORING ───────────────────────────────────────────
@@ -4550,6 +5026,876 @@ async function inspectQuiz(quizId) {
       card.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
       card.classList.add('bg-slate-400', 'dark:bg-slate-600', 'cursor-default');
       card.disabled = true;
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // VERCEL BLOB STORAGE COMMAND CENTER (#UI-4.0 Architecture Controller)
+    // ═════════════════════════════════════════════════════════════════════════
+    let storageState = {
+      quota: null,
+      files: [],
+      total: 0,
+      page: 1,
+      limit: 15,
+      pages: 1,
+      filterTab: 'all', // 'all' | 'gt_5mb' | 'orphan' | 'quarantine'
+      type: 'all',
+      sort: 'size_desc',
+      search: '',
+      searchTimeout: null,
+      selectedIds: new Set(),
+      activeReplaceFile: null,
+      pendingReplaceBlob: null,
+      activeDeleteFile: null,
+      activeDrawerFile: null,
+      drawerTab: 'meta'
+    };
+
+    function formatBytesJs(bytes) {
+      if (bytes === null || bytes === undefined || isNaN(bytes)) return '0 B';
+      const b = Number(bytes);
+      if (b === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(b) / Math.log(k));
+      return parseFloat((b / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    async function loadStorageCommandCenter() {
+      await Promise.all([
+        loadStorageQuota(),
+        loadStorageFiles(1)
+      ]);
+    }
+
+    async function loadStorageQuota() {
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/storage/quota`, { headers: getAuthHeaders() });
+        if (!res.ok) {
+          console.warn('Failed to fetch storage quota, status:', res.status);
+          return;
+        }
+        const data = await res.json();
+        const q = data.quota || {};
+        storageState.quota = q;
+
+        // Tier & Ratio
+        const tierEl = document.getElementById('sq-tier-name');
+        if (tierEl) tierEl.innerText = `${q.tier || 'Vercel Blob'} (${formatBytesJs(q.limit_bytes)})`;
+
+        const ratioEl = document.getElementById('sq-usage-ratio');
+        if (ratioEl) ratioEl.innerText = `${formatBytesJs(q.used_bytes)} / ${formatBytesJs(q.limit_bytes)} (${q.used_percentage}%)`;
+
+        // Progress bar with color thresholds (75% warning, 90% critical)
+        const bar = document.getElementById('sq-progress-bar');
+        if (bar) {
+          bar.style.width = `${Math.min(q.used_percentage, 100)}%`;
+          if (q.used_percentage >= 90) {
+            bar.className = 'h-full rounded-full bg-gradient-to-r from-rose-500 to-red-600 transition-all duration-500';
+          } else if (q.used_percentage >= 75) {
+            bar.className = 'h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500';
+          } else {
+            bar.className = 'h-full rounded-full bg-gradient-to-r from-cyan-500 to-teal-400 transition-all duration-500';
+          }
+        }
+
+        // Summary texts
+        const usedEl = document.getElementById('sq-used-summary');
+        if (usedEl) usedEl.innerText = `المستهلك: ${formatBytesJs(q.used_bytes)} (${q.files_count || 0} ملف)`;
+
+        const remEl = document.getElementById('sq-remaining-summary');
+        if (remEl) remEl.innerText = `المتبقي: ${formatBytesJs(q.remaining_bytes)}`;
+
+        const syncEl = document.getElementById('sq-last-sync-time');
+        if (syncEl) syncEl.innerText = `آخر مزامنة: ${new Date().toLocaleTimeString('ar-EG')}`;
+
+        // Recoverable & Quarantine cards
+        const recEl = document.getElementById('sq-recoverable-text');
+        if (recEl) recEl.innerText = formatBytesJs(q.recoverable_bytes_from_orphans);
+
+        const recCountEl = document.getElementById('sq-orphan-count-text');
+        if (recCountEl) recCountEl.innerText = `${q.orphan_files_count || 0} ملف يتيم غير مرتبط`;
+
+        const quarEl = document.getElementById('sq-quarantined-text');
+        if (quarEl) quarEl.innerText = formatBytesJs(q.quarantined_bytes);
+
+        const quarCountEl = document.getElementById('sq-quarantined-count-text');
+        if (quarCountEl) quarCountEl.innerText = `${q.quarantined_count || 0} ملف معزول حالياً`;
+
+        // Top Navigation Badge
+        const navBadge = document.getElementById('badge-storage-usage');
+        if (navBadge) navBadge.innerText = `${q.used_percentage}%`;
+
+        // Mandatory State: Over-Quota Alert Banner (>=90%)
+        const overquotaBanner = document.getElementById('storage-overquota-banner');
+        if (overquotaBanner) {
+          if (q.used_percentage >= 90) {
+            overquotaBanner.classList.remove('hidden');
+          } else {
+            overquotaBanner.classList.add('hidden');
+          }
+        }
+      } catch (err) {
+        console.error('loadStorageQuota error:', err);
+      }
+    }
+
+    async function syncStorageQuota() {
+      const btn = document.getElementById('btn-sync-storage');
+      const icon = document.getElementById('icon-sync-storage');
+      if (icon) icon.classList.add('fa-spin');
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/storage/sync`, {
+          method: 'POST',
+          headers: getAuthHeaders()
+        });
+        if (res.ok) {
+          showToast('تمت مزامنة حالة التخزين مع Vercel Blob وقاعدة البيانات بنجاح!', 'success');
+        } else {
+          showToast('فشلت المزامنة مع Vercel Blob', 'error');
+        }
+        await loadStorageCommandCenter();
+      } catch (err) {
+        console.error('syncStorageQuota error:', err);
+        showToast('تعذر الاتصال بالسيرفر أثناء المزامنة', 'error');
+      } finally {
+        if (icon) icon.classList.remove('fa-spin');
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function loadStorageFiles(page = 1) {
+      storageState.page = page;
+      const skel = document.getElementById('storage-table-skeleton');
+      const empty = document.getElementById('storage-table-empty');
+      const wrap = document.getElementById('storage-table-wrap');
+      const tbody = document.getElementById('storage-files-table-body');
+
+      if (skel) skel.classList.remove('hidden');
+      if (empty) empty.classList.add('hidden');
+      if (wrap) wrap.classList.add('hidden');
+
+      try {
+        const params = new URLSearchParams({
+          page: storageState.page,
+          limit: storageState.limit,
+          sort: storageState.sort,
+          filter: storageState.filterTab,
+          type: storageState.type
+        });
+        if (storageState.search.trim()) {
+          params.set('q', storageState.search.trim());
+        }
+
+        const res = await fetch(`${API_BASE}/admin/api/storage/files?${params.toString()}`, {
+          headers: getAuthHeaders()
+        });
+
+        if (!res.ok) {
+          if (skel) skel.classList.add('hidden');
+          if (wrap) wrap.classList.remove('hidden');
+          if (tbody) tbody.innerHTML = renderAnalyticsErrorRow(6, res.status, 'تعذر تحميل ملفات التخزين السحابي', 'loadStorageFiles');
+          return;
+        }
+
+        const data = await res.json();
+        storageState.files = data.files || [];
+        storageState.total = data.total || 0;
+        storageState.pages = data.pages || 1;
+
+        if (skel) skel.classList.add('hidden');
+
+        if (storageState.files.length === 0) {
+          if (empty) empty.classList.remove('hidden');
+          if (wrap) wrap.classList.add('hidden');
+        } else {
+          if (empty) empty.classList.add('hidden');
+          if (wrap) wrap.classList.remove('hidden');
+          renderStorageFilesTable(storageState.files);
+        }
+
+        // Update Pagination Info
+        const infoEl = document.getElementById('storage-pagination-info');
+        if (infoEl) {
+          const start = storageState.total === 0 ? 0 : (storageState.page - 1) * storageState.limit + 1;
+          const end = Math.min(storageState.page * storageState.limit, storageState.total);
+          infoEl.innerText = `عرض ${start} - ${end} من ${storageState.total} ملف`;
+        }
+
+        const pageEl = document.getElementById('storage-page-num');
+        if (pageEl) pageEl.innerText = `${storageState.page} / ${storageState.pages}`;
+
+        const prevBtn = document.getElementById('btn-storage-prev');
+        if (prevBtn) prevBtn.disabled = (storageState.page <= 1);
+
+        const nextBtn = document.getElementById('btn-storage-next');
+        if (nextBtn) nextBtn.disabled = (storageState.page >= storageState.pages);
+
+        // Update select all header checkbox
+        const thCheck = document.getElementById('th-select-all-storage');
+        if (thCheck) thCheck.checked = false;
+        updateStorageBulkBar();
+
+      } catch (err) {
+        console.error('loadStorageFiles error:', err);
+        if (skel) skel.classList.add('hidden');
+        if (wrap) wrap.classList.remove('hidden');
+        if (tbody) tbody.innerHTML = renderAnalyticsErrorRow(6, 0, 'حدث خطأ بالاتصال أثناء جلب الملفات', 'loadStorageFiles');
+      }
+    }
+
+    function renderStorageFilesTable(files) {
+      const tbody = document.getElementById('storage-files-table-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = files.map(file => {
+        const isChecked = storageState.selectedIds.has(String(file.id));
+        const iconInfo = getStorageFileIcon(file.file_type || file.file_path);
+        const isOrphan = file.is_orphan;
+        const isQuarantined = file.is_quarantined;
+
+        // DB Linkage Badge
+        let linkageBadge = '';
+        if (isOrphan) {
+          linkageBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 flex items-center gap-1 w-fit"><i class="fa-solid fa-link-slash"></i> يتيم (غير مرتبط)</span>`;
+        } else if (file.course_id || file.material_id) {
+          linkageBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300 dark:border-blue-800 flex items-center gap-1 w-fit"><i class="fa-solid fa-graduation-cap"></i> مقرر: ${escapeHtml(file.course_id || file.material_id)}</span>`;
+        } else if (file.announcement_id) {
+          linkageBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 border border-teal-300 dark:border-teal-800 flex items-center gap-1 w-fit"><i class="fa-solid fa-bullhorn"></i> إعلان ${file.announcement_id}</span>`;
+        } else {
+          linkageBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 w-fit">مرتبط بنظام الدروس</span>`;
+        }
+
+        // Quarantine status
+        let quarantineBadge = '';
+        if (isQuarantined) {
+          const daysLeft = file.quarantine_days_remaining !== undefined ? file.quarantine_days_remaining : 7;
+          quarantineBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-800 flex items-center gap-1 w-fit"><i class="fa-solid fa-shield-halved"></i> معزول (${daysLeft} يوم متبقي)</span>`;
+        } else {
+          quarantineBadge = `<span class="text-emerald-600 dark:text-emerald-400 font-bold text-[11px] flex items-center gap-1"><i class="fa-solid fa-circle-check text-xs"></i> نشط ومتاح</span>`;
+        }
+
+        return `
+          <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+            <td class="p-3.5 text-center">
+              <input type="checkbox" onchange="toggleFileSelection('${file.id}', this.checked)" ${isChecked ? 'checked' : ''} class="rounded border-slate-300 dark:border-slate-700 cursor-pointer" />
+            </td>
+            <td class="p-3.5 max-w-xs">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl ${iconInfo.bg} ${iconInfo.color} flex items-center justify-center text-sm shrink-0">
+                  <i class="${iconInfo.icon}"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h5 class="font-bold text-slate-900 dark:text-white truncate" title="${escapeHtml(file.title || file.file_path || '')}">${escapeHtml(file.title || 'ملف بدون اسم')}</h5>
+                  <p class="text-[10px] text-slate-400 font-mono truncate" dir="ltr" title="${escapeHtml(file.file_path || '')}">${escapeHtml(file.file_path || '---')}</p>
+                </div>
+              </div>
+            </td>
+            <td class="p-3.5">
+              <div class="space-y-0.5">
+                <span class="font-bold font-mono text-slate-800 dark:text-slate-200 text-xs">${formatBytesJs(file.file_size)}</span>
+                <span class="block text-[10px] text-slate-400 font-mono">(${file.quota_percentage || '0.00'}% من الحصة)</span>
+              </div>
+            </td>
+            <td class="p-3.5">
+              ${linkageBadge}
+            </td>
+            <td class="p-3.5">
+              ${quarantineBadge}
+            </td>
+            <td class="p-3.5">
+              <div class="flex items-center justify-center gap-1">
+                ${file.file_path ? `
+                  <a href="${escapeHtml(file.file_path)}" target="_blank" rel="noopener noreferrer" class="p-2 rounded-lg text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="معاينة الملف">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </a>
+                ` : ''}
+
+                <!-- Atomic Replace -->
+                <button onclick="openReplaceModalById('${file.id}')" class="p-2 rounded-lg text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 dark:hover:bg-cyan-950/50 transition" title="استبدال ذري (Atomic Replace)">
+                  <i class="fa-solid fa-arrows-rotate"></i>
+                </button>
+
+                <!-- Quarantine or Restore -->
+                ${isQuarantined ? `
+                  <button onclick="quickRestoreFile('${file.id}')" class="p-2 rounded-lg text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950/50 transition" title="استعادة من العزل">
+                    <i class="fa-solid fa-rotate-left"></i>
+                  </button>
+                ` : `
+                  <button onclick="openDeleteModalById('${file.id}')" class="p-2 rounded-lg text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition" title="عزل مؤقت أو حذف نهائي">
+                    <i class="fa-solid fa-shield-halved"></i>
+                  </button>
+                `}
+
+                <!-- Inspector Drawer -->
+                <button onclick="openStorageDrawerById('${file.id}')" class="p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="درج التفاصيل والتدقيق">
+                  <i class="fa-solid fa-circle-info"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function getStorageFileIcon(pathOrType) {
+      const s = String(pathOrType || '').toLowerCase();
+      if (s.includes('pdf')) return { icon: 'fa-solid fa-file-pdf', color: 'text-rose-600', bg: 'bg-rose-100 dark:bg-rose-950' };
+      if (s.includes('mp4') || s.includes('video') || s.includes('webm')) return { icon: 'fa-solid fa-file-video', color: 'text-purple-600', bg: 'bg-purple-100 dark:bg-purple-950' };
+      if (s.includes('png') || s.includes('jpg') || s.includes('jpeg') || s.includes('webp') || s.includes('image')) return { icon: 'fa-solid fa-file-image', color: 'text-emerald-600', bg: 'bg-emerald-100 dark:bg-emerald-950' };
+      if (s.includes('zip') || s.includes('rar') || s.includes('tar') || s.includes('7z')) return { icon: 'fa-solid fa-file-zipper', color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-950' };
+      if (s.includes('py') || s.includes('js') || s.includes('html') || s.includes('code')) return { icon: 'fa-solid fa-file-code', color: 'text-blue-600', bg: 'bg-blue-100 dark:bg-blue-950' };
+      if (s.includes('doc') || s.includes('docx') || s.includes('ppt') || s.includes('pptx')) return { icon: 'fa-solid fa-file-lines', color: 'text-indigo-600', bg: 'bg-indigo-100 dark:bg-indigo-950' };
+      return { icon: 'fa-solid fa-file', color: 'text-slate-600', bg: 'bg-slate-100 dark:bg-slate-800' };
+    }
+
+    // ── FILTER TABS & SEARCH ─────────────────────────────────────────────────
+    function setStorageFilterTab(tab) {
+      storageState.filterTab = tab;
+      const tabs = ['all', 'gt_5mb', 'orphan', 'quarantine'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`sft-tab-${t}`);
+        if (!btn) return;
+        if (t === tab) {
+          btn.className = 'storage-tab-filter px-3.5 py-2 rounded-xl bg-brand-800 text-white shadow-sm shrink-0 transition font-bold flex items-center gap-1.5';
+        } else {
+          btn.className = 'storage-tab-filter px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 shrink-0 transition font-bold flex items-center gap-1.5';
+        }
+      });
+      loadStorageFiles(1);
+    }
+
+    function filterByOrphansQuick() {
+      setStorageFilterTab('orphan');
+    }
+
+    function filterByQuarantineQuick() {
+      setStorageFilterTab('quarantine');
+    }
+
+    function debounceStorageSearch() {
+      clearTimeout(storageState.searchTimeout);
+      storageState.searchTimeout = setTimeout(() => {
+        const input = document.getElementById('storage-search-input');
+        storageState.search = input ? input.value : '';
+        loadStorageFiles(1);
+      }, 300);
+    }
+
+    function applyStorageFilters() {
+      const typeSel = document.getElementById('storage-type-select');
+      const sortSel = document.getElementById('storage-sort-select');
+      if (typeSel) storageState.type = typeSel.value;
+      if (sortSel) storageState.sort = sortSel.value;
+      loadStorageFiles(1);
+    }
+
+    function storagePrevPage() {
+      if (storageState.page > 1) {
+        loadStorageFiles(storageState.page - 1);
+      }
+    }
+
+    function storageNextPage() {
+      if (storageState.page < storageState.pages) {
+        loadStorageFiles(storageState.page + 1);
+      }
+    }
+
+    // ── MULTI-SELECT & BULK ACTIONS ──────────────────────────────────────────
+    function toggleSelectAllStorage(checked) {
+      if (checked) {
+        storageState.files.forEach(f => storageState.selectedIds.add(String(f.id)));
+      } else {
+        storageState.files.forEach(f => storageState.selectedIds.delete(String(f.id)));
+      }
+      renderStorageFilesTable(storageState.files);
+      updateStorageBulkBar();
+    }
+
+    function toggleFileSelection(fileId, checked) {
+      if (checked) {
+        storageState.selectedIds.add(String(fileId));
+      } else {
+        storageState.selectedIds.delete(String(fileId));
+      }
+      updateStorageBulkBar();
+    }
+
+    function updateStorageBulkBar() {
+      const bar = document.getElementById('storage-bulk-bar');
+      const countEl = document.getElementById('storage-bulk-count');
+      const textEl = document.getElementById('storage-bulk-text');
+      const size = storageState.selectedIds.size;
+
+      if (!bar) return;
+      if (size > 0) {
+        bar.classList.remove('hidden');
+        if (countEl) countEl.innerText = size;
+        if (textEl) textEl.innerText = `تم تحديد ${size} ملف`;
+      } else {
+        bar.classList.add('hidden');
+      }
+    }
+
+    function clearStorageSelection() {
+      storageState.selectedIds.clear();
+      const thCheck = document.getElementById('th-select-all-storage');
+      if (thCheck) thCheck.checked = false;
+      renderStorageFilesTable(storageState.files);
+      updateStorageBulkBar();
+    }
+
+    async function bulkQuarantineSelected() {
+      const ids = Array.from(storageState.selectedIds);
+      if (ids.length === 0) return;
+
+      if (!confirm(`هل أنت متأكد من نقل ${ids.length} ملف إلى سلة العزل المؤقت (7 أيام)؟`)) {
+        return;
+      }
+
+      showToast(`جاري عزل ${ids.length} ملفات...`, 'info');
+      let successCount = 0;
+
+      for (const id of ids) {
+        try {
+          const res = await fetch(`${API_BASE}/admin/api/storage/quarantine/${id}`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ reason: 'Bulk quarantine by administrator' })
+          });
+          if (res.ok) successCount++;
+        } catch (_) {}
+      }
+
+      showToast(`تم نقل ${successCount} ملف بنجاح إلى سلة العزل المؤقت!`, 'success');
+      clearStorageSelection();
+      await loadStorageCommandCenter();
+    }
+
+    // ── MODAL: ATOMIC REPLACE WITH VERCEL 4.5 MB DIRECT UPLOAD BYPASS ─────────
+    function openReplaceModalById(fileId) {
+      const file = storageState.files.find(f => String(f.id) === String(fileId));
+      if (!file) return;
+
+      storageState.activeReplaceFile = file;
+      storageState.pendingReplaceBlob = null;
+
+      const sub = document.getElementById('replace-modal-sub');
+      if (sub) sub.innerText = `الملف المستهدف: ${file.title || file.file_path || '---'}`;
+
+      const card = document.getElementById('replace-comparison-card');
+      if (card) card.classList.add('hidden');
+
+      const prog = document.getElementById('replace-progress-wrap');
+      if (prog) prog.classList.add('hidden');
+
+      const confirmBtn = document.getElementById('btn-confirm-replace');
+      if (confirmBtn) confirmBtn.disabled = true;
+
+      const dropText = document.getElementById('replace-drop-text');
+      if (dropText) dropText.innerText = 'اسحب الملف البديل هنا أو اضغط للاختيار';
+
+      const fileInput = document.getElementById('replace-file-input');
+      if (fileInput) fileInput.value = '';
+
+      openModal('modal-replace-file');
+    }
+
+    function handleReplaceFileChosen(files) {
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      storageState.pendingReplaceBlob = file;
+
+      const dropText = document.getElementById('replace-drop-text');
+      if (dropText) dropText.innerText = `تم اختيار: ${file.name} (${formatBytesJs(file.size)})`;
+
+      const card = document.getElementById('replace-comparison-card');
+      if (card) card.classList.remove('hidden');
+
+      const oldSize = storageState.activeReplaceFile ? (storageState.activeReplaceFile.file_size || 0) : 0;
+      const newSize = file.size;
+      const delta = oldSize - newSize;
+
+      const oldEl = document.getElementById('replace-old-size-label');
+      if (oldEl) oldEl.innerText = formatBytesJs(oldSize);
+
+      const newEl = document.getElementById('replace-new-size-label');
+      if (newEl) newEl.innerText = formatBytesJs(newSize);
+
+      const deltaEl = document.getElementById('replace-delta-label');
+      if (deltaEl) {
+        if (delta > 0) {
+          deltaEl.innerText = `+${formatBytesJs(delta)} توفير`;
+          deltaEl.className = 'font-bold text-emerald-600 font-mono';
+        } else if (delta < 0) {
+          deltaEl.innerText = `-${formatBytesJs(Math.abs(delta))} زيادة`;
+          deltaEl.className = 'font-bold text-rose-500 font-mono';
+        } else {
+          deltaEl.innerText = 'لا تغيير بالحجم';
+          deltaEl.className = 'font-bold text-slate-500 font-mono';
+        }
+      }
+
+      const confirmBtn = document.getElementById('btn-confirm-replace');
+      if (confirmBtn) confirmBtn.disabled = false;
+    }
+
+    async function executeAtomicReplace() {
+      if (!storageState.activeReplaceFile || !storageState.pendingReplaceBlob) return;
+
+      const targetFile = storageState.activeReplaceFile;
+      const chosenBlob = storageState.pendingReplaceBlob;
+      const confirmBtn = document.getElementById('btn-confirm-replace');
+      const progWrap = document.getElementById('replace-progress-wrap');
+      const progBar = document.getElementById('replace-progress-bar');
+      const progPct = document.getElementById('replace-progress-pct');
+
+      if (confirmBtn) confirmBtn.disabled = true;
+      if (progWrap) progWrap.classList.remove('hidden');
+
+      try {
+        // Step 1: Request client upload token/presigned URL (Bypasses Vercel 4.5 MB Function limit)
+        const tokenRes = await fetch(`${API_BASE}/admin/api/storage/upload-token`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            filename: chosenBlob.name,
+            content_type: chosenBlob.type || 'application/octet-stream',
+            file_size: chosenBlob.size
+          })
+        });
+
+        if (!tokenRes.ok) {
+          throw new Error('تعذر إنشاء رابط الرفع المباشر إلى Vercel Blob');
+        }
+
+        const tokenData = await tokenRes.json();
+        let uploadedUrl = tokenData.file_url || '';
+
+        // Step 2: Direct Client Upload via XMLHttpRequest with live progress tracking
+        if (tokenData.upload_url) {
+          await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const method = tokenData.method || 'PUT';
+            xhr.open(method, tokenData.upload_url);
+
+            if (tokenData.headers) {
+              for (const [k, v] of Object.entries(tokenData.headers)) {
+                xhr.setRequestHeader(k, v);
+              }
+            }
+
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                if (progBar) progBar.style.width = `${percent}%`;
+                if (progPct) progPct.innerText = `${percent}%`;
+              }
+            };
+
+            xhr.onload = () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                resolve();
+              } else {
+                reject(new Error(`Direct upload failed with status ${xhr.status}`));
+              }
+            };
+
+            xhr.onerror = () => reject(new Error('Network error during direct client upload'));
+            xhr.send(chosenBlob);
+          });
+        }
+
+        // Step 3: Atomic Swap in Database & Blob reference
+        const swapRes = await fetch(`${API_BASE}/admin/api/storage/replace/${targetFile.id}`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            new_url: uploadedUrl,
+            new_size: chosenBlob.size,
+            old_file_path: targetFile.file_path
+          })
+        });
+
+        if (!swapRes.ok) {
+          const errData = await swapRes.json().catch(() => ({}));
+          throw new Error(errData.detail || 'فشل التبديل الذري في قاعدة البيانات');
+        }
+
+        const swapResult = await swapRes.json();
+        closeModal('modal-replace-file');
+        showToast(`تم استبدال الملف ذرياً بنجاح! تم توفير ${formatBytesJs(swapResult.net_savings || 0)}`, 'success');
+        await loadStorageCommandCenter();
+
+      } catch (err) {
+        console.error('executeAtomicReplace error:', err);
+        // Mandatory State: Rollback Toast
+        showToast(`فشل الاستبدال: ${err.message}. تم التراجع التلقائي دون التأثير على روابط الطلاب.`, 'error');
+      } finally {
+        if (confirmBtn) confirmBtn.disabled = false;
+        if (progWrap) progWrap.classList.add('hidden');
+      }
+    }
+
+    // ── MODAL: SAFE DELETE & QUARANTINE ──────────────────────────────────────
+    function openDeleteModalById(fileId) {
+      const file = storageState.files.find(f => String(f.id) === String(fileId));
+      if (!file) return;
+
+      storageState.activeDeleteFile = file;
+
+      const titleEl = document.getElementById('del-modal-filename');
+      if (titleEl) titleEl.innerText = file.title || file.file_path || '---';
+
+      const warnWrap = document.getElementById('del-linked-warning');
+      const warnDesc = document.getElementById('del-linked-desc');
+      if (warnWrap && warnDesc) {
+        if (!file.is_orphan) {
+          warnWrap.classList.remove('hidden');
+          if (file.course_id || file.material_id) {
+            warnDesc.innerText = `هذا الملف مرتبط بالمقرر الدراسي (${file.course_id || file.material_id}). حذفه النهائي قد يكسر روابط تنزيل المحاضرات للطلاب.`;
+          } else if (file.announcement_id) {
+            warnDesc.innerText = `هذا الملف مرتبط بإعلان لوحة الإعلانات رقم (${file.announcement_id}).`;
+          } else {
+            warnDesc.innerText = 'هذا الملف مسجل كملف تعليمي نشط في قاعدة البيانات.';
+          }
+        } else {
+          warnWrap.classList.add('hidden');
+        }
+      }
+
+      const input = document.getElementById('del-confirmation-input');
+      if (input) input.value = '';
+
+      openModal('modal-delete-file');
+    }
+
+    async function executeQuarantineFile() {
+      if (!storageState.activeDeleteFile) return;
+      const file = storageState.activeDeleteFile;
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/storage/quarantine/${file.id}`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ reason: 'Quarantined from SafeActionModal by administrator' })
+        });
+
+        if (res.ok) {
+          closeModal('modal-delete-file');
+          showToast('تم نقل الملف إلى سلة العزل المؤقت (7 أيام) بنجاح!', 'success');
+          await loadStorageCommandCenter();
+        } else {
+          const d = await res.json().catch(() => ({}));
+          showToast(d.detail || 'فشل نقل الملف للعزل', 'error');
+        }
+      } catch (err) {
+        console.error('executeQuarantineFile error:', err);
+        showToast('تعذر الاتصال بالسيرفر لعزل الملف', 'error');
+      }
+    }
+
+    async function quickRestoreFile(fileId) {
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/storage/restore/${fileId}`, {
+          method: 'POST',
+          headers: getAuthHeaders()
+        });
+
+        if (res.ok) {
+          showToast('تمت استعادة الملف من العزل وإعادته للعمل بنجاح!', 'success');
+          await loadStorageCommandCenter();
+        } else {
+          const d = await res.json().catch(() => ({}));
+          showToast(d.detail || 'فشلت استعادة الملف', 'error');
+        }
+      } catch (err) {
+        console.error('quickRestoreFile error:', err);
+        showToast('حدث خطأ بالاتصال أثناء استعادة الملف', 'error');
+      }
+    }
+
+    async function executePermanentDeleteFile() {
+      if (!storageState.activeDeleteFile) return;
+      const file = storageState.activeDeleteFile;
+      const input = document.getElementById('del-confirmation-input');
+      const confirmation = input ? input.value.trim() : '';
+
+      if (confirmation !== 'DELETE') {
+        alert('لتأكيد الحذف النهائي غير القابل للتراجع، يجب كتابة كلمة DELETE بالأحرف الإنجليزية الكبيرة تماماً.');
+        if (input) input.focus();
+        return;
+      }
+
+      const btn = document.getElementById('btn-confirm-permanent-delete');
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/storage/permanent/${file.id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ confirmation: 'DELETE' })
+        });
+
+        if (res.ok) {
+          const result = await res.json();
+          closeModal('modal-delete-file');
+          showToast(`تم حذف الملف نهائياً من Vercel Blob بنجاح! تم تحرير ${formatBytesJs(result.bytes_freed || 0)}`, 'success');
+          await loadStorageCommandCenter();
+        } else {
+          const d = await res.json().catch(() => ({}));
+          showToast(d.detail || 'فشل الحذف النهائي للملف. تأكد من امتلاك صلاحية SUPER_ADMIN.', 'error');
+        }
+      } catch (err) {
+        console.error('executePermanentDeleteFile error:', err);
+        showToast('تعذر الاتصال بالسيرفر لتنفيذ الحذف النهائي', 'error');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    // ── DRAWER: INSPECTOR & AUDIT HISTORY (#UI-4.0 Region 5) ─────────────────
+    function openStorageDrawerById(fileId) {
+      const file = storageState.files.find(f => String(f.id) === String(fileId));
+      if (!file) return;
+
+      storageState.activeDrawerFile = file;
+
+      const titleEl = document.getElementById('drawer-meta-title');
+      if (titleEl) titleEl.innerText = file.title || 'ملف بدون اسم';
+
+      const urlEl = document.getElementById('drawer-meta-url');
+      if (urlEl) urlEl.innerText = file.file_path || '---';
+
+      const sizeEl = document.getElementById('drawer-meta-size');
+      if (sizeEl) sizeEl.innerText = `${formatBytesJs(file.file_size)} (${file.quota_percentage || '0'}%)`;
+
+      const typeEl = document.getElementById('drawer-meta-type');
+      if (typeEl) typeEl.innerText = file.file_type || 'غير محدد';
+
+      const linkEl = document.getElementById('drawer-meta-linkage');
+      if (linkEl) {
+        if (file.is_orphan) {
+          linkEl.innerText = 'يتيم (غير مستخدم في أي مقرر أو إعلان نشط)';
+        } else if (file.course_id || file.material_id) {
+          linkEl.innerText = `مرتبط بالمقرر الدراسي: ${file.course_id || file.material_id}`;
+        } else if (file.announcement_id) {
+          linkEl.innerText = `مرتبط بالإعلان رقم: ${file.announcement_id}`;
+        } else {
+          linkEl.innerText = 'مرتبط بنظام الملفات التعليمية';
+        }
+      }
+
+      const dateEl = document.getElementById('drawer-meta-date');
+      if (dateEl) {
+        dateEl.innerText = file.created_at ? new Date(file.created_at).toLocaleString('ar-EG') : '---';
+      }
+
+      setDrawerSubTab('meta');
+      const drawer = document.getElementById('storage-inspector-drawer');
+      if (drawer) drawer.classList.remove('-translate-x-full');
+    }
+
+    function openStorageAuditDrawer() {
+      setDrawerSubTab('audit');
+      const drawer = document.getElementById('storage-inspector-drawer');
+      if (drawer) drawer.classList.remove('-translate-x-full');
+    }
+
+    function closeStorageDrawer() {
+      const drawer = document.getElementById('storage-inspector-drawer');
+      if (drawer) drawer.classList.add('-translate-x-full');
+    }
+
+    function setDrawerSubTab(tab) {
+      storageState.drawerTab = tab;
+      const metaTabBtn = document.getElementById('drawer-tab-meta');
+      const auditTabBtn = document.getElementById('drawer-tab-audit');
+      const metaContent = document.getElementById('drawer-content-meta');
+      const auditContent = document.getElementById('drawer-content-audit');
+
+      if (tab === 'meta') {
+        if (metaTabBtn) metaTabBtn.className = 'w-1/2 py-2.5 border-b-2 border-cyan-500 text-cyan-600 dark:text-cyan-400 font-bold';
+        if (auditTabBtn) auditTabBtn.className = 'w-1/2 py-2.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-bold';
+        if (metaContent) metaContent.classList.remove('hidden');
+        if (auditContent) auditContent.classList.add('hidden');
+      } else {
+        if (auditTabBtn) auditTabBtn.className = 'w-1/2 py-2.5 border-b-2 border-cyan-500 text-cyan-600 dark:text-cyan-400 font-bold';
+        if (metaTabBtn) metaTabBtn.className = 'w-1/2 py-2.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-bold';
+        if (metaContent) metaContent.classList.add('hidden');
+        if (auditContent) auditContent.classList.remove('hidden');
+        loadStorageAuditLogs();
+      }
+    }
+
+    async function loadStorageAuditLogs() {
+      const listEl = document.getElementById('drawer-audit-list');
+      if (!listEl) return;
+
+      listEl.innerHTML = '<div class="py-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin text-lg mb-2"></i><p>جاري قراءة سجل التدقيق غير القابل للتلاعب...</p></div>';
+
+      try {
+        const res = await fetch(`${API_BASE}/admin/api/storage/audit?limit=50`, {
+          headers: getAuthHeaders()
+        });
+
+        if (!res.ok) {
+          listEl.innerHTML = renderAnalyticsErrorRow(1, res.status, 'تعذر تحميل سجل تدقيق التخزين', 'loadStorageAuditLogs');
+          return;
+        }
+
+        const data = await res.json();
+        const logs = data.audit_logs || [];
+
+        if (logs.length === 0) {
+          listEl.innerHTML = '<div class="py-10 text-center text-slate-400 text-xs"><i class="fa-solid fa-scroll text-xl mb-1 text-slate-300"></i><p>لا توجد سجلات تدقيق سابقة حتى الآن</p></div>';
+          return;
+        }
+
+        listEl.innerHTML = logs.map(l => {
+          let badge = '';
+          if (l.action === 'permanent_delete') badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">حذف نهائي</span>';
+          else if (l.action === 'quarantine') badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">عزل مؤقت</span>';
+          else if (l.action === 'restore') badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">استعادة</span>';
+          else if (l.action === 'replace') badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300">استبدال ذري</span>';
+          else badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">${escapeHtml(l.action)}</span>`;
+
+          const dateStr = l.created_at ? new Date(l.created_at).toLocaleString('ar-EG') : '---';
+
+          return `
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1">
+              <div class="flex items-center justify-between">
+                ${badge}
+                <span class="text-[10px] text-slate-400 font-mono">${dateStr}</span>
+              </div>
+              <p class="font-bold text-slate-800 dark:text-slate-200 truncate text-xs" title="${escapeHtml(l.file_title || l.file_path || '')}">
+                ${escapeHtml(l.file_title || l.file_path || '---')}
+              </p>
+              <div class="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+                <span>المشرف: <strong class="text-slate-700 dark:text-slate-300">${escapeHtml(l.admin_name || l.admin_id || 'Admin')}</strong></span>
+                ${l.bytes_freed ? `<span class="text-emerald-600 font-mono font-bold">تم تحرير ${formatBytesJs(l.bytes_freed)}</span>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.error('loadStorageAuditLogs error:', err);
+        listEl.innerHTML = '<div class="py-6 text-center text-rose-500 text-xs">تعذر الاتصال بالسيرفر لجلب سجل التدقيق</div>';
+      }
+    }
+
+    function copyDrawerUrl() {
+      const urlEl = document.getElementById('drawer-meta-url');
+      if (!urlEl || !urlEl.innerText || urlEl.innerText === '--') return;
+      navigator.clipboard.writeText(urlEl.innerText).then(() => {
+        showToast('تم نسخ رابط الملف إلى الحافظة!', 'success');
+      }).catch(() => {
+        showToast('تعذر نسخ الرابط تلقائياً', 'error');
+      });
     }
 
   </script>
