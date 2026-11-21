@@ -118,6 +118,34 @@ def get_game_courses(db: Session = Depends(get_db)):
     return [GameCourseOut(**c) for c in DEFAULT_COURSES]
 
 
+@router.get("/files/{material_id}")
+def get_game_course_files(material_id: str, db: Session = Depends(get_db)):
+    """Return lecture and content files for the given course from Neon DB."""
+    try:
+        from app.models.content.material_file import MaterialFile
+        clean_id = (material_id or "").strip()
+        query = db.query(MaterialFile)
+        if clean_id and clean_id.lower() not in ("all", "default", "none"):
+            query = query.filter(MaterialFile.material_id == clean_id)
+        files = query.order_by(MaterialFile.file_id).all()
+        if files:
+            return [
+                {
+                    "file_id": f.file_id,
+                    "material_id": f.material_id,
+                    "title": f.title,
+                    "description": f.description or "",
+                    "file_type": f.file_type or "pdf",
+                    "file_path": f.file_path or "",
+                    "link_url": f.link_url,
+                }
+                for f in files
+            ]
+    except Exception as e:
+        logger.warning(f"Error fetching game course files from DB: {e}")
+    return []
+
+
 @router.get("/students/{material_id}", response_model=List[GameStudentOut])
 def get_game_students(material_id: str, db: Session = Depends(get_db)):
     """Return enrolled students for the selected course with their game stats."""

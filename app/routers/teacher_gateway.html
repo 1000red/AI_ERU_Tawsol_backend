@@ -1226,7 +1226,7 @@
       }
 
       try {
-        const res = await fetch(`/content/files/${encodeURIComponent(courseId)}`);
+        const res = await fetch(`/api/v1/games/files/${encodeURIComponent(courseId)}`);
         if (res.ok) {
           const files = await res.json();
           if (Array.isArray(files) && files.length > 0) {
