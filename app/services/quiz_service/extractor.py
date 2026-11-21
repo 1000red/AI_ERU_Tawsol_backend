@@ -101,11 +101,14 @@ def extract_text(file_path: str) -> str:
             return _extract_pptx(path_to_parse)
         elif ext in (".docx", ".doc"):
             return _extract_docx(path_to_parse)
+        elif ext in (".txt", ".py", ".md", ".json", ".sql", ".html", ".js", ".ts", ".css", ".csv", ".cfg", ".conf"):
+            with open(path_to_parse, "r", encoding="utf-8", errors="ignore") as f:
+                return _clean(f.read())
         else:
             raise HTTPException(
                 status_code=422,
                 detail=f"Quiz generation is not supported for '{ext}' files. "
-                       "Please use PDF, PPTX, or DOCX.",
+                       "Please use PDF, PPTX, DOCX, TXT, PY, or MD.",
             )
 
     except HTTPException:

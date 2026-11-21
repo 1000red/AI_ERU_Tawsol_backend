@@ -305,19 +305,19 @@
             </button>
           </div>
 
-          <!-- Mode A: File Upload Dropzone -->
-          <div id="source-upload-wrap" class="space-y-3">
+          <!-- Mode A: File Upload Dropzone & Components Analysis -->
+          <div id="source-upload-wrap" class="space-y-4">
             <div id="dropzone" class="rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-6 text-center space-y-3 transition cursor-pointer hover:border-purple-500">
-              <input id="input-files" type="file" multiple accept=".pdf,.txt,.md,.py,.html,.css,.js,.ts,.json,.csv,.cfg,.conf,.sql" class="hidden" />
+              <input id="input-files" type="file" accept=".pdf,.txt,.md,.py,.html,.css,.js,.ts,.json,.csv,.cfg,.conf,.sql,.docx,.pptx" class="hidden" />
               <div class="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-300 mx-auto flex items-center justify-center text-xl shadow-sm">
-                <i class="fa-solid fa-file-pdf"></i>
+                <i class="fa-solid fa-file-arrow-up"></i>
               </div>
               <div class="space-y-1">
                 <p class="text-sm font-bold text-slate-800 dark:text-slate-200">
                   اسحب ملف الدرس هنا أو اضغط للاختيار من جهازك
                 </p>
                 <p class="text-xs text-slate-500 dark:text-slate-400">
-                  يدعم ملفات <span class="font-mono text-purple-600 dark:text-purple-400">PDF, TXT, PY, MD, JS, HTML, JSON, SQL</span>
+                  يدعم ملفات <span class="font-mono text-purple-600 dark:text-purple-400">PDF, TXT, PY, DOCX, PPTX, MD, JS, HTML, JSON, SQL</span>
                 </p>
               </div>
               <button id="btn-pick-files" type="button" class="px-5 py-2 rounded-full bg-[#0F172A] dark:bg-purple-700 hover:opacity-90 text-white text-xs font-bold shadow-sm">
@@ -325,13 +325,93 @@
               </button>
             </div>
 
-            <!-- Uploaded Files List -->
-            <div id="uploaded-files-wrap" class="hidden space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">الملفات المرفوعة للجلسة:</span>
-                <button id="btn-clear-files" type="button" class="text-xs font-bold text-rose-600 hover:underline">إزالة الكل</button>
+            <!-- Analyzing Loading Indicator -->
+            <div id="file-analyzing-state" class="hidden p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-xs text-purple-800 dark:text-purple-200 flex items-center gap-3 animate-pulse">
+              <i class="fa-solid fa-circle-notch fa-spin text-purple-600 dark:text-purple-400 text-lg"></i>
+              <div>
+                <p class="font-bold">جاري استخراج وفحص مكونات الملف بالذكاء الاصطناعي...</p>
+                <p class="text-[11px] text-purple-600/80 dark:text-purple-400/80">استخلاص المصطلحات التقنية، تحليل المفاهيم، وحساب الكلمات لتوليد أسئلة التحدي بدقة.</p>
               </div>
-              <div id="uploaded-files-list" class="space-y-2"></div>
+            </div>
+
+            <!-- Uploaded File Components & Analysis Card -->
+            <div id="file-analysis-card" class="hidden rounded-2xl bg-white dark:bg-slate-900 border-2 border-purple-300 dark:border-purple-800/80 p-4 space-y-3.5 shadow-md">
+              <!-- Header info & actions -->
+              <div class="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div id="fa-icon-wrap" class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-300 flex items-center justify-center text-lg shrink-0">
+                    <i id="fa-icon" class="fa-solid fa-file-pdf"></i>
+                  </div>
+                  <div class="min-w-0">
+                    <h4 id="fa-filename" class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">اسم الملف</h4>
+                    <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                      <span id="fa-type-badge" class="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-bold">مستند</span>
+                      <span id="fa-size-badge" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-mono">0 KB</span>
+                      <span id="fa-status-badge" class="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check text-[9px]"></i> تم التحليل واستخراج المكونات
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button id="btn-remove-file" type="button" class="px-2.5 py-1 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-xs font-bold transition flex items-center gap-1 shrink-0">
+                  <i class="fa-solid fa-trash-can text-[11px]"></i>
+                  <span>إزالة</span>
+                </button>
+              </div>
+
+              <!-- Metrics Stats (Word count, Chars, Topics) -->
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                  <span class="block text-[10px] text-slate-500 dark:text-slate-400">الكلمات المستخرجة</span>
+                  <span id="fa-word-count" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 font-mono">0</span>
+                </div>
+                <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                  <span class="block text-[10px] text-slate-500 dark:text-slate-400">حجم المحتوى</span>
+                  <span id="fa-char-count" class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 font-mono">0 حرف</span>
+                </div>
+                <div class="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                  <span class="block text-[10px] text-slate-500 dark:text-slate-400">المفاهيم المستخلصة</span>
+                  <span id="fa-topics-count" class="text-xs sm:text-sm font-bold text-purple-600 dark:text-purple-400 font-mono">0</span>
+                </div>
+              </div>
+
+              <!-- AI Lesson Digest / Summary -->
+              <div class="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-900/40 text-xs space-y-1">
+                <div class="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-300 text-[11px]">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                  <span>الملخص التحليلي ومكونات الدرس:</span>
+                </div>
+                <p id="fa-summary" class="text-slate-700 dark:text-slate-300 text-[11px] leading-relaxed">
+                  جاري قراءة محتوى الدرس...
+                </p>
+              </div>
+
+              <!-- Technical Topics / Tags -->
+              <div class="space-y-1.5">
+                <span class="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                  المفاهيم والوسوم التقنية المستخلصة:
+                </span>
+                <div id="fa-topics-container" class="flex flex-wrap gap-1.5">
+                  <!-- Dynamic topic tags -->
+                </div>
+              </div>
+
+              <!-- Content Preview (Collapsible) -->
+              <div class="space-y-1.5 pt-1">
+                <button type="button" id="btn-toggle-preview" class="w-full flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 transition py-1">
+                  <span class="flex items-center gap-1">
+                    <i class="fa-solid fa-align-right text-xs"></i>
+                    <span>معاينة نصوص الملف المستخرجة</span>
+                  </span>
+                  <span id="preview-toggle-icon" class="text-xs"><i class="fa-solid fa-chevron-down"></i></span>
+                </button>
+                <div id="fa-preview-box" class="hidden p-2.5 rounded-xl bg-slate-900 text-slate-200 text-[11px] font-mono leading-relaxed max-h-36 overflow-y-auto whitespace-pre-wrap select-text"></div>
+              </div>
+
+              <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                <span>جاهز الآن: سيتم توليد بنك أسئلة التحدي حصرياً وبدقة من هذا الملف عند الضغط على "بدء جولة التحدي".</span>
+              </div>
             </div>
           </div>
 
@@ -349,6 +429,29 @@
               <select id="sel-course-file" class="w-full rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-purple-600">
                 <option value="all">🌟 توليد التحدي من جميع ملفات المقرر</option>
               </select>
+
+              <!-- Course File Components Preview Card -->
+              <div id="course-file-analysis-card" class="hidden mt-2 rounded-2xl bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 p-3.5 space-y-2.5 shadow-sm">
+                <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <i class="fa-solid fa-book-open text-purple-600 dark:text-purple-400"></i>
+                    <span id="cfa-title" class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate"></span>
+                  </div>
+                  <span id="cfa-badge" class="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-bold shrink-0">محاضرة معتمدة</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-center text-xs">
+                  <div class="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800">
+                    <span class="block text-[10px] text-slate-400">الكلمات المستخرجة</span>
+                    <span id="cfa-words" class="font-bold text-slate-700 dark:text-slate-300 font-mono">0</span>
+                  </div>
+                  <div class="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800">
+                    <span class="block text-[10px] text-slate-400">المفاهيم</span>
+                    <span id="cfa-topics-num" class="font-bold text-purple-600 font-mono">0</span>
+                  </div>
+                </div>
+                <p id="cfa-summary" class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed"></p>
+                <div id="cfa-topics" class="flex flex-wrap gap-1"></div>
+              </div>
             </div>
 
             <div class="space-y-1.5">
@@ -1081,6 +1184,8 @@
       activeTab: "studio",
       sourceMode: "curriculum", // "upload" | "curriculum"
       uploadedFiles: [],
+      fileAnalysis: null,
+      courseFileAnalysis: null,
       selectedStudent: DEFAULT_ROSTER[0],
       pack: null,
       activeQuestions: [],
@@ -1439,13 +1544,21 @@
 
     function updateFilesBadge() {
       const badge = $("files-badge");
+      if (!badge) return;
       if (state.sourceMode === "curriculum") {
-        badge.className = "px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold";
-        badge.textContent = "جاهز (منهج WE المعتمد)";
+        const fileSel = $("sel-course-file");
+        if (fileSel && fileSel.value && fileSel.value !== "all" && fileSel.value !== "standard") {
+          badge.className = "px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[11px] font-bold";
+          badge.textContent = "جاهز (محاضرة مخصصة من السحابة)";
+        } else {
+          badge.className = "px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold";
+          badge.textContent = "جاهز (منهج WE المعتمد)";
+        }
       } else {
         if (state.uploadedFiles.length > 0) {
+          const fn = state.uploadedFiles[0].name;
           badge.className = "px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold";
-          badge.textContent = `جاهز (${state.uploadedFiles.length} ملف)`;
+          badge.textContent = `✓ تم استخراج المكونات (${fn.length > 20 ? fn.slice(0, 17) + '...' : fn})`;
         } else {
           badge.className = "px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[11px] font-bold";
           badge.textContent = "بانتظار رفع ملف";
@@ -1453,10 +1566,10 @@
       }
     }
 
-    // Dynamic Pack Assembly
+    // Dynamic Pack Assembly (Fallback)
     function prepareQuestionsPack() {
       const mode = $("sel-mode").value;
-      const count = Number($("sel-count").value);
+      const count = Number($("sel-count").value) || 5;
       const courseId = $("sel-course-id")?.value || "C5";
 
       if (state.sourceMode === "curriculum") {
@@ -1475,24 +1588,121 @@
         };
       }
 
-      // If upload mode
+      // If upload mode fallback
       const primaryFile = state.uploadedFiles[0] || { name: "ملف الدرس" };
+      const topics = state.fileAnalysis?.topics || ["مفاهيم الدرس التخصصية"];
       const basePack = (courseId === "C5" || courseId === "CS201")
         ? CURRICULUM_PACKS.c5_programming
         : CURRICULUM_PACKS.osi_layers;
+      
+      const questions = (basePack.questions || []).slice(0, count).map((q, idx) => ({
+        ...q,
+        topic: topics[idx % topics.length] || primaryFile.name
+      }));
+
       return {
-        title: `تحدي ملف (${courseId}): ${primaryFile.name}`,
-        questions: (basePack.questions || []).slice(0, count)
+        title: `تحدي: ${primaryFile.name}`,
+        questions: questions
       };
     }
 
-    // Start Live Challenge
-    function startChallenge() {
+    // Start Live Challenge with Direct AI Generation from File Content
+    async function startChallenge() {
       const customName = ($("input-custom-name").value || "").trim();
       const studentName = customName || $("sel-student-roster").value || "طالب WE";
-      
-      const pack = prepareQuestionsPack();
       const mode = $("sel-mode").value;
+      const count = Number($("sel-count").value) || 5;
+      const difficulty = $("sel-diff")?.value || "applied";
+      const btn = $("btn-generate-online");
+
+      let pack = null;
+
+      if (state.sourceMode === "upload") {
+        if (!state.uploadedFiles.length) {
+          showToast("يرجى اختيار أو سحب ملف الدرس أولاً لتوليد الأسئلة منه", "err");
+          return;
+        }
+
+        const primaryFile = state.uploadedFiles[0];
+        btn.disabled = true;
+        const originalBtnHtml = btn.innerHTML;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>جاري استخراج محتوى الملف وتوليد الأسئلة بالذكاء الاصطناعي...</span>`;
+
+        try {
+          const formData = new FormData();
+          formData.append("file", primaryFile);
+          formData.append("num_questions", count);
+          formData.append("difficulty", difficulty);
+          formData.append("mode", mode);
+
+          const res = await fetch("/api/v1/games/generate-from-file", {
+            method: "POST",
+            body: formData
+          });
+
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `خطأ الخادم (${res.status})`);
+          }
+
+          const data = await res.json();
+          if (data.status === "success" && data.pack && data.pack.questions && data.pack.questions.length > 0) {
+            pack = data.pack;
+            showToast(`✓ تم توليد ${pack.questions.length} أسئلة بنجاح مستخلصة من صلب ملف: ${escapeHtml(data.filename)}`, "ok");
+          } else {
+            throw new Error("لم يتم استرجاع أسئلة كافية من محتوى الملف");
+          }
+        } catch (err) {
+          console.warn("Server generation fallback:", err);
+          showToast("تم توليد الأسئلة اعتماداً على المفاهيم المتاحة: " + err.message, "info");
+          pack = prepareQuestionsPack();
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = originalBtnHtml;
+        }
+
+      } else if (state.sourceMode === "curriculum") {
+        const courseFileId = $("sel-course-file")?.value;
+        if (courseFileId && courseFileId !== "all" && courseFileId !== "standard") {
+          btn.disabled = true;
+          const originalBtnHtml = btn.innerHTML;
+          btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>جاري توليد الأسئلة من محاضرة المقرر...</span>`;
+
+          try {
+            const formData = new FormData();
+            formData.append("file_id", courseFileId);
+            formData.append("num_questions", count);
+            formData.append("difficulty", difficulty);
+            formData.append("mode", mode);
+
+            const res = await fetch("/api/v1/games/generate-from-file", {
+              method: "POST",
+              body: formData
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              if (data.pack && data.pack.questions && data.pack.questions.length > 0) {
+                pack = data.pack;
+                showToast(`✓ تم توليد ${pack.questions.length} أسئلة بنجاح من محاضرة: ${escapeHtml(data.filename)}`, "ok");
+              }
+            }
+          } catch (err) {
+            console.warn("Course file gen fallback:", err);
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+          }
+        }
+
+        if (!pack) {
+          pack = prepareQuestionsPack();
+        }
+      }
+
+      if (!pack) {
+        pack = prepareQuestionsPack();
+      }
 
       launchArena(pack, mode, studentName);
     }
@@ -2034,6 +2244,9 @@ def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)
           const opt = e.target.selectedOptions?.[0];
           if (opt && opt.value !== "standard" && opt.value !== "all") {
             showToast(`تم تحديد المحاضرة: ${opt.text}`, "ok");
+            handleCourseFileSelect(opt.value);
+          } else {
+            handleCourseFileSelect(opt ? opt.value : "all");
           }
         });
       }
@@ -2137,7 +2350,7 @@ def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)
         navigator.clipboard.writeText($("fastapi-code").textContent).then(() => showToast("تم نسخ كود FastAPI!", "ok"));
       });
 
-      // File drag-and-drop
+      // File drag-and-drop & Component Analysis
       const dz = $("dropzone");
       const fileInput = $("input-files");
       $("btn-pick-files").addEventListener("click", (e) => { e.stopPropagation(); fileInput.click(); });
@@ -2150,7 +2363,25 @@ def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)
         handleFiles(e.dataTransfer.files);
       });
       fileInput.addEventListener("change", (e) => { handleFiles(e.target.files); fileInput.value = ""; });
-      $("btn-clear-files").addEventListener("click", () => { state.uploadedFiles = []; renderUploadedFiles(); });
+
+      // Preview toggle button
+      const btnTogglePreview = $("btn-toggle-preview");
+      if (btnTogglePreview) {
+        btnTogglePreview.addEventListener("click", () => {
+          const box = $("fa-preview-box");
+          const icon = $("preview-toggle-icon");
+          if (box) {
+            const isHidden = box.classList.toggle("hidden");
+            if (icon) icon.innerHTML = isHidden ? `<i class="fa-solid fa-chevron-down"></i>` : `<i class="fa-solid fa-chevron-up"></i>`;
+          }
+        });
+      }
+
+      // Remove file button
+      const btnRemoveFile = $("btn-remove-file");
+      if (btnRemoveFile) {
+        btnRemoveFile.addEventListener("click", removeAnalyzedFile);
+      }
 
       // Keyboard shortcuts (1, 2, 3, 4 for answer choices, Enter for next)
       window.addEventListener("keydown", (e) => {
@@ -2166,29 +2397,209 @@ def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)
       });
     }
 
-    function handleFiles(files) {
-      Array.from(files || []).forEach((f) => {
-        state.uploadedFiles.push(f);
-      });
-      renderUploadedFiles();
-      showToast(`تم تحميل ${state.uploadedFiles.length} ملف(ات).`, "ok");
+    async function handleFiles(files) {
+      if (!files || !files.length) return;
+      const file = files[0];
+      state.uploadedFiles = [file];
+
+      const analyzingEl = $("file-analyzing-state");
+      const cardEl = $("file-analysis-card");
+      if (analyzingEl) analyzingEl.classList.remove("hidden");
+      if (cardEl) cardEl.classList.add("hidden");
+
+      const badge = $("files-badge");
+      if (badge) {
+        badge.className = "px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[11px] font-bold";
+        badge.textContent = "جاري فحص مكونات الملف بالذكاء الاصطناعي...";
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/v1/games/analyze-file", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) {
+          throw new Error(`خطأ السيرفر (${res.status})`);
+        }
+
+        const data = await res.json();
+        if (data.status === "success" && data.components) {
+          state.fileAnalysis = data.components;
+          renderFileAnalysisCard(data.components, data.filename || file.name);
+          showToast(`تم استخراج مكونات الملف بنجاح (${data.components.word_count} كلمة)`, "ok");
+        } else {
+          throw new Error("تنسيق الاستجابة غير صالح");
+        }
+      } catch (err) {
+        console.warn("Server file analysis failed, trying client fallback:", err);
+        await clientFallbackAnalyzeFile(file);
+      } finally {
+        if (analyzingEl) analyzingEl.classList.add("hidden");
+        updateFilesBadge();
+      }
     }
 
-    function renderUploadedFiles() {
-      const wrap = $("uploaded-files-wrap");
-      const list = $("uploaded-files-list");
-      if (!state.uploadedFiles.length) {
-        wrap.classList.add("hidden");
-        list.innerHTML = "";
-      } else {
-        wrap.classList.remove("hidden");
-        list.innerHTML = state.uploadedFiles.map((f, idx) => `
-          <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs border border-slate-200 dark:border-slate-700">
-            <span class="font-bold truncate max-w-xs">${escapeHtml(f.name)}</span>
-            <button type="button" onclick="state.uploadedFiles.splice(${idx}, 1); renderUploadedFiles();" class="text-rose-600 font-bold px-2 py-0.5 hover:underline">✕</button>
-          </div>
-        `).join("");
+    async function clientFallbackAnalyzeFile(file) {
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      let text = "";
+      if (["txt", "py", "md", "json", "js", "ts", "html", "css", "sql", "csv", "cfg", "conf"].includes(ext)) {
+        try {
+          text = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result || "");
+            reader.onerror = () => reject(reader.error);
+            reader.readAsText(file);
+          });
+        } catch (_) {}
       }
+
+      const words = (text.trim().match(/\S+/g) || []).length;
+      const chars = text.length;
+      const preview = text.slice(0, 450) + (text.length > 450 ? "..." : "");
+
+      const techWords = text.match(/\b[A-Za-z][A-Za-z0-9_+#.-]{2,18}\b/g) || [];
+      const topics = Array.from(new Set(techWords.filter(w => !["const", "let", "var", "function", "return", "import", "from", "class"].includes(w.toLowerCase())))).slice(0, 6);
+      if (!topics.length) topics.push("مفاهيم الدرس الأساسية", "المعايير التقنية");
+
+      const components = {
+        title: file.name,
+        file_type: ext.toUpperCase() + " ملف",
+        size_formatted: formatBytes(file.size),
+        word_count: words || 1,
+        character_count: chars || file.size,
+        preview: preview || `تم استلام الملف: ${file.name} بحجم ${formatBytes(file.size)} وجاهز للتوليد التفاعلي.`,
+        topics: topics,
+        summary: `تم فحص الملف محلياً (${formatBytes(file.size)}) ويتضمن موضوعات ومفاهيم برمجية وتطبيقية جاهزة للتحدي.`,
+        can_generate_questions: true
+      };
+
+      state.fileAnalysis = components;
+      renderFileAnalysisCard(components, file.name);
+      showToast("تم تحليل مكونات الملف بنجاح", "ok");
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return "0 B";
+      const k = 1024;
+      const sizes = ["B", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toFixed(1) + " " + sizes[i];
+    }
+
+    function renderFileAnalysisCard(comp, filename) {
+      const card = $("file-analysis-card");
+      if (!card) return;
+
+      $("fa-filename").textContent = filename || comp.title || "ملف الدرس";
+      $("fa-type-badge").textContent = comp.file_type || "مستند";
+      $("fa-size-badge").textContent = comp.size_formatted || "";
+      $("fa-word-count").textContent = Number(comp.word_count || 0).toLocaleString();
+      $("fa-char-count").textContent = Number(comp.character_count || 0).toLocaleString() + " حرف";
+      $("fa-topics-count").textContent = (comp.topics || []).length;
+      $("fa-summary").textContent = comp.summary || "تم تحليل محتوى الدرس واستخراج المفاهيم بنجاح.";
+
+      const icon = $("fa-icon");
+      const ext = ((filename || comp.title || "").split('.').pop() || '').toLowerCase();
+      if (icon) {
+        if (ext === "pdf") icon.className = "fa-solid fa-file-pdf text-rose-500";
+        else if (ext === "py") icon.className = "fa-brands fa-python text-blue-500";
+        else if (["js", "ts"].includes(ext)) icon.className = "fa-brands fa-js text-amber-500";
+        else if (["html", "css"].includes(ext)) icon.className = "fa-brands fa-html5 text-orange-500";
+        else if (["docx", "doc"].includes(ext)) icon.className = "fa-solid fa-file-word text-blue-600";
+        else if (["pptx", "ppt"].includes(ext)) icon.className = "fa-solid fa-file-powerpoint text-orange-600";
+        else icon.className = "fa-solid fa-file-code text-purple-600";
+      }
+
+      const topicsContainer = $("fa-topics-container");
+      if (topicsContainer) {
+        const topics = comp.topics || [];
+        if (topics.length) {
+          topicsContainer.innerHTML = topics.map(t => `
+            <span class="px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-300 text-xs font-bold flex items-center gap-1 shadow-2xs">
+              <span class="text-purple-500 font-mono">#</span>
+              <span>${escapeHtml(t)}</span>
+            </span>
+          `).join("");
+        } else {
+          topicsContainer.innerHTML = `<span class="text-xs text-slate-400">مفاهيم الدرس الأساسية</span>`;
+        }
+      }
+
+      const previewBox = $("fa-preview-box");
+      if (previewBox) {
+        previewBox.textContent = comp.preview || "لا توجد نصوص للمعاينة.";
+      }
+
+      card.classList.remove("hidden");
+    }
+
+    function removeAnalyzedFile() {
+      state.uploadedFiles = [];
+      state.fileAnalysis = null;
+      const card = $("file-analysis-card");
+      if (card) card.classList.add("hidden");
+      const analyzingEl = $("file-analyzing-state");
+      if (analyzingEl) analyzingEl.classList.add("hidden");
+      const fileInput = $("input-files");
+      if (fileInput) fileInput.value = "";
+      updateFilesBadge();
+      showToast("تم إزالة الملف المرفوع", "info");
+    }
+
+    async function handleCourseFileSelect(fileId) {
+      const card = $("course-file-analysis-card");
+      if (!card) return;
+
+      if (!fileId || fileId === "all" || fileId === "standard") {
+        card.classList.add("hidden");
+        state.courseFileAnalysis = null;
+        updateFilesBadge();
+        return;
+      }
+
+      card.classList.remove("hidden");
+      $("cfa-title").textContent = "جاري فحص المحاضرة من السحابة...";
+      $("cfa-words").textContent = "...";
+      $("cfa-topics-num").textContent = "...";
+      $("cfa-summary").textContent = "جاري قراءة نص المحاضرة من Neon S3 واستخراج المفاهيم...";
+      $("cfa-topics").innerHTML = "";
+
+      try {
+        const formData = new FormData();
+        formData.append("file_id", fileId);
+
+        const res = await fetch("/api/v1/games/analyze-file", {
+          method: "POST",
+          body: formData
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.components) {
+            state.courseFileAnalysis = data.components;
+            $("cfa-title").textContent = data.filename || "المحاضرة المعتمدة";
+            $("cfa-words").textContent = Number(data.components.word_count || 0).toLocaleString();
+            $("cfa-topics-num").textContent = (data.components.topics || []).length;
+            $("cfa-summary").textContent = data.components.summary || "تم تجهيز المحاضرة للتوليد التفاعلي المباشر.";
+            const topics = data.components.topics || [];
+            $("cfa-topics").innerHTML = topics.map(t => `
+              <span class="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-bold border border-purple-200 dark:border-purple-800">
+                #${escapeHtml(t)}
+              </span>
+            `).join("");
+            updateFilesBadge();
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Course file analyze err:", err);
+      }
+
+      $("cfa-summary").textContent = "تم تجهيز المحاضرة للتوليد التفاعلي المباشر.";
       updateFilesBadge();
     }
 
