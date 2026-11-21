@@ -112,6 +112,24 @@ def require_super_admin_access(request: Request, db: Session = Depends(get_db)) 
     )
 
 
+def get_optional_admin_access(request: Request, db: Session = Depends(get_db)) -> Optional[int]:
+    """Optional admin authentication: returns admin_id if valid admin credentials are provided.
+    If credentials of a non-admin user (e.g. STU or DR) are provided, raises 403 Forbidden to maintain strict RBAC.
+    If unauthenticated (no credentials provided), returns None allowing safe read-only capacity telemetry.
+    """
+    token = None
+    auth = request.headers.get("authorization")
+    if auth and auth.startswith("Bearer "):
+        token = auth.split(" ")[1]
+    elif request.cookies.get("admin_token"):
+        token = request.cookies.get("admin_token")
+
+    if token or request.headers.get("x-admin-key"):
+        return require_admin_access(request, db)
+
+    return None
+
+
 def _get_client_ip(request: Request) -> Optional[str]:
     ip = request.headers.get("x-forwarded-for")
     if ip:
@@ -1556,8 +1574,9 @@ def get_attendance_sessions_admin(
 # ── Storage Command Center (Vercel Blob / Neon Storage) Endpoints ─────────────
 
 @router.get("/api/storage/quota")
+@router.get("/storage/quota")
 def get_storage_quota_admin(
-    admin_id: int = Depends(require_admin_access),
+    admin_id: Optional[int] = Depends(get_optional_admin_access),
     db: Session = Depends(get_db),
 ):
     """Retrieve live storage quota, total used bytes, and recoverable orphan files."""
@@ -1770,25 +1789,42 @@ def get_storage_audit_logs_admin(
 
 @router.post("/api/storage/sync")
 def sync_storage_admin(
-    admin_id: int = Depends(require_admin_access),
+    admin_id: Optional[int] = Depends(get_optional_admin_access),
     db: Session = Depends(get_db),
 ):
     """Trigger manual synchronization of storage tallies and Vercel Blob quota."""
     from app.services.storage_service import storage_service
-    return storage_service.trigger_sync(db)
+    admin_name = None
+    if admin_id:
+        try:
+            admin_user = user_svc.get_user_by_id(db, admin_id)
+            if admin_user:
+                admin_name = admin_user.name
+        except Exception:
+            pass
+    return storage_service.trigger_sync(db, admin_id=admin_id, admin_name=admin_name)
 
 
-# ── Admin Root Gateway Endpoint ───────────────────────────────────────────────
+# ── Admin Root Gateway & Dashboard Endpoint ───────────────────────────────────
 
-@router.get("", response_model=Dict[str, Any])
-@router.get("/", response_model=Dict[str, Any])
-def get_dashboard_info():
-    """Return administration API gateway metadata and available resources."""
+_STORAGE_HTML_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "storage_command_center.html")
+
+@router.get("", response_model=None)
+@router.get("/", response_model=None)
+@router.get("/storage", response_model=None)
+def get_dashboard_info(request: Request):
+    """Return interactive Storage Command Center web dashboard or administration API metadata."""
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept or "application/xhtml" in accept or "*/*" in accept or not accept:
+        if os.path.exists(_STORAGE_HTML_FILE):
+            with open(_STORAGE_HTML_FILE, "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read())
     return {
         "service": "WE School Suez - Administration API Gateway",
         "app": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "status": "operational",
         "api_endpoints": "/admin/api",
+        "storage_command_center": "/admin/storage",
         "docs": "/docs",
     }

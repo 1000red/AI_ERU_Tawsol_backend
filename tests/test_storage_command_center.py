@@ -150,7 +150,7 @@ def storage_client():
         }
     finally:
         db.close()
-        app.dependency_overrides.clear()
+        app.dependency_overrides.pop(get_db, None)
         Base.metadata.drop_all(bind=engine)
 
 

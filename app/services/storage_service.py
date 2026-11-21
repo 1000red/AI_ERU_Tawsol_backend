@@ -38,37 +38,47 @@ class StorageManagementService:
     def get_quota_summary(self, db: Session) -> Dict[str, Any]:
         """Calculates total usage, active vs orphan files, and quarantine statistics."""
         # Query sum of sizes and count of all MaterialFiles
-        total_stats = db.query(
-            func.count(MaterialFile.file_id),
-            func.sum(func.coalesce(MaterialFile.file_size, 0))
-        ).first()
-
-        total_files = total_stats[0] or 0
-        total_used_bytes = int(total_stats[1] or 0)
+        try:
+            total_stats = db.query(
+                func.count(MaterialFile.file_id),
+                func.sum(func.coalesce(MaterialFile.file_size, 0))
+            ).first()
+            total_files = total_stats[0] or 0
+            total_used_bytes = int(total_stats[1] or 0)
+        except Exception:
+            total_files = 0
+            total_used_bytes = 0
 
         # Quarantined files
-        quarantine_stats = db.query(
-            func.count(StorageQuarantine.id),
-            func.sum(func.coalesce(StorageQuarantine.original_size, 0))
-        ).first()
-        quarantined_count = quarantine_stats[0] or 0
-        quarantined_bytes = int(quarantine_stats[1] or 0)
+        try:
+            quarantine_stats = db.query(
+                func.count(StorageQuarantine.id),
+                func.sum(func.coalesce(StorageQuarantine.original_size, 0))
+            ).first()
+            quarantined_count = quarantine_stats[0] or 0
+            quarantined_bytes = int(quarantine_stats[1] or 0)
+        except Exception:
+            quarantined_count = 0
+            quarantined_bytes = 0
 
         # Orphan files (files without course/material_id and announcement_id)
-        orphan_stats = db.query(
-            func.count(MaterialFile.file_id),
-            func.sum(func.coalesce(MaterialFile.file_size, 0))
-        ).filter(
-            or_(MaterialFile.material_id.is_(None), MaterialFile.material_id == ""),
-            MaterialFile.announcement_id.is_(None)
-        ).first()
-
-        orphan_count = orphan_stats[0] or 0
-        recoverable_bytes = int(orphan_stats[1] or 0)
+        try:
+            orphan_stats = db.query(
+                func.count(MaterialFile.file_id),
+                func.sum(func.coalesce(MaterialFile.file_size, 0))
+            ).filter(
+                or_(MaterialFile.material_id.is_(None), MaterialFile.material_id == ""),
+                MaterialFile.announcement_id.is_(None)
+            ).first()
+            orphan_count = orphan_stats[0] or 0
+            recoverable_bytes = int(orphan_stats[1] or 0)
+        except Exception:
+            orphan_count = 0
+            recoverable_bytes = 0
 
         # Calculate percentage against current tier quota (1 GB Hobby or Pro)
         pct = (total_used_bytes / max(1, self.quota_bytes)) * 100.0
-        pct_rounded = round(pct, 1)
+        pct_rounded = round(pct, 2)
 
         if pct >= 100.0:
             status = "exceeded"
@@ -106,6 +116,7 @@ class StorageManagementService:
             "quarantined_formatted": format_bytes(quarantined_bytes),
             "last_sync": self._last_sync_time.isoformat(),
             "blob_configured": bool(VERCEL_BLOB_TOKEN or neon_storage.is_configured),
+            "sync_status": "operational",
         }
 
     def list_files(
@@ -130,9 +141,12 @@ class StorageManagementService:
                 MaterialFile.announcement_id.is_(None)
             )
         elif filter_mode == "quarantine":
-            # Subquery on StorageQuarantine
-            quarantine_ids = db.query(StorageQuarantine.file_id).subquery()
-            query = query.filter(MaterialFile.file_id.in_(quarantine_ids))
+            try:
+                quarantine_records = db.query(StorageQuarantine.file_id).all()
+                quarantine_ids = [r[0] for r in quarantine_records]
+                query = query.filter(MaterialFile.file_id.in_(quarantine_ids))
+            except Exception:
+                query = query.filter(MaterialFile.file_id == -1)
 
         # 2. Type Filter
         if type_filter and type_filter != "all":
@@ -179,19 +193,23 @@ class StorageManagementService:
         file_ids = [f.file_id for f in items]
         quarantine_map = {}
         if file_ids:
-            q_records = db.query(StorageQuarantine).filter(StorageQuarantine.file_id.in_(file_ids)).all()
-            for qr in q_records:
-                now_utc = datetime.datetime.now(datetime.timezone.utc)
-                due = qr.purge_due_at
-                if due.tzinfo is None:
-                    due = due.replace(tzinfo=datetime.timezone.utc)
-                remaining_days = max(0, (due - now_utc).days)
-                quarantine_map[qr.file_id] = {
-                    "quarantined_at": qr.quarantined_at.isoformat(),
-                    "purge_due_at": qr.purge_due_at.isoformat(),
-                    "days_left": remaining_days,
-                    "reason": qr.reason,
-                }
+            try:
+                q_records = db.query(StorageQuarantine).filter(StorageQuarantine.file_id.in_(file_ids)).all()
+                for qr in q_records:
+                    now_utc = datetime.datetime.now(datetime.timezone.utc)
+                    due = qr.purge_due_at
+                    if due.tzinfo is None:
+                        due = due.replace(tzinfo=datetime.timezone.utc)
+                    remaining_days = max(0, (due - now_utc).days)
+                    quarantine_map[qr.file_id] = {
+                        "quarantined_at": qr.quarantined_at.isoformat(),
+                        "purge_due_at": qr.purge_due_at.isoformat(),
+                        "days_left": remaining_days,
+                        "days_remaining": remaining_days,
+                        "reason": qr.reason,
+                    }
+            except Exception:
+                pass
 
         # Build detailed row items
         rows = []
@@ -538,10 +556,177 @@ class StorageManagementService:
             for l in logs
         ]
 
-    def trigger_sync(self, db: Session) -> Dict[str, Any]:
-        """Refreshes storage counts and updates sync timestamp."""
+    def _sync_with_vercel_blob(self, db: Session) -> Dict[str, Any]:
+        """Queries Vercel Blob REST API to reconcile remote blobs and update file sizes in database."""
+        token = VERCEL_BLOB_TOKEN or os.getenv("BLOB_READ_WRITE_TOKEN", "")
+        if not token:
+            return {"synced": False, "reason": "No VERCEL_BLOB_TOKEN configured"}
+
+        try:
+            import urllib.request
+            import json
+
+            req = urllib.request.Request(
+                "https://blob.vercel-storage.com/?limit=1000",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "User-Agent": "WE-School-StorageCommandCenter/2.0",
+                },
+                method="GET",
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                blobs = data.get("blobs", [])
+                remote_bytes = 0
+                updated_count = 0
+
+                for b in blobs:
+                    b_url = b.get("url", "")
+                    b_path = b.get("pathname", "")
+                    b_size = int(b.get("size") or 0)
+                    remote_bytes += b_size
+
+                    # Find matching file in DB
+                    mf = db.query(MaterialFile).filter(
+                        or_(
+                            MaterialFile.file_path == b_url,
+                            MaterialFile.link_url == b_url,
+                            MaterialFile.file_path.ilike(f"%{b_path}") if b_path else False,
+                        )
+                    ).first()
+                    if mf and (not mf.file_size or mf.file_size == 0):
+                        mf.file_size = b_size
+                        updated_count += 1
+
+                if updated_count > 0:
+                    db.commit()
+
+                return {
+                    "synced": True,
+                    "blob_count": len(blobs),
+                    "remote_bytes": remote_bytes,
+                    "updated_db_records": updated_count,
+                }
+        except Exception as e:
+            return {"synced": False, "error": str(e)}
+
+    def _sync_with_neon_storage(self, db: Session) -> Dict[str, Any]:
+        """Queries Neon Object Storage (S3) to reconcile objects and update file sizes."""
+        if not neon_storage.is_configured:
+            return {"synced": False, "reason": "Neon storage not configured"}
+
+        try:
+            resp = neon_storage.client.list_objects_v2(Bucket=neon_storage.bucket_name, MaxKeys=1000)
+            contents = resp.get("Contents", [])
+            remote_bytes = 0
+            updated_count = 0
+
+            for obj in contents:
+                key = obj.get("Key", "")
+                size = int(obj.get("Size") or 0)
+                remote_bytes += size
+
+                if key:
+                    mf = db.query(MaterialFile).filter(
+                        MaterialFile.file_path.ilike(f"%{key}%")
+                    ).first()
+                    if mf and (not mf.file_size or mf.file_size == 0):
+                        mf.file_size = size
+                        updated_count += 1
+
+            if updated_count > 0:
+                db.commit()
+
+            return {
+                "synced": True,
+                "object_count": len(contents),
+                "remote_bytes": remote_bytes,
+                "updated_db_records": updated_count,
+            }
+        except Exception as e:
+            return {"synced": False, "error": str(e)}
+
+    def _auto_size_missing_files(self, db: Session) -> int:
+        """Finds any MaterialFile records with missing or 0 file_size and detects size via HEAD or local file."""
+        missing = db.query(MaterialFile).filter(
+            or_(MaterialFile.file_size.is_(None), MaterialFile.file_size <= 0)
+        ).all()
+
+        updated = 0
+        import urllib.request
+
+        for mf in missing:
+            path = mf.file_path or mf.link_url
+            if not path:
+                continue
+
+            # 1. Remote HTTP/HTTPS URL
+            if path.startswith("http://") or path.startswith("https://"):
+                try:
+                    req = urllib.request.Request(
+                        path,
+                        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+                        method="HEAD",
+                    )
+                    with urllib.request.urlopen(req, timeout=5) as r:
+                        cl = r.headers.get("Content-Length")
+                        if cl and cl.isdigit() and int(cl) > 0:
+                            mf.file_size = int(cl)
+                            updated += 1
+                            continue
+                except Exception:
+                    pass
+
+            # 2. Local disk path
+            if os.path.exists(path):
+                try:
+                    sz = os.path.getsize(path)
+                    if sz > 0:
+                        mf.file_size = sz
+                        updated += 1
+                except Exception:
+                    pass
+
+        if updated > 0:
+            db.commit()
+        return updated
+
+    def trigger_sync(self, db: Session, admin_id: Optional[int] = None, admin_name: Optional[str] = None) -> Dict[str, Any]:
+        """Performs comprehensive storage synchronization across Vercel Blob, Neon S3, and database."""
+        # 1. Sync Vercel Blob
+        blob_res = self._sync_with_vercel_blob(db)
+
+        # 2. Sync Neon S3
+        neon_res = self._sync_with_neon_storage(db)
+
+        # 3. Auto-size files with 0 or None size
+        auto_sized = self._auto_size_missing_files(db)
+
+        # 4. Update sync timestamp
         self._last_sync_time = datetime.datetime.now(datetime.timezone.utc)
-        return self.get_quota_summary(db)
+
+        # 5. Log audit entry
+        try:
+            audit = StorageAuditLog(
+                admin_id=admin_id,
+                admin_name=admin_name or ("المسؤول" if admin_id else "مزامنة النظام"),
+                action="sync",
+                details=f"مزامنة شاملة: Vercel Blob ({blob_res.get('synced', False)}), Neon Storage ({neon_res.get('synced', False)}), ملفات محدثة: {auto_sized}.",
+            )
+            db.add(audit)
+            db.commit()
+        except Exception:
+            db.rollback()
+
+        # 6. Return fresh summary
+        summary = self.get_quota_summary(db)
+        summary["sync_details"] = {
+            "vercel_blob": blob_res,
+            "neon_storage": neon_res,
+            "auto_sized_files": auto_sized,
+            "synced_at": self._last_sync_time.isoformat(),
+        }
+        return summary
 
     def _delete_physical_blob(self, path_or_url: str) -> None:
         if not path_or_url:

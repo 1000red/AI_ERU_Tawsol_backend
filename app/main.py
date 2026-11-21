@@ -171,9 +171,16 @@ app.include_router(edugame.router)
 app.include_router(attendance.router)
 app.include_router(admin_dashboard.router)
 
+@app.get("/api/storage/quota", tags=["Storage Telemetry"])
+def get_public_storage_quota(db: Session = Depends(get_db)):
+    """Public read-only storage capacity telemetry for live dashboards."""
+    from app.services.storage_service import storage_service
+    summary = storage_service.get_quota_summary(db)
+    return {"quota": summary, **summary}
+
 @app.get("/dashboard", include_in_schema=False)
 def dashboard_view():
-    return {"message": "Admin API available at /admin/api.", "docs": "/docs"}
+    return RedirectResponse(url="/admin/storage", status_code=302)
 
 
 @app.get("/login", include_in_schema=False)
