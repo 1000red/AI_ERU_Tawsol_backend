@@ -56,7 +56,11 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
 
 
 @router.get("/login", include_in_schema=False)
-def auth_login_page():
+def auth_login_page(request: Request):
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept or "application/xhtml" in accept or "*/*" in accept or not accept:
+        from app.routers.user_management_web import USER_MANAGEMENT_HTML
+        return HTMLResponse(content=USER_MANAGEMENT_HTML)
     return {"message": "Use POST /auth/login for authentication."}
 
 

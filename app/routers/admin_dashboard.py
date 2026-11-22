@@ -1807,16 +1807,26 @@ def sync_storage_admin(
 
 # ── Admin Root Gateway & Dashboard Endpoint ───────────────────────────────────
 
+_UM_HTML_FILE = os.path.join(os.path.dirname(__file__), "user_management.html")
 _STORAGE_HTML_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "storage_command_center.html")
+_DASHBOARD_HTML_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates", "dashboard.html")
+
+if os.path.exists(_DASHBOARD_HTML_FILE):
+    with open(_DASHBOARD_HTML_FILE, "r", encoding="utf-8") as _df:
+        DASHBOARD_HTML = _df.read()
+else:
+    DASHBOARD_HTML = "<html><body><h1>Admin Dashboard</h1></body></html>"
 
 @router.get("", response_model=None)
 @router.get("/", response_model=None)
-@router.get("/storage", response_model=None)
 def get_dashboard_info(request: Request):
-    """Return interactive Storage Command Center web dashboard or administration API metadata."""
+    """Return interactive web admin dashboard or administration API metadata."""
     accept = request.headers.get("accept", "")
     if "text/html" in accept or "application/xhtml" in accept or "*/*" in accept or not accept:
-        if os.path.exists(_STORAGE_HTML_FILE):
+        if os.path.exists(_UM_HTML_FILE):
+            with open(_UM_HTML_FILE, "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read())
+        elif os.path.exists(_STORAGE_HTML_FILE):
             with open(_STORAGE_HTML_FILE, "r", encoding="utf-8") as f:
                 return HTMLResponse(content=f.read())
     return {
@@ -1828,3 +1838,15 @@ def get_dashboard_info(request: Request):
         "storage_command_center": "/admin/storage",
         "docs": "/docs",
     }
+
+
+@router.get("/storage", response_model=None)
+def get_storage_dashboard(request: Request):
+    """Return dedicated Storage Command Center (#UI-4.0) web dashboard."""
+    if os.path.exists(_STORAGE_HTML_FILE):
+        with open(_STORAGE_HTML_FILE, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    if os.path.exists(_UM_HTML_FILE):
+        with open(_UM_HTML_FILE, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>Storage Command Center</h1>")

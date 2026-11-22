@@ -170,6 +170,11 @@ app.include_router(neon_router)
 app.include_router(edugame.router)
 app.include_router(attendance.router)
 app.include_router(admin_dashboard.router)
+from app.routers import user_management_web, teacher_portal_web, student_checkin_web, sqbs_pitch_web
+app.include_router(user_management_web.router)
+app.include_router(teacher_portal_web.router)
+app.include_router(student_checkin_web.router)
+app.include_router(sqbs_pitch_web.router)
 
 @app.get("/api/storage/quota", tags=["Storage Telemetry"])
 def get_public_storage_quota(db: Session = Depends(get_db)):
@@ -178,9 +183,10 @@ def get_public_storage_quota(db: Session = Depends(get_db)):
     summary = storage_service.get_quota_summary(db)
     return {"quota": summary, **summary}
 
-@app.get("/dashboard", include_in_schema=False)
+@app.get("/dashboard", response_class=HTMLResponse, tags=["Admin Dashboard"])
 def dashboard_view():
-    return RedirectResponse(url="/admin/storage", status_code=302)
+    from app.routers.admin_dashboard import DASHBOARD_HTML
+    return HTMLResponse(content=DASHBOARD_HTML)
 
 
 @app.get("/login", include_in_schema=False)

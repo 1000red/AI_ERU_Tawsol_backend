@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeConnect | عرض مسابقة HP IDEA Egypt — مدرسة WE للتكنولوجيا التطبيقية بالسويس</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            cairo: ['Cairo', 'system-ui', 'sans-serif'],
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            we: {
+              dark: '#090D1F',
+              panel: '#111834',
+              violet: '#5B21B6',
+              violetLight: '#7C3AED',
+              gold: '#F59E0B',
+              goldLight: '#FCD34D',
+              emerald: '#10B981',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      font-family: 'Cairo', 'Inter', system-ui, sans-serif;
+      background: radial-gradient(circle at 18% 12%, rgba(124, 58, 237, 0.20), transparent 42%),
+                  radial-gradient(circle at 82% 85%, rgba(16, 185, 129, 0.14), transparent 45%),
+                  #090D1F;
+      color: #F8FAFC;
+      overflow: hidden;
+    }
+    html[lang="en"] body {
+      font-family: 'Inter', 'Cairo', system-ui, sans-serif;
+    }
+    .slide {
+      display: none;
+      height: calc(100vh - 116px);
+      overflow-y: auto;
+      animation: slideFade 0.32s ease-out;
+    }
+    .slide.active {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    @keyframes slideFade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .glass {
+      background: rgba(17, 24, 52, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      backdrop-filter: blur(14px);
+    }
+    .photo-frame {
+      cursor: zoom-in;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .photo-frame:hover {
+      transform: scale(1.015);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.45); border-radius: 99px; }
+
+    /* Clean Landscape 16:9 Print / PDF Export */
+    @media print {
+      @page { size: 13.33in 7.5in; margin: 0; }
+      html, body {
+        display: block !important;
+        width: 13.33in !important;
+        height: auto !important;
+        background: #090D1F !important;
+        color: #F8FAFC !important;
+        overflow: visible !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      #top-bar, #bottom-bar, .no-print, #modal-appendix, #modal-judge-demo, #modal-video-backup, #modal-lightbox, #modal-grid {
+        display: none !important;
+      }
+      #slides-stage {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: none !important;
+        width: 13.33in !important;
+      }
+      .slide {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        height: 7.49in !important;
+        width: 13.33in !important;
+        padding: 0.35in 0.55in !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        overflow: hidden !important;
+        background: radial-gradient(circle at 18% 12%, rgba(124, 58, 237, 0.20), transparent 42%), #090D1F !important;
+      }
+      .slide:last-of-type {
+        page-break-after: auto !important;
+        break-after: auto !important;
+      }
+      /* In print, make 2-col slide layouts side-by-side using table/flex fallback */
+      .slide .grid.lg\:grid-cols-12 {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 1.5rem !important;
+      }
+      .slide .lg\:col-span-7 {
+        width: 58% !important;
+        flex-shrink: 0 !important;
+      }
+      .slide .lg\:col-span-5 {
+        width: 40% !important;
+        flex-shrink: 0 !important;
+      }
+      .slide .photo-frame {
+        height: 270px !important;
+      }
+      .slide .grid.md\:grid-cols-3 {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 1.25rem !important;
+      }
+      .slide .grid.md\:grid-cols-3 > div {
+        flex: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col select-none">
+
+  <!-- ======================================================================= -->
+  <!-- TOP NAVIGATION BAR (Minimalist, Judge-Friendly)                         -->
+  <!-- ======================================================================= -->
+  <header id="top-bar" class="h-[60px] px-4 sm:px-6 border-b border-white/10 bg-[#090D1F]/90 backdrop-blur flex items-center justify-between gap-3 shrink-0 z-30">
+    <!-- Brand -->
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-we-violet to-we-violetLight flex items-center justify-center text-white font-black text-base shadow-lg shadow-purple-700/30 shrink-0">
+        WC
+      </div>
+      <div class="leading-tight truncate">
+        <div class="flex items-center gap-2">
+          <span class="font-black text-base sm:text-lg tracking-tight text-white">WeConnect</span>
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-we-gold/20 text-we-goldLight border border-we-gold/40">HP IDEA Egypt</span>
+        </div>
+        <p class="text-xs text-slate-400 truncate" data-ar="مدرسة WE للتكنولوجيا التطبيقية بالسويس" data-en="WE Applied Technology School — Suez">مدرسة WE للتكنولوجيا التطبيقية بالسويس</p>
+      </div>
+    </div>
+
+    <!-- Center: 5:00 Live Pitch Timer -->
+    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+      <button onclick="toggleTimer()" id="btn-timer-toggle" class="text-emerald-400 hover:text-emerald-300 transition text-sm" title="تشغيل / إيقاف المؤقت (Space)">
+        <i class="fa-solid fa-play" id="timer-icon"></i>
+      </button>
+      <span id="pitch-timer-display" class="font-mono font-black text-base text-white tracking-wider w-14 text-center">05:00</span>
+      <span id="slide-target-badge" class="text-xs font-mono text-slate-400 border-s border-white/10 ps-2">0:20</span>
+      <button onclick="resetTimer()" class="text-slate-400 hover:text-white text-xs ms-1" title="إعادة ضبط 5:00">
+        <i class="fa-solid fa-rotate-left"></i>
+      </button>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="flex items-center gap-2 shrink-0">
+      <!-- AR / EN Switch -->
+      <button onclick="toggleLanguage()" id="btn-lang" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-xs sm:text-sm font-extrabold text-white transition flex items-center gap-1.5">
+        <i class="fa-solid fa-globe text-we-goldLight"></i>
+        <span id="lang-label">EN</span>
+      </button>
+
+      <!-- Appendix / Q&A Drawer (Key A) -->
+      <button onclick="openAppendix('a1')" class="px-3 py-1.5 rounded-xl bg-purple-600/80 hover:bg-purple-600 border border-purple-400/40 text-xs sm:text-sm font-extrabold text-white transition flex items-center gap-1.5 shadow-sm">
+        <i class="fa-solid fa-folder-open"></i>
+        <span data-ar="الملحق وQ&A" data-en="Appendix & Q&A">الملحق وQ&A</span>
+      </button>
+
+      <!-- Optional Practice Voice-Over (STRICTLY OFF BY DEFAULT) -->
+      <button onclick="toggleRehearsalVoice()" id="btn-voice-rehearsal" class="hidden sm:flex px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-400 transition items-center gap-1.5" title="تعليق صوتي احتياطي للتدريب فقط (مغلق افتراضياً)">
+        <i class="fa-solid fa-volume-xmark" id="voice-icon"></i>
+        <span class="hidden lg:inline" id="voice-label" data-ar="صوت: مغلق" data-en="Voice: Off">صوت: مغلق</span>
+      </button>
+
+      <!-- Slide Grid (G) -->
+      <button onclick="openSlideGrid()" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-sm transition" title="فهرس الشرائح (G)">
+        <i class="fa-solid fa-grip"></i>
+      </button>
+
+      <!-- Print / Save PDF -->
+      <button onclick="window.print()" class="hidden sm:inline-flex p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-sm transition" title="طباعة / حفظ PDF">
+        <i class="fa-solid fa-file-pdf"></i>
+      </button>
+
+      <!-- Fullscreen (F) -->
+      <button onclick="toggleFullscreen()" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-sm transition" title="ملء الشاشة (F)">
+        <i class="fa-solid fa-expand"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ======================================================================= -->
+  <!-- MAIN SLIDES STAGE (10 FOCUSED SLIDES — >= 18px, <= 25 WORDS EACH)       -->
+  <!-- ======================================================================= -->
+  <main id="slides-stage" class="flex-1 w-full max-w-7xl mx-auto px-5 sm:px-10 py-3 relative">
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE 1: THE HOOK — 9 SILENT STUDENTS (0:20)                          -->
+    <!-- ===================================================================== -->
+    <section class="slide active" data-slide="1" data-duration="20">
+      <div class="text-center max-w-4xl mx-auto space-y-5">
+        <div>
+          <div class="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-we-violet/30 border border-purple-400/40 text-purple-200 text-base sm:text-lg font-bold">
+            <i class="fa-solid fa-sparkles text-we-goldLight"></i>
+            <span data-ar="WeConnect • مسابقة HP IDEA Egypt" data-en="WeConnect • HP IDEA Egypt">WeConnect • مسابقة HP IDEA Egypt</span>
+          </div>
+        </div>
+
+        <div class="block">
+          <div class="text-[128px] sm:text-[172px] font-black leading-none bg-gradient-to-b from-we-goldLight via-we-gold to-rose-400 bg-clip-text text-transparent drop-shadow-2xl font-mono">
+            9
+          </div>
+        </div>
+
+        <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight"
+            data-ar="9 طلاب صامتين في فصل من 14."
+            data-en="9 Silent Students in a Class of 14.">
+          9 طلاب صامتين في فصل من 14.
+        </h1>
+
+        <p class="text-xl sm:text-2xl text-slate-300 font-semibold max-w-2xl mx-auto leading-relaxed"
+           data-ar="ليسوا غير قادرين — بل لم يجدوا مساحة آمنة تمنحهم صوتاً بلا إحراج."
+           data-en="Not incapable — simply unseen without a safe, stigma-free space.">
+          ليسوا غير قادرين — بل لم يجدوا مساحة آمنة تمنحهم صوتاً بلا إحراج.
+        </p>
+
+        <div class="pt-3 flex items-center justify-center gap-4 flex-wrap text-base font-bold text-slate-300">
+          <span class="px-4 py-2 rounded-xl bg-white/5 border border-white/10">
+            <i class="fa-solid fa-school text-we-goldLight me-2"></i>
+            <span data-ar="مدرسة WE للتكنولوجيا التطبيقية بالسويس" data-en="WE Applied Technology School — Suez">مدرسة WE للتكنولوجيا التطبيقية بالسويس</span>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE 2: THE PROBLEM — THREE DAILY COSTS (0:25)                       -->
+    <!-- ===================================================================== -->
+    <section class="slide" data-slide="2" data-duration="25">
+      <div class="space-y-8">
+        <div class="text-center space-y-2">
+          <span class="text-base font-extrabold text-rose-400 uppercase tracking-wider" data-ar="المشكلة التربوية" data-en="The Classroom Challenge">المشكلة التربوية</span>
+          <h2 class="text-3xl sm:text-5xl font-black text-white"
+              data-ar="ثلاث تكاليف خفية في كل حصة"
+              data-en="Three Hidden Costs Every Class">
+            ثلاث تكاليف خفية في كل حصة
+          </h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="glass rounded-3xl p-7 border-t-4 border-amber-400 space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-2xl">
+              <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <h3 class="text-2xl font-black text-white" data-ar="1. الوقت" data-en="1. Time">1. الوقت</h3>
+            <p class="text-lg sm:text-xl text-slate-200 leading-relaxed font-medium"
+               data-ar="دفاتر ورقية بطيئة تسرق دقائق التدريس وتؤخر إبلاغ ولي الأمر."
+               data-en="Slow paper logs drain teaching minutes and delay parent updates.">
+              دفاتر ورقية بطيئة تسرق دقائق التدريس وتؤخر إبلاغ ولي الأمر.
+            </p>
+          </div>
+
+          <div class="glass rounded-3xl p-7 border-t-4 border-purple-400 space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-purple-500/20 text-purple-300 flex items-center justify-center text-2xl">
+              <i class="fa-solid fa-volume-xmark"></i>
+            </div>
+            <h3 class="text-2xl font-black text-white" data-ar="2. الصمت" data-en="2. Silence">2. الصمت</h3>
+            <p class="text-lg sm:text-xl text-slate-200 leading-relaxed font-medium"
+               data-ar="5 طلاب فقط يشاركون (36%)، و9 طلاب خارج التفاعل الصفي."
+               data-en="Only 5 students participate (36%), leaving 9 disengaged.">
+              5 طلاب فقط يشاركون (36%)، و9 طلاب خارج التفاعل الصفي.
+            </p>
+          </div>
+
+          <div class="glass rounded-3xl p-7 border-t-4 border-rose-500 space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-300 flex items-center justify-center text-2xl">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <h3 class="text-2xl font-black text-white" data-ar="3. الوصم" data-en="3. Stigma">3. الوصم</h3>
+            <p class="text-lg sm:text-xl text-slate-200 leading-relaxed font-medium"
+               data-ar="إعلان المخالفات أمام الفصل يجرح الكرامة ويزيد الانسحاب."
+               data-en="Public reprimands hurt dignity and push students into withdrawal.">
+              إعلان المخالفات أمام الفصل يجرح الكرامة ويزيد الانسحاب.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE 3: DESIGN THINKING MAP (HP IDEA CORE) + REAL PHOTO (0:35)       -->
+    <!-- ===================================================================== -->
+    <section class="slide" data-slide="3" data-duration="35">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
+        <div class="lg:col-span-7 space-y-5">
+          <div>
+            <span class="text-base font-extrabold text-we-goldLight" data-ar="منهجية HP IDEA — التفكير التصميمي" data-en="HP IDEA Methodology — Design Thinking">منهجية HP IDEA — التفكير التصميمي</span>
+            <h2 class="text-3xl sm:text-4xl font-black text-white mt-1"
+                data-ar="ما اكتشفناه داخل الفصل"
+                data-en="What We Discovered in Class">
+              ما اكتشفناه داخل الفصل
+            </h2>
+          </div>
+
+          <div class="space-y-3">
+            <div class="glass rounded-2xl p-4 flex items-center gap-4 border-s-4 border-rose-400">
+              <span class="px-3 py-1 rounded-xl bg-rose-500/20 text-rose-300 font-black text-base font-mono shrink-0">Empathize</span>
+              <p class="text-lg font-bold text-slate-100" data-ar="رصدنا 9 طلاب صامتين يخشون الإحراج العلني." data-en="Observed 9 quiet students fearing public embarrassment.">رصدنا 9 طلاب صامتين يخشون الإحراج العلني.</p>
+            </div>
+            <div class="glass rounded-2xl p-4 flex items-center gap-4 border-s-4 border-amber-400">
+              <span class="px-3 py-1 rounded-xl bg-amber-500/20 text-amber-300 font-black text-base font-mono shrink-0">Define</span>
+              <p class="text-lg font-bold text-slate-100" data-ar="كيف نوثّق السلوك بسرعة ونحفظ كرامة الطالب؟" data-en="How do we log behavior fast while protecting dignity?">كيف نوثّق السلوك بسرعة ونحفظ كرامة الطالب؟</p>
+            </div>
+            <div class="glass rounded-2xl p-4 flex items-center gap-4 border-s-4 border-purple-400">
+              <span class="px-3 py-1 rounded-xl bg-purple-500/20 text-purple-300 font-black text-base font-mono shrink-0">Ideate</span>
+              <p class="text-lg font-bold text-slate-100" data-ar="التحفيز علني أمام الجميع، والتقويم خاص بالكامل." data-en="Praise in public; guide and correct strictly in private.">التحفيز علني أمام الجميع، والتقويم خاص بالكامل.</p>
+            </div>
+            <div class="glass rounded-2xl p-4 flex items-center gap-4 border-s-4 border-blue-400">
+              <span class="px-3 py-1 rounded-xl bg-blue-500/20 text-blue-300 font-black text-base font-mono shrink-0">Prototype</span>
+              <p class="text-lg font-bold text-slate-100" data-ar="بطاقة QR مشفّرة + 4 شاشات خصوصية + اختبارات فهم." data-en="Encrypted QR card + 4 privacy views + mastery quizzes.">بطاقة QR مشفّرة + 4 شاشات خصوصية + اختبارات فهم.</p>
+            </div>
+            <div class="glass rounded-2xl p-4 flex items-center gap-4 border-s-4 border-emerald-400">
+              <span class="px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 font-black text-base font-mono shrink-0">Test</span>
+              <p class="text-lg font-bold text-slate-100" data-ar="تجربة ميدانية أسبوعين مع فصل C2 بمدرسة WE السويس." data-en="2-week classroom pilot in Class C2 at WE Suez.">تجربة ميدانية أسبوعين مع فصل C2 بمدرسة WE السويس.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 space-y-3">
+          <div class="glass rounded-3xl p-3 overflow-hidden">
+            <img src="https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/class_girls_group.jpg" alt="طالبات مدرسة WE السويس يستخدمن WeConnect في الفصل" onclick="openLightbox(this.src, this.alt)" class="photo-frame w-full h-[360px] object-cover rounded-2xl">
+            <p class="text-sm text-slate-300 font-semibold mt-2.5 px-1 flex items-center gap-2">
+              <i class="fa-solid fa-camera text-we-goldLight"></i>
+              <span data-ar="طالبات WE السويس خلال اختبار WeConnect داخل الفصل" data-en="WE Suez students testing WeConnect together in class">طالبات WE السويس خلال اختبار WeConnect داخل الفصل</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE 4: THE SOLUTION IN ONE FLOW + HANDS PHOTO & 15s VIDEO (0:35)    -->
+    <!-- ===================================================================== -->
+    <section class="slide" data-slide="4" data-duration="35">
+      <div class="space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+          <div>
+            <span class="text-base font-extrabold text-emerald-400" data-ar="الحل — WeConnect" data-en="The Solution — WeConnect">الحل — WeConnect</span>
+            <h2 class="text-3xl sm:text-4xl font-black text-white mt-1"
+                data-ar="تدفق واحد يحفظ الوقت والكرامة"
+                data-en="One Flow: Speed With Dignity">
+              تدفق واحد يحفظ الوقت والكرامة
+            </h2>
+          </div>
+        </div>
+
+        <!-- 3-Step Flow -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="glass rounded-2xl p-5 flex items-center gap-4 border border-purple-500/30">
+            <div class="w-12 h-12 rounded-2xl bg-purple-600 text-white font-black text-xl flex items-center justify-center shrink-0">1</div>
+            <div>
+              <h3 class="text-xl font-black text-white" data-ar="مسح QR" data-en="Scan QR">مسح QR</h3>
+              <p class="text-base text-slate-300" data-ar="بطاقة الطالب أو التابلت" data-en="Student card or tablet">بطاقة الطالب أو التابلت</p>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-5 flex items-center gap-4 border border-amber-500/30">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500 text-slate-950 font-black text-xl flex items-center justify-center shrink-0">2</div>
+            <div>
+              <h3 class="text-xl font-black text-white" data-ar="وسم فوري" data-en="Instant Tag">وسم فوري</h3>
+              <p class="text-base text-slate-300" data-ar="إيجابي أو ملاحظة خاصة" data-en="Positive praise or private note">إيجابي أو ملاحظة خاصة</p>
+            </div>
+          </div>
+          <div class="glass rounded-2xl p-5 flex items-center gap-4 border border-emerald-500/30">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-slate-950 font-black text-xl flex items-center justify-center shrink-0">3</div>
+            <div>
+              <h3 class="text-xl font-black text-white" data-ar="4 شاشات خصوصية" data-en="4 Privacy Views">4 شاشات خصوصية</h3>
+              <p class="text-base text-slate-300" data-ar="لوحة الشرف علنية • التقويم سري" data-en="Honor roll public • Notes private">لوحة الشرف علنية • التقويم سري</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Classroom Real Media: Video + Hands-Only Photo -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="glass rounded-3xl p-3 space-y-2">
+            <video src="https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/class_video_1.mp4" controls muted playsinline class="w-full h-[250px] object-cover rounded-2xl bg-black"></video>
+            <p class="text-sm text-slate-300 font-semibold px-1 flex items-center gap-2">
+              <i class="fa-solid fa-film text-emerald-400"></i>
+              <span data-ar="لقطة ميدانية حقيقية (15ث) داخل الفصل" data-en="Real classroom clip (15s) in action">لقطة ميدانية حقيقية (15ث) داخل الفصل</span>
+            </p>
+          </div>
+          <div class="glass rounded-3xl p-3 space-y-2">
+            <img src="https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/class_hands_quiz.jpg" alt="طالب يحل اختبار WeConnect التفاعلي على التابلت داخل الفصل" onclick="openLightbox(this.src, this.alt)" class="photo-frame w-full h-[250px] object-cover rounded-2xl">
+            <p class="text-sm text-slate-300 font-semibold px-1 flex items-center gap-2">
+              <i class="fa-solid fa-tablet-screen-button text-purple-400"></i>
+              <span data-ar="استخدام فعلي للتطبيق داخل الحصة بدون تعقيد" data-en="Live in-class tablet use with zero friction">استخدام فعلي للتطبيق داخل الحصة بدون تعقيد</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE 5: PILOT DESIGN & HONEST LIMITATIONS + PHOTO (0:30)             -->
+    <!-- ===================================================================== -->
+    <section class="slide" data-slide="5" data-duration="30">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
+        <div class="lg:col-span-7 space-y-5">
+          <div>
+            <span class="text-base font-extrabold text-blue-400" data-ar="إثبات مفهوم ميداني (Proof of Concept)" data-en="Field Proof of Concept">إثبات مفهوم ميداني (Proof of Concept)</span>
+            <h2 class="text-3xl sm:text-4xl font-black text-white mt-1"
+                data-ar="تصميم التجربة وحدودها بصراحة"
+                data-en="Pilot Scope & Honest Limitations">
+              تصميم التجربة وحدودها بصراحة
+            </h2>
+          </div>
+
+          <div class="grid grid-cols-3 gap-4">
+            <div class="glass rounded-2xl p-4 text-center">
+              <div class="text-3xl sm:text-4xl font-black text-white font-mono">14</div>
+              <div class="text-base font-bold text-slate-300 mt-1" data-ar="طالباً (فصل C2)" data-en="Students (C2)">طالباً (فصل C2)</div>
+            </div>
+            <div class="glass rounded-2xl p-4 text-center">
+              <div class="text-3xl sm:text-4xl font-black text-we-goldLight font-mono">2</div>
+              <div class="text-base font-bold text-slate-300 mt-1" data-ar="أسبوعان ميدانياً" data-en="Weeks Live">أسبوعان ميدانياً</div>
+            </div>
+            <div class="glass rounded-2xl p-4 text-center">
+              <div class="text-3xl sm:text-4xl font-black text-emerald-400 font-mono">810</div>
+              <div class="text-base font-bold text-slate-300 mt-1" data-ar="سجل موثّق زمنياً" data-en="Timestamped Logs">سجل موثّق زمنياً</div>
+            </div>
+          </div>
+
+          <!-- Transparent Limitations Box -->
+          <div class="rounded-3xl p-5 bg-amber-500/10 border border-amber-400/35 space-y-2.5">
+            <h3 class="text-xl font-black text-amber-300 flex items-center gap-2">
+              <i class="fa-solid fa-scale-balanced"></i>
+              <span data-ar="حدود التجربة بشفافية علمية" data-en="Transparent Limitations">حدود التجربة بشفافية علمية</span>
+            </h3>
+            <ul class="space-y-2 text-lg text-slate-100 font-medium">
+              <li class="flex items-start gap-2.5">
+                <i class="fa-solid fa-circle-dot text-amber-400 mt-1.5 text-xs"></i>
+                <span data-ar="فصل واحد بلا مجموعة ضابطة؛ والـ810 سجلاً قياسات متكررة وليست عينات مستقلة." data-en="Single class without control group; 810 logs are repeated measures.">فصل واحد بلا مجموعة ضابطة؛ والـ810 سجلاً قياسات متكررة وليست عينات مستقلة.</span>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <i class="fa-solid fa-circle-dot text-amber-400 mt-1.5 text-xs"></i>
+                <span data-ar="نراعي احتمال أثر الجِدّة (Hawthorne) — والمرحلة التالية: فصل ضابط لمدة 8 أسابيع." data-en="Novelty (Hawthorne) effect acknowledged — Next phase: 8-week controlled study.">نراعي احتمال أثر الجِدّة (Hawthorne) — والمرحلة التالية: فصل ضابط لمدة 8 أسابيع.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5">
+          <div class="glass rounded-3xl p-3">
+            <img src="https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/class_student_tablet.jpg" alt="طالبة مدرسة WE السويس تستخدم تطبيق WeConnect على التابلت في الفصل" onclick="openLightbox(this.src, this.alt)" class="photo-frame w-full h-[360px] object-cover rounded-2xl">
+            <p class="text-sm text-slate-300 font-semibold mt-2.5 px-1 flex items-center gap-2">
+              <i class="fa-solid fa-shield-halved text-blue-400"></i>
+              <span data-ar="توثيق ميداني داخل فصل WE السويس (للعرض التحكيمي)" data-en="WE Suez classroom field pilot (for judging review)">توثيق ميداني داخل فصل WE السويس (للعرض التحكيمي)</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE 6: RESULT 1 — PARTICIPATION 5 -> 9 -> 13 & EFFICIENCY (0:35)    -->
+    <!-- ===================================================================== -->
+    <section class="slide" data-slide="6" data-duration="35">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
+        <div class="lg:col-span-7 space-y-5">
+          <div>
+            <span class="text-base font-extrabold text-emerald-400" data-ar="النتيجة الأولى" data-en="Result 1">النتيجة الأولى</span>
+            <h2 class="text-3xl sm:text-4xl font-black text-white mt-1"
+                data-ar="+8 طلاب نشطين وتوثيق أوسع بنفس جهد المعلم"
+                data-en="+8 Active Students & Deeper Tracking at Zero Extra Effort">
+              +8 طلاب نشطين وتوثيق أوسع بنفس جهد المعلم
+            </h2>
+          </div>
+
+          <div class="glass rounded-3xl p-5">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <span class="text-lg font-extrabold text-white" data-ar="المشاركة النشطة (من 14 طالباً)" data-en="Active Participation (out of 14)">المشاركة النشطة (من 14 طالباً)</span>
+              <span class="px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 font-black text-base font-mono">5 → 9 → 13 (36% → 93%)</span>
+            </div>
+            <!-- Vector-sharp Bar Progression (100% crisp in Browser & PDF) -->
+            <div class="grid grid-cols-3 gap-5 items-end h-[185px] pt-6 px-3 border-b border-white/15">
+              <div class="flex flex-col items-center justify-end h-full gap-1.5">
+                <span class="font-mono font-black text-xl text-rose-400">5 <span class="text-sm text-slate-400">(36%)</span></span>
+                <div class="w-full max-w-[92px] rounded-t-2xl bg-gradient-to-t from-rose-600 to-rose-400 shadow-lg" style="height: 36%"></div>
+                <span class="text-sm sm:text-base font-bold text-slate-200 pt-1" data-ar="قبل التجربة" data-en="Baseline">قبل التجربة</span>
+              </div>
+              <div class="flex flex-col items-center justify-end h-full gap-1.5">
+                <span class="font-mono font-black text-xl text-amber-300">9 <span class="text-sm text-slate-400">(64%)</span></span>
+                <div class="w-full max-w-[92px] rounded-t-2xl bg-gradient-to-t from-amber-600 to-amber-400 shadow-lg" style="height: 64%"></div>
+                <span class="text-sm sm:text-base font-bold text-slate-200 pt-1" data-ar="الأسبوع 1" data-en="Week 1">الأسبوع 1</span>
+              </div>
+              <div class="flex flex-col items-center justify-end h-full gap-1.5">
+                <span class="font-mono font-black text-xl text-emerald-400">13 <span class="text-sm text-emerald-200">(93%)</span></span>
+                <div class="w-full max-w-[92px] rounded-t-2xl bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-lg shadow-emerald-500/30" style="height: 93%"></div>
+                <span class="text-sm sm:text-base font-bold text-emerald-300 pt-1" data-ar="الأسبوع 2" data-en="Week 2">الأسبوع 2</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass rounded-2xl p-4 flex items-center justify-between gap-4 border-s-4 border-we-gold">
+            <div>
+              <p class="text-lg font-extrabold text-white" data-ar="زمن تسجيل الواقعة الواحدة: 180ث ← 15ث" data-en="Single-event logging: 180s → 15s">زمن تسجيل الواقعة الواحدة: 180ث ← 15ث</p>
+              <p class="text-base text-slate-300" data-ar="ما أتاح توثيق 810 وقائع بنفس جهد المعلم اليومي." data-en="Enabling 810 logged moments with the same teacher effort.">ما أتاح توثيق 810 وقائع بنفس جهد المعلم اليومي.</p>
+            </div>
+            <span class="px-3.5 py-2 rounded-xl bg-we-gold/20 text-we-goldLight font-mono font-black text-2xl shrink-0">15s</span>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5">
+          <div class="glass rounded-3xl p-3">
+            <img src="https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/class_boys_group.jpg" alt="طلاب WE السويس يتفاعلون جماعياً مع تطبيق WeConnect داخل الفصل" onclick="openLightbox(this.src, this.alt)" class="photo-frame w-full h-[360px] object-cover rounded-2xl">
+            <p class="text-sm text-slate-300 font-semibold mt-2.5 px-1 flex items-center gap-2">
+              <i class="fa-solid fa-users text-emerald-400"></i>
+              <span data-ar="مشاركة جماعية حقيقية للطلاب حول التابلت في الفصل" data-en="Real collaborative participation around WeConnect in class">مشاركة جماعية حقيقية للطلاب حول التابلت في الفصل</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE 7: RESULT 2 — POSITIVE RATIO 10:1 & DIGNITY (0:35)              -->
+    <!-- ===================================================================== -->
+    <section class="slide" data-slide="7" data-duration="35">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
+        <div class="lg:col-span-7 space-y-5">
+          <div>
+            <span class="text-base font-extrabold text-we-goldLight" data-ar="النتيجة الثانية" data-en="Result 2">النتيجة الثانية</span>
+            <h2 class="text-3xl sm:text-4xl font-black text-white mt-1"
+                data-ar="بيئة صفية إيجابية وكرامة محفوظة"
+                data-en="Positive Climate & Protected Dignity">
+              بيئة صفية إيجابية وكرامة محفوظة
+            </h2>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="glass rounded-3xl p-5 border-t-4 border-emerald-400 text-center space-y-1">
+              <div class="text-4xl sm:text-5xl font-black text-emerald-400 font-mono">10:1</div>
+              <div class="text-lg font-extrabold text-white" data-ar="نسبة التعزيز" data-en="Positive Ratio">نسبة التعزيز</div>
+              <p class="text-sm text-slate-300" data-ar="738 نقطة إيجابية / 72 سلبية (14 واقعة)" data-en="738 positive / 72 negative (14 events)">738 نقطة إيجابية / 72 سلبية (14 واقعة)</p>
+            </div>
+            <div class="glass rounded-3xl p-5 border-t-4 border-we-gold text-center space-y-1">
+              <div class="text-4xl sm:text-5xl font-black text-we-goldLight font-mono">4.8/5</div>
+              <div class="text-lg font-extrabold text-white" data-ar="رضا المعلمين" data-en="Teacher Rating">رضا المعلمين</div>
+              <p class="text-sm text-slate-300" data-ar="سهولة الاستخدام اليومي" data-en="Daily usability score">سهولة الاستخدام اليومي</p>
+            </div>
+            <div class="glass rounded-3xl p-5 border-t-4 border-purple-400 text-center space-y-1">
+              <div class="text-4xl sm:text-5xl font-black text-purple-300 font-mono">0</div>
+              <div class="text-lg font-extrabold text-white" data-ar="خطر مرتفع" data-en="High-Risk Cases">خطر مرتفع</div>
+              <p class="text-sm text-slate-300" data-ar="0 وقائع وصم علني مُبلَّغ عنها" data-en="0 reported public-shaming events">0 وقائع وصم علني مُبلَّغ عنها</p>
+            </div>
+          </div>
+
+          <div class="glass rounded-2xl p-4 flex items-center justify-between gap-3 text-base text-slate-200 font-semibold">
+            <span>
+              <i class="fa-solid fa-book-open text-emerald-400 me-2"></i>
+              <span data-ar="تفوق معيار PBIS للتعزيز الصفي (5:1) — توزيع النقاط حسب الفئة متاح في الملحق A2." data-en="Exceeds PBIS 5:1 classroom benchmark — category & teacher breakdown in Appendix A2.">تفوق معيار PBIS للتعزيز الصفي (5:1) — توزيع النقاط حسب الفئة متاح في الملحق A2.</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5">
+          <div class="glass rounded-3xl p-3">
+            <img src="https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/class_quiz_dark_100.jpg" alt="طالب يحقق 100% في اختبار WeConnect داخل الفصل" onclick="openLightbox(this.src, this.alt)" class="photo-frame w-full h-[360px] object-cover rounded-2xl">
+            <p class="text-sm text-slate-300 font-semibold mt-2.5 px-1 flex items-center gap-2">
+              <i class="fa-solid fa-trophy text-we-goldLight"></i>
+              <span data-ar="طالب ينهي اختبار WeConnect بنتيجة 100% داخل الحصة" data-en="Student completing WeConnect quiz with 100% in class">طالب ينهي اختبار WeConnect بنتيجة 100% داخل الحصة</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE 8: ETHICAL AI — HUMAN DECIDES + THURSDAY HYPOTHESIS (0:30)      -->
+    <!-- ===================================================================== -->
+    <section class="slide" data-slide="8" data-duration="30">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
+        <div class="lg:col-span-7 space-y-5">
+          <div>
+            <span class="text-base font-extrabold text-purple-400" data-ar="الذكاء الاصطناعي الأخلاقي والتعلم للفهم" data-en="Ethical AI & Learning for Understanding">الذكاء الاصطناعي الأخلاقي والتعلم للفهم</span>
+            <h2 class="text-3xl sm:text-4xl font-black text-white mt-1"
+                data-ar="الإنسان يقرر — والذكاء الاصطناعي يساند"
+                data-en="Humans Decide — AI Assists">
+              الإنسان يقرر — والذكاء الاصطناعي يساند
+            </h2>
+          </div>
+
+          <div class="space-y-4">
+            <div class="glass rounded-2xl p-5 flex items-start gap-4 border-s-4 border-emerald-400">
+              <i class="fa-solid fa-user-check text-2xl text-emerald-400 mt-1"></i>
+              <div>
+                <h3 class="text-xl font-black text-white" data-ar="Human-in-the-Loop بالكامل" data-en="Strict Human-in-the-Loop">Human-in-the-Loop بالكامل</h3>
+                <p class="text-lg text-slate-300" data-ar="صفر قرارات عقابية آلية؛ الأخصائي والمعلم هما صاحب القرار." data-en="Zero automated penalties; counselors & teachers always decide.">صفر قرارات عقابية آلية؛ الأخصائي والمعلم هما صاحب القرار.</p>
+              </div>
+            </div>
+
+            <div class="glass rounded-2xl p-5 flex items-start gap-4 border-s-4 border-amber-400">
+              <i class="fa-solid fa-magnifying-glass-chart text-2xl text-amber-400 mt-1"></i>
+              <div>
+                <h3 class="text-xl font-black text-white" data-ar="نمط الخميس كفرضية للتحقق" data-en="Thursday Pattern as a Hypothesis">نمط الخميس كفرضية للتحقق</h3>
+                <p class="text-lg text-slate-300" data-ar="رصدنا 7 من 14 واقعة سلبية يوم الخميس (خميسان فقط) — فرضية للتحقق." data-en="7 of 14 negative events fell on Thursdays (2 weeks) — a hypothesis to verify.">رصدنا 7 من 14 واقعة سلبية يوم الخميس (خميسان فقط) — فرضية للتحقق.</p>
+              </div>
+            </div>
+
+            <div class="glass rounded-2xl p-5 flex items-start gap-4 border-s-4 border-purple-400">
+              <i class="fa-solid fa-lock text-2xl text-purple-400 mt-1"></i>
+              <div>
+                <h3 class="text-xl font-black text-white" data-ar="خصوصية كاملة لبيانات الطلاب" data-en="Strict Student Data Privacy">خصوصية كاملة لبيانات الطلاب</h3>
+                <p class="text-lg text-slate-300" data-ar="Gemini يقرأ نص المحاضرة فقط لتوليد أسئلة بمراجعة المعلم — صفر سجلات سلوك." data-en="Gemini only reads lecture files for teacher-reviewed quizzes — zero student PII.">Gemini يقرأ نص المحاضرة فقط لتوليد أسئلة بمراجعة المعلم — صفر سجلات سلوك.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5">
+          <div class="glass rounded-3xl p-3">
+            <img src="https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/class_quiz_light_100.jpg" alt="شاشة اختبار WeConnect على التابلت مع الشرح المرجعي وشعار WE" onclick="openLightbox(this.src, this.alt)" class="photo-frame w-full h-[360px] object-cover rounded-2xl">
+            <p class="text-sm text-slate-300 font-semibold mt-2.5 px-1 flex items-center gap-2">
+              <i class="fa-solid fa-check-double text-emerald-400"></i>
+              <span data-ar="أسئلة فهم مُسندة بنص المحاضرة وشرح فوري للطالب" data-en="Lecture-grounded quiz with instant pedagogical feedback">أسئلة فهم مُسندة بنص المحاضرة وشرح فوري للطالب</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE 9: SCALING ACROSS 27 WE SCHOOLS (0:35)                          -->
+    <!-- ===================================================================== -->
+    <section class="slide" data-slide="9" data-duration="35">
+      <div class="space-y-7">
+        <div class="text-center space-y-2">
+          <span class="text-base font-extrabold text-we-goldLight" data-ar="قابلية التوسع والاستدامة" data-en="Scalability Across WE Network">قابلية التوسع والاستدامة</span>
+          <h2 class="text-3xl sm:text-5xl font-black text-white"
+              data-ar="جاهز لشبكة مدارس WE التطبيقية"
+              data-en="Built to Scale Across 27 WE Schools">
+            جاهز لشبكة مدارس WE التطبيقية
+          </h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="glass rounded-3xl p-6 text-center space-y-2 border-t-4 border-purple-500">
+            <div class="text-5xl font-black text-purple-300 font-mono">27</div>
+            <h3 class="text-xl font-black text-white" data-ar="مدرسة WE في مصر" data-en="WE Schools in Egypt">مدرسة WE في مصر</h3>
+            <p class="text-lg text-slate-300" data-ar="نشر وإعداد كامل للمدرسة خلال 48 ساعة." data-en="Full school onboarding ready in 48 hours.">نشر وإعداد كامل للمدرسة خلال 48 ساعة.</p>
+          </div>
+
+          <div class="glass rounded-3xl p-6 text-center space-y-2 border-t-4 border-emerald-400">
+            <div class="text-5xl font-black text-emerald-400 font-mono">~3 <span class="text-2xl" data-ar="ج/شهر" data-en="EGP/mo">ج/شهر</span></div>
+            <h3 class="text-xl font-black text-white" data-ar="تكلفة الطالب شهرياً" data-en="Monthly Cost / Student">تكلفة الطالب شهرياً</h3>
+            <p class="text-lg text-slate-300" data-ar="أي ~36 جنيهاً سنوياً (1,500 ج/شهر لمدرسة 500 طالب)." data-en="~36 EGP/year (1,500 EGP/mo per 500-student school).">أي ~36 جنيهاً سنوياً (1,500 ج/شهر لمدرسة 500 طالب).</p>
+          </div>
+
+          <div class="glass rounded-3xl p-6 text-center space-y-2 border-t-4 border-we-gold">
+            <div class="text-5xl font-black text-we-goldLight font-mono">8 <span class="text-2xl" data-ar="أسابيع" data-en="Wks">أسابيع</span></div>
+            <h3 class="text-xl font-black text-white" data-ar="المرحلة التالية الضابطة" data-en="Next Controlled Phase">المرحلة التالية الضابطة</h3>
+            <p class="text-lg text-slate-300" data-ar="فصل ضابط + 60 طالباً + استبيان قبلي وبعدي." data-en="Control class + 60 students + pre/post baseline.">فصل ضابط + 60 طالباً + استبيان قبلي وبعدي.</p>
+          </div>
+        </div>
+
+        <div class="glass rounded-2xl p-4 text-center text-lg text-slate-200 font-semibold">
+          <i class="fa-solid fa-road text-purple-400 me-2"></i>
+          <span data-ar="التركيز الحالي: السلوك الإيجابي + اختبارات الفهم (مُجرَّبان) • وباقي وحدات الإدارة المدرسية كخارطة طريق (الملحق A3)." data-en="Current focus: Positive Behavior + Mastery Quizzes (tested) • Additional school modules on roadmap (Appendix A3).">التركيز الحالي: السلوك الإيجابي + اختبارات الفهم (مُجرَّبان) • وباقي وحدات الإدارة المدرسية كخارطة طريق (الملحق A3).</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- SLIDE 10: FINALE & JUDGE CARD SCAN + OFFLINE DEMO & BACKUP (0:20)     -->
+    <!-- ===================================================================== -->
+    <section class="slide" data-slide="10" data-duration="20">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-6xl mx-auto">
+        <div class="lg:col-span-7 space-y-6">
+          <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-base font-extrabold">
+            <i class="fa-solid fa-heart"></i>
+            <span data-ar="WeConnect • مدرسة WE السويس" data-en="WeConnect • WE School Suez">WeConnect • مدرسة WE السويس</span>
+          </span>
+
+          <h2 class="text-4xl sm:text-5xl font-black text-white leading-tight"
+              data-ar="لكل طالب صوت.. ولكل طالب كرامة محفوظة."
+              data-en="Every Student Heard. Every Dignity Protected.">
+            لكل طالب صوت.. ولكل طالب كرامة محفوظة.
+          </h2>
+
+          <p class="text-xl text-slate-300 font-semibold"
+             data-ar="امسح بطاقة الحكم لتجربة شاشة ولي الأمر فوراً (بيئة تجريبية معزولة)."
+             data-en="Scan the Judge Card to experience the Parent View instantly (isolated sandbox).">
+            امسح بطاقة الحكم لتجربة شاشة ولي الأمر فوراً (بيئة تجريبية معزولة).
+          </p>
+
+          <div class="flex flex-wrap items-center gap-3 pt-1">
+            <button onclick="openJudgeDemo()" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-95 text-slate-950 font-black text-lg shadow-xl shadow-emerald-500/25 transition flex items-center gap-2.5">
+              <i class="fa-solid fa-mobile-screen-button"></i>
+              <span data-ar="معاينة شاشة ولي الأمر (تعمل Offline)" data-en="Preview Judge Parent View (Offline)">معاينة شاشة ولي الأمر (تعمل Offline)</span>
+            </button>
+
+            <button onclick="openVideoBackup()" class="px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-base transition flex items-center gap-2">
+              <i class="fa-solid fa-circle-play text-we-goldLight"></i>
+              <span data-ar="فيديو احتياطي 30ث" data-en="30s Backup Video">فيديو احتياطي 30ث</span>
+            </button>
+
+            <button onclick="openAppendix('a4')" class="px-5 py-3.5 rounded-2xl bg-purple-600/80 hover:bg-purple-600 text-white font-bold text-base transition flex items-center gap-2">
+              <i class="fa-solid fa-comments"></i>
+              <span data-ar="بنك أسئلة اللجنة (17)" data-en="Judges Q&A (17)">بنك أسئلة اللجنة (17)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scannable Inline Offline SVG Judge QR Card -->
+        <div class="lg:col-span-5 flex justify-center">
+          <div class="glass rounded-3xl p-6 text-center space-y-4 border-2 border-we-gold/50 shadow-2xl max-w-xs w-full">
+            <div class="flex items-center justify-between text-xs font-extrabold text-we-goldLight uppercase tracking-wider">
+              <span>WeConnect Judge Card</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Sandbox</span>
+            </div>
+            <div class="flex justify-center">
+              <svg class="w-40 h-40 rounded-xl bg-white p-2 shadow-lg" xmlns="http://www.w3.org/2000/svg" version="1.1" width="220" height="220" viewBox="0 0 33 33">
+	<!-- Created with https://api.qrserver.com (QR Code API, see goQR.me/api for information) -->
+	<title>QR Code</title>
+	<desc>https://ai-eru-tawsol-backend-weschool.vercel.app/weconnect?demo=parent</desc>
+	<rect style="fill:rgb(255, 255, 255);fill-opacity:1" x="0" y="0" width="33" height="33" />
+	<g id="elements">
+		<path style="fill:rgb(0, 0, 0)" d="M 0,0 l 1,0 0,1 -1,0 z M 1,0 l 1,0 0,1 -1,0 z M 2,0 l 1,0 0,1 -1,0 z M 3,0 l 1,0 0,1 -1,0 z M 4,0 l 1,0 0,1 -1,0 z M 5,0 l 1,0 0,1 -1,0 z M 6,0 l 1,0 0,1 -1,0 z M 10,0 l 1,0 0,1 -1,0 z M 12,0 l 1,0 0,1 -1,0 z M 13,0 l 1,0 0,1 -1,0 z M 14,0 l 1,0 0,1 -1,0 z M 18,0 l 1,0 0,1 -1,0 z M 19,0 l 1,0 0,1 -1,0 z M 20,0 l 1,0 0,1 -1,0 z M 23,0 l 1,0 0,1 -1,0 z M 26,0 l 1,0 0,1 -1,0 z M 27,0 l 1,0 0,1 -1,0 z M 28,0 l 1,0 0,1 -1,0 z M 29,0 l 1,0 0,1 -1,0 z M 30,0 l 1,0 0,1 -1,0 z M 31,0 l 1,0 0,1 -1,0 z M 32,0 l 1,0 0,1 -1,0 z M 0,1 l 1,0 0,1 -1,0 z M 6,1 l 1,0 0,1 -1,0 z M 8,1 l 1,0 0,1 -1,0 z M 10,1 l 1,0 0,1 -1,0 z M 13,1 l 1,0 0,1 -1,0 z M 14,1 l 1,0 0,1 -1,0 z M 15,1 l 1,0 0,1 -1,0 z M 20,1 l 1,0 0,1 -1,0 z M 22,1 l 1,0 0,1 -1,0 z M 26,1 l 1,0 0,1 -1,0 z M 32,1 l 1,0 0,1 -1,0 z M 0,2 l 1,0 0,1 -1,0 z M 2,2 l 1,0 0,1 -1,0 z M 3,2 l 1,0 0,1 -1,0 z M 4,2 l 1,0 0,1 -1,0 z M 6,2 l 1,0 0,1 -1,0 z M 12,2 l 1,0 0,1 -1,0 z M 14,2 l 1,0 0,1 -1,0 z M 15,2 l 1,0 0,1 -1,0 z M 16,2 l 1,0 0,1 -1,0 z M 19,2 l 1,0 0,1 -1,0 z M 21,2 l 1,0 0,1 -1,0 z M 26,2 l 1,0 0,1 -1,0 z M 28,2 l 1,0 0,1 -1,0 z M 29,2 l 1,0 0,1 -1,0 z M 30,2 l 1,0 0,1 -1,0 z M 32,2 l 1,0 0,1 -1,0 z M 0,3 l 1,0 0,1 -1,0 z M 2,3 l 1,0 0,1 -1,0 z M 3,3 l 1,0 0,1 -1,0 z M 4,3 l 1,0 0,1 -1,0 z M 6,3 l 1,0 0,1 -1,0 z M 8,3 l 1,0 0,1 -1,0 z M 9,3 l 1,0 0,1 -1,0 z M 10,3 l 1,0 0,1 -1,0 z M 12,3 l 1,0 0,1 -1,0 z M 13,3 l 1,0 0,1 -1,0 z M 14,3 l 1,0 0,1 -1,0 z M 15,3 l 1,0 0,1 -1,0 z M 16,3 l 1,0 0,1 -1,0 z M 17,3 l 1,0 0,1 -1,0 z M 22,3 l 1,0 0,1 -1,0 z M 24,3 l 1,0 0,1 -1,0 z M 26,3 l 1,0 0,1 -1,0 z M 28,3 l 1,0 0,1 -1,0 z M 29,3 l 1,0 0,1 -1,0 z M 30,3 l 1,0 0,1 -1,0 z M 32,3 l 1,0 0,1 -1,0 z M 0,4 l 1,0 0,1 -1,0 z M 2,4 l 1,0 0,1 -1,0 z M 3,4 l 1,0 0,1 -1,0 z M 4,4 l 1,0 0,1 -1,0 z M 6,4 l 1,0 0,1 -1,0 z M 9,4 l 1,0 0,1 -1,0 z M 16,4 l 1,0 0,1 -1,0 z M 17,4 l 1,0 0,1 -1,0 z M 18,4 l 1,0 0,1 -1,0 z M 19,4 l 1,0 0,1 -1,0 z M 20,4 l 1,0 0,1 -1,0 z M 21,4 l 1,0 0,1 -1,0 z M 23,4 l 1,0 0,1 -1,0 z M 26,4 l 1,0 0,1 -1,0 z M 28,4 l 1,0 0,1 -1,0 z M 29,4 l 1,0 0,1 -1,0 z M 30,4 l 1,0 0,1 -1,0 z M 32,4 l 1,0 0,1 -1,0 z M 0,5 l 1,0 0,1 -1,0 z M 6,5 l 1,0 0,1 -1,0 z M 8,5 l 1,0 0,1 -1,0 z M 9,5 l 1,0 0,1 -1,0 z M 11,5 l 1,0 0,1 -1,0 z M 12,5 l 1,0 0,1 -1,0 z M 14,5 l 1,0 0,1 -1,0 z M 15,5 l 1,0 0,1 -1,0 z M 16,5 l 1,0 0,1 -1,0 z M 21,5 l 1,0 0,1 -1,0 z M 22,5 l 1,0 0,1 -1,0 z M 26,5 l 1,0 0,1 -1,0 z M 32,5 l 1,0 0,1 -1,0 z M 0,6 l 1,0 0,1 -1,0 z M 1,6 l 1,0 0,1 -1,0 z M 2,6 l 1,0 0,1 -1,0 z M 3,6 l 1,0 0,1 -1,0 z M 4,6 l 1,0 0,1 -1,0 z M 5,6 l 1,0 0,1 -1,0 z M 6,6 l 1,0 0,1 -1,0 z M 8,6 l 1,0 0,1 -1,0 z M 10,6 l 1,0 0,1 -1,0 z M 12,6 l 1,0 0,1 -1,0 z M 14,6 l 1,0 0,1 -1,0 z M 16,6 l 1,0 0,1 -1,0 z M 18,6 l 1,0 0,1 -1,0 z M 20,6 l 1,0 0,1 -1,0 z M 22,6 l 1,0 0,1 -1,0 z M 24,6 l 1,0 0,1 -1,0 z M 26,6 l 1,0 0,1 -1,0 z M 27,6 l 1,0 0,1 -1,0 z M 28,6 l 1,0 0,1 -1,0 z M 29,6 l 1,0 0,1 -1,0 z M 30,6 l 1,0 0,1 -1,0 z M 31,6 l 1,0 0,1 -1,0 z M 32,6 l 1,0 0,1 -1,0 z M 9,7 l 1,0 0,1 -1,0 z M 10,7 l 1,0 0,1 -1,0 z M 11,7 l 1,0 0,1 -1,0 z M 18,7 l 1,0 0,1 -1,0 z M 19,7 l 1,0 0,1 -1,0 z M 21,7 l 1,0 0,1 -1,0 z M 23,7 l 1,0 0,1 -1,0 z M 24,7 l 1,0 0,1 -1,0 z M 0,8 l 1,0 0,1 -1,0 z M 1,8 l 1,0 0,1 -1,0 z M 2,8 l 1,0 0,1 -1,0 z M 3,8 l 1,0 0,1 -1,0 z M 4,8 l 1,0 0,1 -1,0 z M 6,8 l 1,0 0,1 -1,0 z M 7,8 l 1,0 0,1 -1,0 z M 8,8 l 1,0 0,1 -1,0 z M 9,8 l 1,0 0,1 -1,0 z M 11,8 l 1,0 0,1 -1,0 z M 13,8 l 1,0 0,1 -1,0 z M 14,8 l 1,0 0,1 -1,0 z M 15,8 l 1,0 0,1 -1,0 z M 17,8 l 1,0 0,1 -1,0 z M 18,8 l 1,0 0,1 -1,0 z M 20,8 l 1,0 0,1 -1,0 z M 23,8 l 1,0 0,1 -1,0 z M 24,8 l 1,0 0,1 -1,0 z M 25,8 l 1,0 0,1 -1,0 z M 27,8 l 1,0 0,1 -1,0 z M 29,8 l 1,0 0,1 -1,0 z M 31,8 l 1,0 0,1 -1,0 z M 0,9 l 1,0 0,1 -1,0 z M 5,9 l 1,0 0,1 -1,0 z M 8,9 l 1,0 0,1 -1,0 z M 10,9 l 1,0 0,1 -1,0 z M 12,9 l 1,0 0,1 -1,0 z M 16,9 l 1,0 0,1 -1,0 z M 17,9 l 1,0 0,1 -1,0 z M 18,9 l 1,0 0,1 -1,0 z M 19,9 l 1,0 0,1 -1,0 z M 20,9 l 1,0 0,1 -1,0 z M 23,9 l 1,0 0,1 -1,0 z M 25,9 l 1,0 0,1 -1,0 z M 26,9 l 1,0 0,1 -1,0 z M 30,9 l 1,0 0,1 -1,0 z M 31,9 l 1,0 0,1 -1,0 z M 32,9 l 1,0 0,1 -1,0 z M 0,10 l 1,0 0,1 -1,0 z M 2,10 l 1,0 0,1 -1,0 z M 5,10 l 1,0 0,1 -1,0 z M 6,10 l 1,0 0,1 -1,0 z M 10,10 l 1,0 0,1 -1,0 z M 14,10 l 1,0 0,1 -1,0 z M 15,10 l 1,0 0,1 -1,0 z M 16,10 l 1,0 0,1 -1,0 z M 17,10 l 1,0 0,1 -1,0 z M 20,10 l 1,0 0,1 -1,0 z M 21,10 l 1,0 0,1 -1,0 z M 22,10 l 1,0 0,1 -1,0 z M 25,10 l 1,0 0,1 -1,0 z M 29,10 l 1,0 0,1 -1,0 z M 31,10 l 1,0 0,1 -1,0 z M 1,11 l 1,0 0,1 -1,0 z M 2,11 l 1,0 0,1 -1,0 z M 3,11 l 1,0 0,1 -1,0 z M 4,11 l 1,0 0,1 -1,0 z M 5,11 l 1,0 0,1 -1,0 z M 8,11 l 1,0 0,1 -1,0 z M 12,11 l 1,0 0,1 -1,0 z M 14,11 l 1,0 0,1 -1,0 z M 15,11 l 1,0 0,1 -1,0 z M 16,11 l 1,0 0,1 -1,0 z M 18,11 l 1,0 0,1 -1,0 z M 20,11 l 1,0 0,1 -1,0 z M 21,11 l 1,0 0,1 -1,0 z M 22,11 l 1,0 0,1 -1,0 z M 23,11 l 1,0 0,1 -1,0 z M 24,11 l 1,0 0,1 -1,0 z M 28,11 l 1,0 0,1 -1,0 z M 30,11 l 1,0 0,1 -1,0 z M 2,12 l 1,0 0,1 -1,0 z M 3,12 l 1,0 0,1 -1,0 z M 4,12 l 1,0 0,1 -1,0 z M 5,12 l 1,0 0,1 -1,0 z M 6,12 l 1,0 0,1 -1,0 z M 9,12 l 1,0 0,1 -1,0 z M 10,12 l 1,0 0,1 -1,0 z M 12,12 l 1,0 0,1 -1,0 z M 13,12 l 1,0 0,1 -1,0 z M 14,12 l 1,0 0,1 -1,0 z M 15,12 l 1,0 0,1 -1,0 z M 17,12 l 1,0 0,1 -1,0 z M 22,12 l 1,0 0,1 -1,0 z M 24,12 l 1,0 0,1 -1,0 z M 25,12 l 1,0 0,1 -1,0 z M 27,12 l 1,0 0,1 -1,0 z M 28,12 l 1,0 0,1 -1,0 z M 29,12 l 1,0 0,1 -1,0 z M 0,13 l 1,0 0,1 -1,0 z M 4,13 l 1,0 0,1 -1,0 z M 8,13 l 1,0 0,1 -1,0 z M 13,13 l 1,0 0,1 -1,0 z M 16,13 l 1,0 0,1 -1,0 z M 18,13 l 1,0 0,1 -1,0 z M 19,13 l 1,0 0,1 -1,0 z M 20,13 l 1,0 0,1 -1,0 z M 21,13 l 1,0 0,1 -1,0 z M 22,13 l 1,0 0,1 -1,0 z M 23,13 l 1,0 0,1 -1,0 z M 26,13 l 1,0 0,1 -1,0 z M 27,13 l 1,0 0,1 -1,0 z M 31,13 l 1,0 0,1 -1,0 z M 32,13 l 1,0 0,1 -1,0 z M 0,14 l 1,0 0,1 -1,0 z M 3,14 l 1,0 0,1 -1,0 z M 4,14 l 1,0 0,1 -1,0 z M 6,14 l 1,0 0,1 -1,0 z M 7,14 l 1,0 0,1 -1,0 z M 8,14 l 1,0 0,1 -1,0 z M 11,14 l 1,0 0,1 -1,0 z M 12,14 l 1,0 0,1 -1,0 z M 14,14 l 1,0 0,1 -1,0 z M 15,14 l 1,0 0,1 -1,0 z M 18,14 l 1,0 0,1 -1,0 z M 22,14 l 1,0 0,1 -1,0 z M 31,14 l 1,0 0,1 -1,0 z M 0,15 l 1,0 0,1 -1,0 z M 1,15 l 1,0 0,1 -1,0 z M 2,15 l 1,0 0,1 -1,0 z M 5,15 l 1,0 0,1 -1,0 z M 8,15 l 1,0 0,1 -1,0 z M 9,15 l 1,0 0,1 -1,0 z M 11,15 l 1,0 0,1 -1,0 z M 14,15 l 1,0 0,1 -1,0 z M 16,15 l 1,0 0,1 -1,0 z M 19,15 l 1,0 0,1 -1,0 z M 20,15 l 1,0 0,1 -1,0 z M 21,15 l 1,0 0,1 -1,0 z M 22,15 l 1,0 0,1 -1,0 z M 24,15 l 1,0 0,1 -1,0 z M 25,15 l 1,0 0,1 -1,0 z M 30,15 l 1,0 0,1 -1,0 z M 2,16 l 1,0 0,1 -1,0 z M 6,16 l 1,0 0,1 -1,0 z M 7,16 l 1,0 0,1 -1,0 z M 8,16 l 1,0 0,1 -1,0 z M 10,16 l 1,0 0,1 -1,0 z M 11,16 l 1,0 0,1 -1,0 z M 12,16 l 1,0 0,1 -1,0 z M 13,16 l 1,0 0,1 -1,0 z M 14,16 l 1,0 0,1 -1,0 z M 17,16 l 1,0 0,1 -1,0 z M 20,16 l 1,0 0,1 -1,0 z M 22,16 l 1,0 0,1 -1,0 z M 24,16 l 1,0 0,1 -1,0 z M 25,16 l 1,0 0,1 -1,0 z M 28,16 l 1,0 0,1 -1,0 z M 31,16 l 1,0 0,1 -1,0 z M 2,17 l 1,0 0,1 -1,0 z M 4,17 l 1,0 0,1 -1,0 z M 8,17 l 1,0 0,1 -1,0 z M 9,17 l 1,0 0,1 -1,0 z M 10,17 l 1,0 0,1 -1,0 z M 12,17 l 1,0 0,1 -1,0 z M 13,17 l 1,0 0,1 -1,0 z M 16,17 l 1,0 0,1 -1,0 z M 19,17 l 1,0 0,1 -1,0 z M 20,17 l 1,0 0,1 -1,0 z M 21,17 l 1,0 0,1 -1,0 z M 23,17 l 1,0 0,1 -1,0 z M 25,17 l 1,0 0,1 -1,0 z M 26,17 l 1,0 0,1 -1,0 z M 29,17 l 1,0 0,1 -1,0 z M 31,17 l 1,0 0,1 -1,0 z M 32,17 l 1,0 0,1 -1,0 z M 2,18 l 1,0 0,1 -1,0 z M 4,18 l 1,0 0,1 -1,0 z M 5,18 l 1,0 0,1 -1,0 z M 6,18 l 1,0 0,1 -1,0 z M 7,18 l 1,0 0,1 -1,0 z M 8,18 l 1,0 0,1 -1,0 z M 10,18 l 1,0 0,1 -1,0 z M 12,18 l 1,0 0,1 -1,0 z M 13,18 l 1,0 0,1 -1,0 z M 14,18 l 1,0 0,1 -1,0 z M 15,18 l 1,0 0,1 -1,0 z M 18,18 l 1,0 0,1 -1,0 z M 21,18 l 1,0 0,1 -1,0 z M 22,18 l 1,0 0,1 -1,0 z M 24,18 l 1,0 0,1 -1,0 z M 25,18 l 1,0 0,1 -1,0 z M 27,18 l 1,0 0,1 -1,0 z M 28,18 l 1,0 0,1 -1,0 z M 29,18 l 1,0 0,1 -1,0 z M 31,18 l 1,0 0,1 -1,0 z M 1,19 l 1,0 0,1 -1,0 z M 8,19 l 1,0 0,1 -1,0 z M 10,19 l 1,0 0,1 -1,0 z M 14,19 l 1,0 0,1 -1,0 z M 16,19 l 1,0 0,1 -1,0 z M 18,19 l 1,0 0,1 -1,0 z M 19,19 l 1,0 0,1 -1,0 z M 20,19 l 1,0 0,1 -1,0 z M 21,19 l 1,0 0,1 -1,0 z M 22,19 l 1,0 0,1 -1,0 z M 23,19 l 1,0 0,1 -1,0 z M 24,19 l 1,0 0,1 -1,0 z M 25,19 l 1,0 0,1 -1,0 z M 26,19 l 1,0 0,1 -1,0 z M 27,19 l 1,0 0,1 -1,0 z M 30,19 l 1,0 0,1 -1,0 z M 1,20 l 1,0 0,1 -1,0 z M 2,20 l 1,0 0,1 -1,0 z M 3,20 l 1,0 0,1 -1,0 z M 5,20 l 1,0 0,1 -1,0 z M 6,20 l 1,0 0,1 -1,0 z M 7,20 l 1,0 0,1 -1,0 z M 9,20 l 1,0 0,1 -1,0 z M 13,20 l 1,0 0,1 -1,0 z M 17,20 l 1,0 0,1 -1,0 z M 19,20 l 1,0 0,1 -1,0 z M 22,20 l 1,0 0,1 -1,0 z M 24,20 l 1,0 0,1 -1,0 z M 25,20 l 1,0 0,1 -1,0 z M 28,20 l 1,0 0,1 -1,0 z M 31,20 l 1,0 0,1 -1,0 z M 0,21 l 1,0 0,1 -1,0 z M 1,21 l 1,0 0,1 -1,0 z M 3,21 l 1,0 0,1 -1,0 z M 7,21 l 1,0 0,1 -1,0 z M 9,21 l 1,0 0,1 -1,0 z M 10,21 l 1,0 0,1 -1,0 z M 11,21 l 1,0 0,1 -1,0 z M 13,21 l 1,0 0,1 -1,0 z M 14,21 l 1,0 0,1 -1,0 z M 16,21 l 1,0 0,1 -1,0 z M 19,21 l 1,0 0,1 -1,0 z M 21,21 l 1,0 0,1 -1,0 z M 22,21 l 1,0 0,1 -1,0 z M 23,21 l 1,0 0,1 -1,0 z M 25,21 l 1,0 0,1 -1,0 z M 26,21 l 1,0 0,1 -1,0 z M 29,21 l 1,0 0,1 -1,0 z M 31,21 l 1,0 0,1 -1,0 z M 32,21 l 1,0 0,1 -1,0 z M 0,22 l 1,0 0,1 -1,0 z M 3,22 l 1,0 0,1 -1,0 z M 4,22 l 1,0 0,1 -1,0 z M 5,22 l 1,0 0,1 -1,0 z M 6,22 l 1,0 0,1 -1,0 z M 7,22 l 1,0 0,1 -1,0 z M 9,22 l 1,0 0,1 -1,0 z M 12,22 l 1,0 0,1 -1,0 z M 14,22 l 1,0 0,1 -1,0 z M 15,22 l 1,0 0,1 -1,0 z M 16,22 l 1,0 0,1 -1,0 z M 18,22 l 1,0 0,1 -1,0 z M 29,22 l 1,0 0,1 -1,0 z M 31,22 l 1,0 0,1 -1,0 z M 0,23 l 1,0 0,1 -1,0 z M 3,23 l 1,0 0,1 -1,0 z M 4,23 l 1,0 0,1 -1,0 z M 7,23 l 1,0 0,1 -1,0 z M 8,23 l 1,0 0,1 -1,0 z M 9,23 l 1,0 0,1 -1,0 z M 11,23 l 1,0 0,1 -1,0 z M 14,23 l 1,0 0,1 -1,0 z M 16,23 l 1,0 0,1 -1,0 z M 18,23 l 1,0 0,1 -1,0 z M 20,23 l 1,0 0,1 -1,0 z M 21,23 l 1,0 0,1 -1,0 z M 22,23 l 1,0 0,1 -1,0 z M 25,23 l 1,0 0,1 -1,0 z M 26,23 l 1,0 0,1 -1,0 z M 29,23 l 1,0 0,1 -1,0 z M 30,23 l 1,0 0,1 -1,0 z M 0,24 l 1,0 0,1 -1,0 z M 4,24 l 1,0 0,1 -1,0 z M 6,24 l 1,0 0,1 -1,0 z M 7,24 l 1,0 0,1 -1,0 z M 9,24 l 1,0 0,1 -1,0 z M 10,24 l 1,0 0,1 -1,0 z M 11,24 l 1,0 0,1 -1,0 z M 12,24 l 1,0 0,1 -1,0 z M 13,24 l 1,0 0,1 -1,0 z M 14,24 l 1,0 0,1 -1,0 z M 17,24 l 1,0 0,1 -1,0 z M 18,24 l 1,0 0,1 -1,0 z M 19,24 l 1,0 0,1 -1,0 z M 22,24 l 1,0 0,1 -1,0 z M 23,24 l 1,0 0,1 -1,0 z M 24,24 l 1,0 0,1 -1,0 z M 25,24 l 1,0 0,1 -1,0 z M 26,24 l 1,0 0,1 -1,0 z M 27,24 l 1,0 0,1 -1,0 z M 28,24 l 1,0 0,1 -1,0 z M 32,24 l 1,0 0,1 -1,0 z M 8,25 l 1,0 0,1 -1,0 z M 10,25 l 1,0 0,1 -1,0 z M 11,25 l 1,0 0,1 -1,0 z M 14,25 l 1,0 0,1 -1,0 z M 16,25 l 1,0 0,1 -1,0 z M 17,25 l 1,0 0,1 -1,0 z M 18,25 l 1,0 0,1 -1,0 z M 19,25 l 1,0 0,1 -1,0 z M 20,25 l 1,0 0,1 -1,0 z M 21,25 l 1,0 0,1 -1,0 z M 24,25 l 1,0 0,1 -1,0 z M 28,25 l 1,0 0,1 -1,0 z M 30,25 l 1,0 0,1 -1,0 z M 32,25 l 1,0 0,1 -1,0 z M 0,26 l 1,0 0,1 -1,0 z M 1,26 l 1,0 0,1 -1,0 z M 2,26 l 1,0 0,1 -1,0 z M 3,26 l 1,0 0,1 -1,0 z M 4,26 l 1,0 0,1 -1,0 z M 5,26 l 1,0 0,1 -1,0 z M 6,26 l 1,0 0,1 -1,0 z M 8,26 l 1,0 0,1 -1,0 z M 10,26 l 1,0 0,1 -1,0 z M 15,26 l 1,0 0,1 -1,0 z M 16,26 l 1,0 0,1 -1,0 z M 17,26 l 1,0 0,1 -1,0 z M 20,26 l 1,0 0,1 -1,0 z M 23,26 l 1,0 0,1 -1,0 z M 24,26 l 1,0 0,1 -1,0 z M 26,26 l 1,0 0,1 -1,0 z M 28,26 l 1,0 0,1 -1,0 z M 29,26 l 1,0 0,1 -1,0 z M 30,26 l 1,0 0,1 -1,0 z M 31,26 l 1,0 0,1 -1,0 z M 0,27 l 1,0 0,1 -1,0 z M 6,27 l 1,0 0,1 -1,0 z M 10,27 l 1,0 0,1 -1,0 z M 19,27 l 1,0 0,1 -1,0 z M 20,27 l 1,0 0,1 -1,0 z M 21,27 l 1,0 0,1 -1,0 z M 22,27 l 1,0 0,1 -1,0 z M 24,27 l 1,0 0,1 -1,0 z M 28,27 l 1,0 0,1 -1,0 z M 29,27 l 1,0 0,1 -1,0 z M 30,27 l 1,0 0,1 -1,0 z M 31,27 l 1,0 0,1 -1,0 z M 32,27 l 1,0 0,1 -1,0 z M 0,28 l 1,0 0,1 -1,0 z M 2,28 l 1,0 0,1 -1,0 z M 3,28 l 1,0 0,1 -1,0 z M 4,28 l 1,0 0,1 -1,0 z M 6,28 l 1,0 0,1 -1,0 z M 8,28 l 1,0 0,1 -1,0 z M 9,28 l 1,0 0,1 -1,0 z M 10,28 l 1,0 0,1 -1,0 z M 12,28 l 1,0 0,1 -1,0 z M 13,28 l 1,0 0,1 -1,0 z M 14,28 l 1,0 0,1 -1,0 z M 15,28 l 1,0 0,1 -1,0 z M 17,28 l 1,0 0,1 -1,0 z M 19,28 l 1,0 0,1 -1,0 z M 22,28 l 1,0 0,1 -1,0 z M 24,28 l 1,0 0,1 -1,0 z M 25,28 l 1,0 0,1 -1,0 z M 26,28 l 1,0 0,1 -1,0 z M 27,28 l 1,0 0,1 -1,0 z M 28,28 l 1,0 0,1 -1,0 z M 31,28 l 1,0 0,1 -1,0 z M 0,29 l 1,0 0,1 -1,0 z M 2,29 l 1,0 0,1 -1,0 z M 3,29 l 1,0 0,1 -1,0 z M 4,29 l 1,0 0,1 -1,0 z M 6,29 l 1,0 0,1 -1,0 z M 8,29 l 1,0 0,1 -1,0 z M 9,29 l 1,0 0,1 -1,0 z M 11,29 l 1,0 0,1 -1,0 z M 16,29 l 1,0 0,1 -1,0 z M 19,29 l 1,0 0,1 -1,0 z M 20,29 l 1,0 0,1 -1,0 z M 24,29 l 1,0 0,1 -1,0 z M 25,29 l 1,0 0,1 -1,0 z M 27,29 l 1,0 0,1 -1,0 z M 28,29 l 1,0 0,1 -1,0 z M 0,30 l 1,0 0,1 -1,0 z M 2,30 l 1,0 0,1 -1,0 z M 3,30 l 1,0 0,1 -1,0 z M 4,30 l 1,0 0,1 -1,0 z M 6,30 l 1,0 0,1 -1,0 z M 8,30 l 1,0 0,1 -1,0 z M 9,30 l 1,0 0,1 -1,0 z M 12,30 l 1,0 0,1 -1,0 z M 15,30 l 1,0 0,1 -1,0 z M 16,30 l 1,0 0,1 -1,0 z M 17,30 l 1,0 0,1 -1,0 z M 20,30 l 1,0 0,1 -1,0 z M 21,30 l 1,0 0,1 -1,0 z M 23,30 l 1,0 0,1 -1,0 z M 26,30 l 1,0 0,1 -1,0 z M 29,30 l 1,0 0,1 -1,0 z M 30,30 l 1,0 0,1 -1,0 z M 31,30 l 1,0 0,1 -1,0 z M 0,31 l 1,0 0,1 -1,0 z M 6,31 l 1,0 0,1 -1,0 z M 8,31 l 1,0 0,1 -1,0 z M 11,31 l 1,0 0,1 -1,0 z M 12,31 l 1,0 0,1 -1,0 z M 14,31 l 1,0 0,1 -1,0 z M 15,31 l 1,0 0,1 -1,0 z M 16,31 l 1,0 0,1 -1,0 z M 19,31 l 1,0 0,1 -1,0 z M 20,31 l 1,0 0,1 -1,0 z M 21,31 l 1,0 0,1 -1,0 z M 25,31 l 1,0 0,1 -1,0 z M 26,31 l 1,0 0,1 -1,0 z M 30,31 l 1,0 0,1 -1,0 z M 0,32 l 1,0 0,1 -1,0 z M 1,32 l 1,0 0,1 -1,0 z M 2,32 l 1,0 0,1 -1,0 z M 3,32 l 1,0 0,1 -1,0 z M 4,32 l 1,0 0,1 -1,0 z M 5,32 l 1,0 0,1 -1,0 z M 6,32 l 1,0 0,1 -1,0 z M 8,32 l 1,0 0,1 -1,0 z M 13,32 l 1,0 0,1 -1,0 z M 14,32 l 1,0 0,1 -1,0 z M 15,32 l 1,0 0,1 -1,0 z M 17,32 l 1,0 0,1 -1,0 z M 19,32 l 1,0 0,1 -1,0 z M 22,32 l 1,0 0,1 -1,0 z M 23,32 l 1,0 0,1 -1,0 z M 24,32 l 1,0 0,1 -1,0 z M 25,32 l 1,0 0,1 -1,0 z M 26,32 l 1,0 0,1 -1,0 z M 28,32 l 1,0 0,1 -1,0 z M 31,32 l 1,0 0,1 -1,0 z " />
+	</g>
+</svg>
+
+            </div>
+            <div>
+              <p class="text-lg font-black text-white" data-ar="امسح الكود لمعاينة ولي الأمر" data-en="Scan for Instant Parent View">امسح الكود لمعاينة ولي الأمر</p>
+              <p class="text-sm text-slate-400 mt-1" data-ar="بيانات تجريبية آمنة — بدون تسجيل دخول" data-en="Isolated demo data — zero login required">بيانات تجريبية آمنة — بدون تسجيل دخول</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================================= -->
+  <!-- BOTTOM PROGRESS & NAVIGATION BAR                                        -->
+  <!-- ======================================================================= -->
+  <footer id="bottom-bar" class="h-[56px] px-4 sm:px-6 border-t border-white/10 bg-[#090D1F]/90 backdrop-blur flex items-center justify-between gap-4 shrink-0 z-30">
+    <button onclick="prevSlide()" id="btn-prev" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-sm sm:text-base transition flex items-center gap-2">
+      <i class="fa-solid fa-arrow-right" id="icon-prev"></i>
+      <span data-ar="السابق" data-en="Prev">السابق</span>
+    </button>
+
+    <div class="flex-1 max-w-xl flex flex-col items-center gap-1.5">
+      <div class="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-300">
+        <span id="slide-counter" class="font-mono text-we-goldLight">1 / 10</span>
+        <span>•</span>
+        <span id="slide-title-footer" class="truncate max-w-[260px] sm:max-w-md">9 طلاب صامتين</span>
+      </div>
+      <div class="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+        <div id="progress-bar" class="h-full bg-gradient-to-r from-we-violetLight via-we-gold to-emerald-400 transition-all duration-300" style="width: 10%"></div>
+      </div>
+    </div>
+
+    <button onclick="nextSlide()" id="btn-next" class="px-4 py-2 rounded-xl bg-gradient-to-r from-we-violet to-we-violetLight hover:opacity-95 text-white font-bold text-sm sm:text-base transition flex items-center gap-2 shadow-md shadow-purple-700/30">
+      <span data-ar="التالي" data-en="Next">التالي</span>
+      <i class="fa-solid fa-arrow-left" id="icon-next"></i>
+    </button>
+  </footer>
+
+  <!-- ======================================================================= -->
+  <!-- MODAL 1: APPENDIX & JUDGES Q&A (A1, A2, A3, A4 — Key A)                 -->
+  <!-- ======================================================================= -->
+  <div id="modal-appendix" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-[#0F1630] border border-white/15 rounded-3xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+      <!-- Header -->
+      <div class="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-xl bg-purple-600 text-white font-black text-sm">Appendix</span>
+          <h3 class="text-lg sm:text-xl font-black text-white" data-ar="الملحق الفني والأدلة وبنك أسئلة لجنة HP IDEA" data-en="Technical Appendix, Evidence & HP IDEA Q&A Bank">الملحق الفني والأدلة وبنك أسئلة لجنة HP IDEA</h3>
+        </div>
+        <button onclick="closeModal('modal-appendix')" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-rose-500/80 text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- 4 Appendix Tabs -->
+      <div class="px-5 py-3 border-b border-white/10 flex items-center gap-2 overflow-x-auto bg-white/[0.02]">
+        <button onclick="switchAppendixTab('a1')" id="tab-btn-a1" class="app-tab px-4 py-2 rounded-xl text-sm font-bold shrink-0 transition" data-ar="A1: المعمارية والأمن (Neon)" data-en="A1: Architecture & Privacy">A1: المعمارية والأمن (Neon)</button>
+        <button onclick="switchAppendixTab('a2')" id="tab-btn-a2" class="app-tab px-4 py-2 rounded-xl text-sm font-bold shrink-0 transition" data-ar="A2: مصفوفة الـ8 KPIs وتوزيع النقاط" data-en="A2: 8-KPI Matrix & Points">A2: مصفوفة الـ8 KPIs وتوزيع النقاط</button>
+        <button onclick="switchAppendixTab('a3')" id="tab-btn-a3" class="app-tab px-4 py-2 rounded-xl text-sm font-bold shrink-0 transition" data-ar="A3: النموذج المالي (27 مدرسة) وERP" data-en="A3: 27-School Finance & Roadmap">A3: النموذج المالي (27 مدرسة) وERP</button>
+        <button onclick="switchAppendixTab('a4')" id="tab-btn-a4" class="app-tab px-4 py-2 rounded-xl text-sm font-bold shrink-0 transition" data-ar="A4: بنك أسئلة اللجنة (17 سؤالاً)" data-en="A4: Judges Q&A Bank (17)">A4: بنك أسئلة اللجنة (17 سؤالاً)</button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-5 overflow-y-auto flex-1 space-y-5 text-base">
+
+        <!-- A1: SINGLE SOURCE OF TRUTH ARCHITECTURE (NEON POSTGRESQL ONLY) -->
+        <div id="appendix-a1" class="app-pane space-y-5">
+          <div class="rounded-2xl p-5 bg-white/5 border border-white/10 space-y-4">
+            <h4 class="text-xl font-black text-we-goldLight" data-ar="المعمارية الموحدة: Neon PostgreSQL كمصدر وحيد للحقيقة" data-en="Single Source of Truth: Neon PostgreSQL Only">المعمارية الموحدة: Neon PostgreSQL كمصدر وحيد للحقيقة</h4>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-center">
+              <div class="p-4 rounded-2xl bg-purple-900/40 border border-purple-500/40">
+                <i class="fa-solid fa-qrcode text-2xl text-purple-300 mb-2"></i>
+                <div class="font-black text-white">WeConnect UI</div>
+                <p class="text-sm text-slate-300 mt-1" data-ar="تطبيق الطلاب وبوابات المعلم والإدارة" data-en="Student App, Teacher & Admin Portals">تطبيق الطلاب وبوابات المعلم والإدارة</p>
+              </div>
+              <div class="p-4 rounded-2xl bg-blue-900/40 border border-blue-500/40">
+                <i class="fa-solid fa-server text-2xl text-blue-300 mb-2"></i>
+                <div class="font-black text-white">FastAPI / Vercel</div>
+                <p class="text-sm text-slate-300 mt-1" data-ar="JWT + RBAC + Rate Limit + Kill-Switch" data-en="JWT + RBAC + Rate Limit + Kill-Switch">JWT + RBAC + Rate Limit + Kill-Switch</p>
+              </div>
+              <div class="p-4 rounded-2xl bg-emerald-900/40 border border-emerald-400/50 ring-2 ring-emerald-400/30">
+                <i class="fa-solid fa-database text-2xl text-emerald-300 mb-2"></i>
+                <div class="font-black text-white">Neon PostgreSQL + S3</div>
+                <p class="text-sm text-emerald-200 mt-1" data-ar="المصدر الوحيد للحقيقة لجميع البيانات والملفات" data-en="Single Source of Truth for all DB & files">المصدر الوحيد للحقيقة لجميع البيانات والملفات</p>
+              </div>
+              <div class="p-4 rounded-2xl bg-amber-900/30 border border-amber-400/40">
+                <i class="fa-solid fa-shield-halved text-2xl text-amber-300 mb-2"></i>
+                <div class="font-black text-white">Gemini 3.5 Flash-Lite</div>
+                <p class="text-sm text-amber-200 mt-1" data-ar="ملفات المحاضرات فقط — صفر بيانات سلوك طلاب" data-en="Lecture files only — zero student PII">ملفات المحاضرات فقط — صفر بيانات سلوك طلاب</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+              <h5 class="font-black text-emerald-400 mb-1" data-ar="مفتاح الإيقاف المركزي (Kill-Switch)" data-en="Admin Global Kill-Switch">مفتاح الإيقاف المركزي (Kill-Switch)</h5>
+              <p class="text-sm text-slate-300" data-ar="يوقف كافة خدمات المنصة خلال ثانية واحدة بحالة HTTP 503 مع إبقاء لوحة الإدارة متاحة." data-en="Halts all student/teacher endpoints in 1s (HTTP 503) while keeping Admin control live.">يوقف كافة خدمات المنصة خلال ثانية واحدة بحالة HTTP 503 مع إبقاء لوحة الإدارة متاحة.</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+              <h5 class="font-black text-purple-300 mb-1" data-ar="حماية خصوصية القُصَّر" data-en="Minor Privacy Protection">حماية خصوصية القُصَّر</h5>
+              <p class="text-sm text-slate-300" data-ar="لا يُرسل أي اسم طالب أو سجل سلوك إلى Google Gemini؛ تحليل السلوك محلي بالكامل على Neon." data-en="No student names or behavior logs are ever sent to Google Gemini; analytics run locally on Neon.">لا يُرسل أي اسم طالب أو سجل سلوك إلى Google Gemini؛ تحليل السلوك محلي بالكامل على Neon.</p>
+            </div>
+            <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+              <h5 class="font-black text-we-goldLight mb-1" data-ar="ملكية البيانات" data-en="Data Ownership">ملكية البيانات</h5>
+              <p class="text-sm text-slate-300" data-ar="تظل البيانات ملكاً حصرياً لمدرسة WE وإدارتها مع قابلية تصدير CSV كاملة وحذف فوري عند الطلب." data-en="100% owned by WE School administration with full CSV export and instant deletion.">تظل البيانات ملكاً حصرياً لمدرسة WE وإدارتها مع قابلية تصدير CSV كاملة وحذف فوري عند الطلب.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- A2: CORRECTED 8-KPI MATRIX + POSITIVE POINTS BREAKDOWN -->
+        <div id="appendix-a2" class="app-pane hidden space-y-5">
+          <div class="overflow-x-auto rounded-2xl border border-white/10">
+            <table class="w-full text-start text-sm sm:text-base">
+              <thead class="bg-white/10 text-we-goldLight font-extrabold">
+                <tr>
+                  <th class="p-3 text-start" data-ar="المؤشر" data-en="KPI">المؤشر</th>
+                  <th class="p-3 text-start" data-ar="قبل التجربة (بشفافية)" data-en="Before (Honest Baseline)">قبل التجربة (بشفافية)</th>
+                  <th class="p-3 text-start" data-ar="بعد أسبوعين (WeConnect)" data-en="After 2 Weeks (WeConnect)">بعد أسبوعين (WeConnect)</th>
+                  <th class="p-3 text-start" data-ar="التفسير المنهجي" data-en="Methodological Note">التفسير المنهجي</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-white/10 text-slate-200">
+                <tr>
+                  <td class="p-3 font-bold" data-ar="1. المشاركة النشطة" data-en="1. Active Participation">1. المشاركة النشطة</td>
+                  <td class="p-3">5 / 14 (36%)</td>
+                  <td class="p-3 text-emerald-400 font-bold">13 / 14 (93%)</td>
+                  <td class="p-3 text-sm text-slate-300" data-ar="+8 طلاب (+57 نقطة مئوية / زيادة نسبية 160%)" data-en="+8 students (+57 pp / +160% relative)">+8 طلاب (+57 نقطة مئوية / زيادة نسبية 160%)</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold" data-ar="2. زمن تسجيل الواقعة" data-en="2. Single-Event Logging">2. زمن تسجيل الواقعة</td>
+                  <td class="p-3">~180s</td>
+                  <td class="p-3 text-emerald-400 font-bold">~15s</td>
+                  <td class="p-3 text-sm text-slate-300" data-ar="توثيق أوسع بكثير (810 سجل) بنفس جهد المعلم" data-en="Far richer logging (810 logs) for same teacher effort">توثيق أوسع بكثير (810 سجل) بنفس جهد المعلم</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold" data-ar="3. نسبة التعزيز الإيجابي" data-en="3. Positive-to-Negative Ratio">3. نسبة التعزيز الإيجابي</td>
+                  <td class="p-3 text-amber-300" data-ar="غير مقاس قبلياً" data-en="Not measured pre-pilot">غير مقاس قبلياً</td>
+                  <td class="p-3 text-emerald-400 font-bold">10:1 (738 / 72 pts)</td>
+                  <td class="p-3 text-sm text-slate-300" data-ar="14 واقعة سلبية = 72 نقطة • مرجع PBIS: 5:1" data-en="14 negative events = 72 pts • PBIS benchmark: 5:1">14 واقعة سلبية = 72 نقطة • مرجع PBIS: 5:1</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold" data-ar="4. الوصم والتنمر العلني" data-en="4. Public Shaming">4. الوصم والتنمر العلني</td>
+                  <td class="p-3 text-amber-300" data-ar="غير مقاس كمياً (استبيان رجعي)" data-en="Unmeasured (retrospective planned)">غير مقاس كمياً (استبيان رجعي)</td>
+                  <td class="p-3 text-emerald-400 font-bold" data-ar="0 وقائع مُبلَّغ عنها" data-en="0 reported incidents">0 وقائع مُبلَّغ عنها</td>
+                  <td class="p-3 text-sm text-slate-300" data-ar="تصميم 4 شاشات خصوصية يفصل التقويم عن العلن" data-en="4-screen privacy architecture hides corrective notes">تصميم 4 شاشات خصوصية يفصل التقويم عن العلن</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold" data-ar="5. رضا المعلمين" data-en="5. Teacher Satisfaction">5. رضا المعلمين</td>
+                  <td class="p-3 text-amber-300" data-ar="غير مقاس قبلياً" data-en="Not measured pre-pilot">غير مقاس قبلياً</td>
+                  <td class="p-3 text-we-goldLight font-bold">4.8 / 5.0</td>
+                  <td class="p-3 text-sm text-slate-300" data-ar="تقييم بعدي لسهولة الاستخدام" data-en="Post-pilot usability survey">تقييم بعدي لسهولة الاستخدام</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold" data-ar="6. حالات الخطر المرتفع" data-en="6. High-Risk Escalations">6. حالات الخطر المرتفع</td>
+                  <td class="p-3 text-amber-300" data-ar="غير مقاس قبلياً" data-en="Not measured pre-pilot">غير مقاس قبلياً</td>
+                  <td class="p-3 text-emerald-400 font-bold">0</td>
+                  <td class="p-3 text-sm text-slate-300" data-ar="تدخل مبكر عبر الأخصائي (Human-in-the-Loop)" data-en="Early counselor review (Human-in-the-Loop)">تدخل مبكر عبر الأخصائي (Human-in-the-Loop)</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold" data-ar="7. تواصل ولي الأمر" data-en="7. Parent Visibility">7. تواصل ولي الأمر</td>
+                  <td class="p-3" data-ar="متأخر (أيام/أسابيع)" data-en="Delayed (days/weeks)">متأخر (أيام/أسابيع)</td>
+                  <td class="p-3 text-emerald-400 font-bold" data-ar="فوري وخاص" data-en="Instant & Private">فوري وخاص</td>
+                  <td class="p-3 text-sm text-slate-300" data-ar="عبر شاشة ولي الأمر المعزولة" data-en="Via isolated parent view">عبر شاشة ولي الأمر المعزولة</td>
+                </tr>
+                <tr>
+                  <td class="p-3 font-bold" data-ar="8. نمط الخميس" data-en="8. Thursday Pattern">8. نمط الخميس</td>
+                  <td class="p-3 text-amber-300" data-ar="غير مرصود" data-en="Undetected">غير مرصود</td>
+                  <td class="p-3 text-amber-300 font-bold" data-ar="فرضية (7/14 في خميسين)" data-en="Hypothesis (7/14 across 2 Thu)">فرضية (7/14 في خميسين)</td>
+                  <td class="p-3 text-sm text-slate-300" data-ar="تحتاج تحققاً في المرحلة الضابطة (8 أسابيع)" data-en="Requires verification in 8-week study">تحتاج تحققاً في المرحلة الضابطة (8 أسابيع)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Positive Points Distribution (Counters Inflation Critique) -->
+          <div class="rounded-2xl p-4 bg-white/5 border border-white/10">
+            <h5 class="font-black text-emerald-400 mb-2" data-ar="توزيع الـ738 نقطة إيجابية حسب الفئة (للتحقق من عدم تضخم النقاط)" data-en="Breakdown of 738 Positive Points (Anti-Inflation Transparency)">توزيع الـ738 نقطة إيجابية حسب الفئة (للتحقق من عدم تضخم النقاط)</h5>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div class="p-3 rounded-xl bg-white/5"><strong class="text-white block">38%</strong><span class="text-slate-300" data-ar="مشاركة وحل مشكلات" data-en="Participation & Problem Solving">مشاركة وحل مشكلات</span></div>
+              <div class="p-3 rounded-xl bg-white/5"><strong class="text-white block">29%</strong><span class="text-slate-300" data-ar="تعاون ومساعدة الزملاء" data-en="Peer Collaboration">تعاون ومساعدة الزملاء</span></div>
+              <div class="p-3 rounded-xl bg-white/5"><strong class="text-white block">21%</strong><span class="text-slate-300" data-ar="انضباط والتزام بالوقت" data-en="Punctuality & Discipline">انضباط والتزام بالوقت</span></div>
+              <div class="p-3 rounded-xl bg-white/5"><strong class="text-white block">12%</strong><span class="text-slate-300" data-ar="إنجاز اختبارات الفهم" data-en="Mastery Quiz Completion">إنجاز اختبارات الفهم</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- A3: CONSERVATIVE 27-SCHOOL FINANCIAL MODEL & ERP ROADMAP -->
+        <div id="appendix-a3" class="app-pane hidden space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="rounded-2xl p-5 bg-white/5 border border-white/10 space-y-3">
+              <h4 class="text-xl font-black text-emerald-400" data-ar="نموذج مالي متحفظ لشبكة WE (27 مدرسة)" data-en="Conservative Financial Model — 27 WE Schools">نموذج مالي متحفظ لشبكة WE (27 مدرسة)</h4>
+              <ul class="space-y-2 text-sm sm:text-base text-slate-200">
+                <li>• <strong data-ar="تكلفة المدرسة الواحدة (500 طالب):" data-en="Single school (500 students):">تكلفة المدرسة الواحدة (500 طالب):</strong> 1,500 EGP/شهر ≈ <strong>3 جنيهات/طالب شهرياً (36 ج/سنة)</strong>.</li>
+                <li>• <strong data-ar="تكلفة البنية والدعم بعد انتهاء الباقة المجانية (27 مدرسة):" data-en="Post-free-tier infra & support (27 schools):">تكلفة البنية والدعم بعد انتهاء الباقة المجانية (27 مدرسة):</strong>
+                  <div class="text-slate-300 text-sm mt-1 ps-3" data-ar="Neon Pro + Vercel Pro + Gemini Paid + مهندس دعم وتدريب ≈ 18,000 – 22,000 ج/شهر (مقابل إيراد مؤسسي 40,500 ج/شهر عند التعاقد المركزي)." data-en="Neon Pro + Vercel Pro + Gemini Paid + Support & Onboarding ≈ 18K–22K EGP/mo (vs 40.5K EGP/mo central license).">Neon Pro + Vercel Pro + Gemini Paid + مهندس دعم وتدريب ≈ 18,000 – 22,000 ج/شهر (مقابل إيراد مؤسسي 40,500 ج/شهر عند التعاقد المركزي).</div>
+                </li>
+                <li>• <strong data-ar="الميزة:" data-en="Advantage:">الميزة:</strong> <span data-ar="هامش مستدام دون افتراض تكلفة تشغيل ثابتة غير واقعية." data-en="Sustainable margin with realistic scaling & support costs.">هامش مستدام دون افتراض تكلفة تشغيل ثابتة غير واقعية.</span></li>
+              </ul>
+            </div>
+
+            <div class="rounded-2xl p-5 bg-white/5 border border-white/10 space-y-3">
+              <h4 class="text-xl font-black text-purple-300" data-ar="حالة وحدات المنصة (شفافية كاملة)" data-en="Platform Modules Status (Full Transparency)">حالة وحدات المنصة (شفافية كاملة)</h4>
+              <div class="space-y-2 text-sm sm:text-base">
+                <div class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-400/30">
+                  <strong class="text-emerald-300 block" data-ar="مُجرَّب ميدانياً داخل الفصل (2 وحدات أساسية):" data-en="Field-Tested in Class (2 Core Modules):">مُجرَّب ميدانياً داخل الفصل (2 وحدات أساسية):</strong>
+                  <span class="text-slate-200" data-ar="1) تتبع السلوك الإيجابي وبطاقات QR • 2) اختبارات الفهم الذكية (Gemini) والمواد الدراسية." data-en="1) Positive Behavior & QR Privacy Views • 2) Lecture-Grounded Mastery Quizzes & Materials.">1) تتبع السلوك الإيجابي وبطاقات QR • 2) اختبارات الفهم الذكية (Gemini) والمواد الدراسية.</span>
+                </div>
+                <div class="p-3 rounded-xl bg-white/5 border border-white/10">
+                  <strong class="text-amber-300 block" data-ar="خارطة طريق مستقبلية (5 وحدات لم تُجرَّب ميدانياً بعد):" data-en="Future Roadmap (5 Modules Not Yet Field-Tested):">خارطة طريق مستقبلية (5 وحدات لم تُجرَّب ميدانياً بعد):</strong>
+                  <span class="text-slate-300" data-ar="المحادثات، الإعلانات، التكليفات، بوابة الحضور بالـQR، وتحليلات الإدارة — مبنية برمجياً وستدخل الاختبار الميداني في المرحلة القادمة." data-en="Chats, Announcements, Assignments, QR Attendance, Admin Analytics — built in code, entering field test in Phase 2.">المحادثات، الإعلانات، التكليفات، بوابة الحضور بالـQR، وتحليلات الإدارة — مبنية برمجياً وستدخل الاختبار الميداني في المرحلة القادمة.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- A4: 17-QUESTION JUDGES Q&A DEFENSE BANK -->
+        <div id="appendix-a4" class="app-pane hidden space-y-4">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <input type="text" id="qa-search" oninput="renderQAList()" placeholder="ابحث في 17 سؤالاً تحكيمياً... / Search 17 judge questions..." class="flex-1 px-4 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white placeholder-slate-400 text-sm outline-none focus:ring-2 focus:ring-purple-500">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button onclick="setQACat('all')" id="qa-cat-all" class="qa-cat px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-600 text-white">الكل (17)</button>
+              <button onclick="setQACat('new')" id="qa-cat-new" class="qa-cat px-3 py-1.5 rounded-lg text-xs font-bold bg-white/10 text-amber-300">الأسئلة الحرجة الجديدة (5)</button>
+              <button onclick="setQACat('pedagogy')" id="qa-cat-pedagogy" class="qa-cat px-3 py-1.5 rounded-lg text-xs font-bold bg-white/10 text-slate-300">تربوي</button>
+              <button onclick="setQACat('data')" id="qa-cat-data" class="qa-cat px-3 py-1.5 rounded-lg text-xs font-bold bg-white/10 text-slate-300">بيانات وخصوصية</button>
+              <button onclick="setQACat('scale')" id="qa-cat-scale" class="qa-cat px-3 py-1.5 rounded-lg text-xs font-bold bg-white/10 text-slate-300">توسع وتكلفة</button>
+            </div>
+          </div>
+          <div id="qa-list" class="space-y-3"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================= -->
+  <!-- MODAL 2: JUDGE INTERACTIVE PARENT-VIEW SANDBOX (100% OFFLINE READY)     -->
+  <!-- ======================================================================= -->
+  <div id="modal-judge-demo" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-[#0F1630] border border-emerald-400/40 rounded-3xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-5 py-4 border-b border-white/10 flex items-center justify-between bg-emerald-950/40">
+        <div>
+          <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-extrabold">WeConnect Isolated Judge Sandbox</span>
+          <h3 class="text-lg font-black text-white mt-0.5" data-ar="محاكي الشاشات الـ4 للخصوصية (بيانات وهمية آمنة)" data-en="4-Screen Privacy Simulator (Safe Fictional Data)">محاكي الشاشات الـ4 للخصوصية (بيانات وهمية آمنة)</h3>
+        </div>
+        <button onclick="closeModal('modal-judge-demo')" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-rose-500 text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Role Switcher for Judge -->
+      <div class="px-5 py-3 border-b border-white/10 flex items-center gap-2 overflow-x-auto bg-white/[0.02]">
+        <button onclick="switchDemoView('parent')" id="demo-btn-parent" class="demo-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500 text-slate-950 shrink-0" data-ar="شاشة ولي الأمر" data-en="Parent View">شاشة ولي الأمر</button>
+        <button onclick="switchDemoView('public')" id="demo-btn-public" class="demo-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white/10 text-slate-200 shrink-0" data-ar="لوحة الشرف العلنية" data-en="Public Honor Roll">لوحة الشرف العلنية</button>
+        <button onclick="switchDemoView('counselor')" id="demo-btn-counselor" class="demo-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white/10 text-slate-200 shrink-0" data-ar="شاشة الأخصائي" data-en="Counselor View">شاشة الأخصائي</button>
+        <button onclick="switchDemoView('student')" id="demo-btn-student" class="demo-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white/10 text-slate-200 shrink-0" data-ar="شاشة الطالب" data-en="Student View">شاشة الطالب</button>
+      </div>
+
+      <div id="demo-view-body" class="p-5 overflow-y-auto space-y-4"></div>
+    </div>
+  </div>
+
+  <!-- ======================================================================= -->
+  <!-- MODAL 3: 30s BACKUP CLASSROOM VIDEO                                     -->
+  <!-- ======================================================================= -->
+  <div id="modal-video-backup" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+    <div class="bg-[#0F1630] border border-white/15 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl">
+      <div class="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+        <h3 class="text-base font-black text-white" data-ar="فيديو احتياطي حي من داخل فصل مدرسة WE السويس" data-en="Backup Live Classroom Demo Video — WE Suez">فيديو احتياطي حي من داخل فصل مدرسة WE السويس</h3>
+        <button onclick="closeVideoBackup()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-rose-500 text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 bg-black">
+        <video id="backup-video-el" src="https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/class_video_2.mp4" controls playsinline class="w-full max-h-[70vh] rounded-2xl"></video>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================= -->
+  <!-- MODAL 4: PHOTO LIGHTBOX                                                 -->
+  <!-- ======================================================================= -->
+  <div id="modal-lightbox" onclick="closeModal('modal-lightbox')" class="hidden fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4 cursor-zoom-out">
+    <img id="lightbox-img" src="" alt="" class="max-w-[92vw] max-h-[82vh] rounded-2xl shadow-2xl border border-white/15">
+    <p id="lightbox-caption" class="text-base text-slate-200 font-bold mt-3 text-center"></p>
+  </div>
+
+  <!-- ======================================================================= -->
+  <!-- MODAL 5: SLIDE INDEX GRID (Key G)                                       -->
+  <!-- ======================================================================= -->
+  <div id="modal-grid" onclick="closeModal('modal-grid')" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation()" class="bg-[#0F1630] border border-white/15 rounded-3xl p-6 max-w-4xl w-full space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xl font-black text-white" data-ar="فهرس الشرائح الـ10 (5:00 دقائق)" data-en="10-Slide Index (5:00 Exact)">فهرس الشرائح الـ10 (5:00 دقائق)</h3>
+        <button onclick="closeModal('modal-grid')" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-rose-500 text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="slide-grid-items" class="grid grid-cols-2 sm:grid-cols-5 gap-3"></div>
+    </div>
+  </div>
+
+  <!-- ======================================================================= -->
+  <!-- APPLICATION JAVASCRIPT                                                  -->
+  <!-- ======================================================================= -->
+  <script>
+    const SLIDES_META = [
+      { id: 1, sec: 20, ar: '9 طلاب صامتين', en: '9 Silent Students', noteAr: 'تسعة طلاب صامتين في فصل واحد من أربعة عشر؛ مش لأنهم مش شاطرين، لكن لأنهم محتاجين مساحة آمنة تمنحهم صوت بلا إحراج.', noteEn: 'Nine silent students in a class of fourteen — not incapable, simply waiting for a safe, stigma-free space.' },
+      { id: 2, sec: 25, ar: 'ثلاث تكاليف في الفصل', en: 'Three Hidden Costs', noteAr: 'المشكلة ثلاثية: وقت بيضيع في الدفاتر الورقية، صمت ستة وتلاتين في المية فقط مشاركين، ووصم علني بيجرح كرامة الطالب.', noteEn: 'Three daily classroom costs: lost time on paper logs, 9 silent students, and public reprimands that hurt dignity.' },
+      { id: 3, sec: 35, ar: 'خريطة Design Thinking', en: 'Design Thinking Map', noteAr: 'مشينا بمنهجية التفكير التصميمي: تعاطفنا مع الصامتين، حددنا المشكلة، ابتكرنا فصل التحفيز العلني عن التقويم الخاص، وصممنا كارت QR واختبرناه أسبوعين.', noteEn: 'Following HP IDEA Design Thinking: Empathize with the silent 9, Define speed with dignity, Ideate public praise vs private guidance, Prototype QR cards, and Test in Class C2.' },
+      { id: 4, sec: 35, ar: 'الحل في تدفق واحد', en: 'Solution in One Flow', noteAr: 'مسح QR، وسم سلوكي فوري، وأربع شاشات خصوصية تفصل لوحة الشرف العلنية عن أي ملاحظة خاصة للمعلم أو ولي الأمر.', noteEn: 'One flow: Scan QR, instant tag, and four privacy views keeping honor rolls public and corrective guidance strictly private.' },
+      { id: 5, sec: 30, ar: 'التجربة وحدودها بصراحة', en: 'Pilot & Limitations', noteAr: 'نفذنا إثبات مفهوم ميداني على 14 طالباً لمدة أسبوعين بـ810 سجل زمني، ونعرض حدوده بشفافية: فصل واحد بلا مجموعة ضابطة ومرحلتنا القادمة 8 أسابيع ضابطة.', noteEn: 'A 2-week field proof of concept with 14 students and 810 timestamped logs, transparently noting single-class limits and our 8-week controlled next phase.' },
+      { id: 6, sec: 35, ar: 'النتيجة 1: المشاركة والوقت', en: 'Result 1: Participation', noteAr: 'المشاركة ارتفعت من 5 إلى 9 إلى 13 طالباً بزيادة 8 طلاب نشطين، وزمن تسجيل الواقعة نزل من 180 ثانية إلى 15 ثانية ما أتاح توثيقاً أوسع بنفس جهد المعلم.', noteEn: 'Active participation rose from 5 to 9 to 13 students — plus 8 active learners — while logging dropped from 180s to 15s per event.' },
+      { id: 7, sec: 35, ar: 'النتيجة 2: الكرامة والإيجابية', en: 'Result 2: Positive Climate', noteAr: 'حققنا نسبة 10 إلى 1 بين التعزيز الإيجابي والتقويم، ورضا معلمين 4.8 من 5، وصفر حالات خطر مرتفع أو وصم علني مبلغ عنها.', noteEn: 'Achieved a 10 to 1 positive ratio, 4.8 out of 5 teacher usability, zero high-risk escalations, and zero reported public shaming.' },
+      { id: 8, sec: 30, ar: 'الذكاء الاصطناعي الأخلاقي', en: 'Ethical AI', noteAr: 'الإنسان يقرر دائماً ولا توجد عقوبات آلية. نمط الخميس نعرضه كفرضية للتحقق، وGemini يقرأ نص المحاضرة فقط دون أي بيانات طلابية.', noteEn: 'Humans always decide with zero automated penalties. Thursday patterns are presented as a hypothesis, and Gemini reads lecture files only with zero student PII.' },
+      { id: 9, sec: 35, ar: 'التوسع في 27 مدرسة WE', en: 'Scaling 27 WE Schools', noteAr: 'WeConnect جاهز للانتشار في 27 مدرسة WE خلال 48 ساعة للتشغيل بتكلفة حوالي 3 جنيهات للطالب شهرياً مع خطة مرحلة ضابطة 8 أسابيع.', noteEn: 'Ready to scale across 27 WE schools with 48-hour onboarding at roughly 3 EGP per student monthly, backed by an 8-week controlled study.' },
+      { id: 10, sec: 20, ar: 'الختام وبطاقة الحكم', en: 'Finale & Judge Card', noteAr: 'لكل طالب صوت وكرامة محفوظة. تفضلوا بمسح بطاقة الحكم لتجربة شاشة ولي الأمر فوراً في بيئة آمنة معزولة.', noteEn: 'Every student heard, every dignity protected. Scan the Judge Card now to preview the isolated Parent View immediately.' }
+    ];
+
+    const QA_BANK = [
+      // 5 NEW CRITICAL QUESTIONS (Highlighted First!)
+      {
+        cat: 'new',
+        qAr: '1. هل لوحة الشرف العلنية نفسها تُحرج من غاب اسمه عنها؟',
+        qEn: '1. Doesn’t a public Honor Roll embarrass students whose names are absent?',
+        aAr: 'سؤال تربوي جوهري! لذلك لوحة الشرف في WeConnect ليست «قائمة أوائل ثابتة لنفس 3 طلاب»؛ بل تحتفي بـ«قفزات التحسن الأسبوعي» و«التعاون ومساعدة الزملاء» و«إتمام اختبارات الفهم»، فلا يظهر أي ترتيب للأخير أو قائمة مقصّرين أبداً، وتمنح كل طالب مساراً واقعياً للظهور الإيجابي.',
+        aEn: 'Crucial pedagogical point. WeConnect’s board never ranks bottom students or lists defaulters; it spotlights weekly growth, peer collaboration, and quiz mastery so different students earn positive recognition.'
+      },
+      {
+        cat: 'new',
+        qAr: '2. ألا تعني نسبة 10:1 وجود «تضخم في النقاط الإيجابية» (Point Inflation)؟',
+        qEn: '2. Could the 10:1 positive ratio simply indicate positive point inflation?',
+        aAr: 'نعي هذا الخطر تماماً. لذلك نوثّق في الملحق A2 توزيع الـ738 نقطة حسب الفئة (38% مشاركة وحل مشكلات، 29% تعاون، 21% انضباط، 12% اختبارات فهم) ونراقب توزيع النقاط لكل معلم؛ وفي المرحلة الضابطة سنضع سقفاً يومياً لكل معيار لضمان قيمة تربوية حقيقية للنقطة.',
+        aEn: 'We actively guard against point inflation. Appendix A2 breaks down the 738 points by category and teacher, and Phase 2 introduces daily per-rubric caps to keep recognition meaningful.'
+      },
+      {
+        cat: 'new',
+        qAr: '3. ألا يمكن أن تكون قفزة المشاركة (5←13) مجرد «أثر جِدّة» (Hawthorne Effect) خلال أسبوعين؟',
+        qEn: '3. Could the participation jump (5→13) just be a 2-week Hawthorne novelty effect?',
+        aAr: 'نعم، هذا احتمال علمي وارد نصرح به بوضوح في الشريحة 5! لذلك نسمّي ما تم «إثبات مفهوم ميداني» وليس إثباتاً سببياً نهائياً، وخطتنا المباشرة هي دراسة منضبطة لمدة 8 أسابيع مع فصل ضابط (Control Group) لقياس استدامة الأثر بعد زوال الجِدّة.',
+        aEn: 'Yes — we state that explicitly on Slide 5. That is why we frame this as a Field Proof of Concept and designed an 8-week controlled study with a control class to test sustained impact.'
+      },
+      {
+        cat: 'new',
+        qAr: '4. من يملك بيانات الطلاب بعد المسابقة وأين تُخزَّن فعلياً؟',
+        qEn: '4. Who owns student data after the competition and where is it stored?',
+        aAr: 'تُخزَّن البيانات في مصدر واحد فقط هو قاعدة Neon PostgreSQL المشفرة (TLS + RBAC) وتظل ملكيتها الحصرية لإدارة مدرسة WE / الوزارة، مع قابلية التصدير الكامل بـCSV أو الحذف الفوري، ولا يُرسل أي سجل سلوك أو اسم طالب لخدمات الذكاء الاصطناعي الخارجية.',
+        aEn: 'All data lives in a single encrypted Neon PostgreSQL database, 100% owned by WE School administration with full CSV export or instant deletion. Zero student behavior records are sent to external AI APIs.'
+      },
+      {
+        cat: 'new',
+        qAr: '5. ما تكلفة التشغيل الحقيقية بعد انتهاء الباقات المجانية (Neon / Vercel / Gemini)؟',
+        qEn: '5. What is the real operating cost once free tiers expire?',
+        aAr: 'حسابنا المتحفظ لشبكة 27 مدرسة WE يشمل الباقات المدفوعة (Neon Pro + Vercel Pro + Gemini Paid API) + مهندس دعم وتدريب بإجمالي ~18,000–22,000 ج/شهر، أي ~3 جنيهات للطالب شهرياً (~36 ج/سنة) بمعدل 1,500 ج/شهر للمدرسة الواحدة — نموذج مستدام واقعياً.',
+        aEn: 'Our conservative 27-school budget includes paid Neon Pro, Vercel Pro, Gemini API, and support staff (~18K–22K EGP/month total), keeping cost at ~3 EGP/student/month (~36 EGP/year).'
+      },
+      // 12 CORRECTED CORE DEFENSE QUESTIONS
+      {
+        cat: 'pedagogy',
+        qAr: '6. كيف يرتبط WeConnect بـ «التعلم من أجل الفهم» (Learning for Understanding) في HP IDEA؟',
+        qEn: '6. How does WeConnect advance HP IDEA’s Learning for Understanding?',
+        aAr: 'الأمان النفسي شرط للفهم العميق: حين يزول الخوف من الإحراج تزيد المشاركة الصفية (+8 طلاب)، وتتبعها اختبارات فهم قصيرة مُسندة بنص المحاضرة مع شرح فوري للسبب وراء الإجابة الصحيحة.',
+        aEn: 'Psychological safety unlocks deep understanding: removing fear of public shaming grew participation by +8 students, paired with lecture-grounded quizzes that explain why each answer works.'
+      },
+      {
+        cat: 'pedagogy',
+        qAr: '7. هل النظام يصدر عقوبات أو إنذارات آلية بحق الطلاب؟',
+        qEn: '7. Does WeConnect ever issue automated punishments?',
+        aAr: 'ممنوع تماماً في التصميم والكود. WeConnect يطبق Human-in-the-Loop بنسبة 100%: النظام يرصد ويلخّص فقط، بينما الأخصائي الاجتماعي والمعلم هما صاحب أي قرار تربوي.',
+        aEn: 'Strictly prohibited by design. WeConnect enforces 100% Human-in-the-Loop: the system only surfaces patterns while teachers and counselors make every pedagogical decision.'
+      },
+      {
+        cat: 'data',
+        qAr: '8. لماذا يذكر النظام 14 واقعة سلبية مع 72 نقطة سلبية؟',
+        qEn: '8. Why are there 14 negative incidents alongside 72 negative points?',
+        aAr: 'الـ14 هي عدد الوقائع المسجلة (Events)، ولكل واقعة وزن نقاط بحسب درجتها (من 3 إلى 8 نقاط) مما يعطي مجموع 72 نقطة سلبية مقابل 738 نقطة إيجابية (نسبة 10:1).',
+        aEn: '14 is the count of logged incidents, each weighted 3–8 points by severity, totaling 72 negative points versus 738 positive points (a 10:1 ratio).'
+      },
+      {
+        cat: 'data',
+        qAr: '9. هل نمط «يوم الخميس» دليل قاطع على الإجهاد؟',
+        qEn: '9. Is the Thursday pattern conclusive proof of student fatigue?',
+        aAr: 'لا، نعرضه بوضوح كفرضية رصدها النظام خلال أسبوعين فقط (خميسان = 7 من 14 واقعة)، وتُعد نقطة انطلاق لتحقيق الأخصائي الاجتماعي والتحقق خلال مرحلة الـ8 أسابيع.',
+        aEn: 'No — we present it explicitly as a hypothesis observed across two Thursdays (7/14 events), giving the counselor a concrete signal to investigate during the 8-week phase.'
+      },
+      {
+        cat: 'data',
+        qAr: '10. لماذا كانت بعض قيم «قبل التجربة» غير مقاسة كمياً في الجدول؟',
+        qEn: '10. Why were several Before-pilot baselines marked unmeasured?',
+        aAr: 'للأمانة العلمية: قبل WeConnect لم يكن يوجد سجل رقمي لنسبة التعزيز أو وقائع الإحراج الصفي، لذلك نصرح بـ«غير مقاس قبلياً» ونستخدم استبياناً رجعياً قصيراً + قياساً قبلياً كاملاً في المرحلة التالية.',
+        aEn: 'For scientific integrity: prior paper registers did not log positive ratios or public-shaming metrics. We label them honestly as unmeasured and add pre/post baselines in Phase 2.'
+      },
+      {
+        cat: 'data',
+        qAr: '11. كيف تضمنون دقة أسئلة اختبارات الفهم وتقليل أخطاء الذكاء الاصطناعي؟',
+        qEn: '11. How do you verify AI accuracy in mastery quizzes?',
+        aAr: 'لا ندّعي الكمال المطلق؛ بل نستخدم Gemini Function Calling لإلزامه باستخراج اقتباس حرفي من نص المحاضرة مع كل سؤال، ويراجع المعلم الأسئلة ويحررها أو يعيد توليد أي سؤال بضغطة زر قبل النشر.',
+        aEn: 'Rather than claiming perfection, we require verbatim lecture reference quotes via Function Calling and keep teachers in full edit/regenerate control before publishing.'
+      },
+      {
+        cat: 'data',
+        qAr: '12. ألا تسمح شروط Gemini المجانية بتدريب النماذج على بيانات الطلاب؟',
+        qEn: '12. Don’t Gemini free-tier terms risk training on student data?',
+        aAr: 'لهذا السبب تحديداً لا نرسل أي سجل سلوك أو اسم طالب أو بيانات قُصَّر إلى Gemini أبداً؛ نرسل فقط نصوص المحاضرات الدراسية العامة، وعند التوسع المؤسسي ننتقل إلى باقة API المدفوعة الخالية من التدريب.',
+        aEn: 'Exactly why zero student names or behavioral logs are ever sent to Gemini — only generic lecture materials — and school-wide deployment uses paid non-training API terms.'
+      },
+      {
+        cat: 'data',
+        qAr: '13. ما قاعدة البيانات الرسمية والمصدر الوحيد للحقيقة في المنظومة؟',
+        qEn: '13. What is the official database and Single Source of Truth?',
+        aAr: 'Neon PostgreSQL + Neon Object Storage فقط كمصدر وحيد للحقيقة (Single Source of Truth) مع خادم FastAPI على Vercel.',
+        aEn: 'Neon PostgreSQL + Neon Object Storage exclusively as our Single Source of Truth, served by FastAPI on Vercel.'
+      },
+      {
+        cat: 'scale',
+        qAr: '14. ماذا يحدث لو انقطع الإنترنت أثناء الحصة أو العرض؟',
+        qEn: '14. What happens if classroom internet drops?',
+        aAr: 'بطاقات QR المطبوعة تبقى جاهزة، والنسخة العرضية التي أمامكم الآن تعمل Offline بنسبة 100% مع PDF احتياطي، كما نخطط لإضافة مزامنة Offline-first للتطبيق في المرحلة القادمة.',
+        aEn: 'Printed QR cards stay usable, this entire deck runs 100% offline with a PDF backup, and offline-first sync for classroom logging is prioritized on our Phase 2 roadmap.'
+      },
+      {
+        cat: 'scale',
+        qAr: '15. لماذا تذكرون 27 مدرسة WE بدلاً من التوسع لـ50 مدرسة فوراً؟',
+        qEn: '15. Why focus on 27 WE schools instead of 50 national schools immediately?',
+        aAr: 'لأن مدارس WE الـ27 تشترك في نفس الثقافة التكنولوجية والهيكل الإداري وشركاء HP IDEA، ما يجعلها بيئة التوسع الأكثر واقعية وقابلية للقياس قبل أي تعميم وطني أوسع.',
+        aEn: 'Egypt’s 27 WE schools share a unified tech culture, governance, and HP IDEA alignment — making them the most realistic, measurable scaling channel before broader national rollout.'
+      },
+      {
+        cat: 'pedagogy',
+        qAr: '16. كيف تعاملتم مع موافقات أولياء الأمور لصور وفيديوهات الطلاب؟',
+        qEn: '16. How are guardian consents handled for student photos/videos?',
+        aAr: 'النسخ التقنية تعتمد لقطات التابلت والأيدي فقط دون وجوه، وأي صور فصلية تُعرض حصرياً لأغراض التحكيم التربوي وتُرفق بموافقة ولي الأمر وإدارة المدرسة (مع إمكانية طمس الوجوه عند أي نشر عام).',
+        aEn: 'Technical slides use face-free tablet/hands close-ups; classroom photos are strictly for judging review under school/guardian consent and blurred prior to any public release.'
+      },
+      {
+        cat: 'scale',
+        qAr: '17. ما الذي يميّز WeConnect عن ClassDojo أو Google Classroom؟',
+        qEn: '17. How does WeConnect differ from ClassDojo or Google Classroom?',
+        aAr: 'صُمم باللغة العربية RTL للبيئة المصرية: يجمع بين بطاقات QR سريعة، ومصفوفة 4 شاشات خصوصية تمنع التشهير، واختبارات فهم من ملفات المعلم، بتكلفة ~3 جنيهات/طالب شهرياً وبملكية كاملة للمدرسة.',
+        aEn: 'Built Arabic-first (RTL) for Egyptian WE schools: combines fast QR cards, a 4-screen anti-shaming privacy model, and lecture-grounded quizzes at ~3 EGP/student/month with full school ownership.'
+      }
+    ];
+
+    let currentSlide = 1;
+    const totalSlides = 10;
+    let currentLang = 'ar';
+    let timerSeconds = 300;
+    let timerInterval = null;
+    let voiceRehearsalOn = false;
+    let qaCategory = 'all';
+    let participationChart = null;
+
+    function applyLanguage() {
+      const html = document.documentElement;
+      html.lang = currentLang;
+      html.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+      document.getElementById('lang-label').innerText = currentLang === 'ar' ? 'EN' : 'عربي';
+
+      document.querySelectorAll('[data-ar]').forEach(el => {
+        const val = el.getAttribute(currentLang === 'ar' ? 'data-ar' : 'data-en');
+        if (val !== null) el.innerText = val;
+      });
+
+      const prevIcon = document.getElementById('icon-prev');
+      const nextIcon = document.getElementById('icon-next');
+      if (currentLang === 'ar') {
+        prevIcon.className = 'fa-solid fa-arrow-right';
+        nextIcon.className = 'fa-solid fa-arrow-left';
+      } else {
+        prevIcon.className = 'fa-solid fa-arrow-left';
+        nextIcon.className = 'fa-solid fa-arrow-right';
+      }
+
+      updateFooterMeta();
+      renderParticipationChart();
+      renderQAList();
+      renderDemoView(activeDemoRole);
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'ar' ? 'en' : 'ar';
+      applyLanguage();
+    }
+
+    function showSlide(n) {
+      if (n < 1) n = 1;
+      if (n > totalSlides) n = totalSlides;
+      currentSlide = n;
+
+      document.querySelectorAll('.slide').forEach(s => {
+        s.classList.toggle('active', Number(s.dataset.slide) === currentSlide);
+      });
+
+      document.getElementById('slide-counter').innerText = `${currentSlide} / ${totalSlides}`;
+      document.getElementById('progress-bar').style.width = `${(currentSlide / totalSlides) * 100}%`;
+      document.getElementById('btn-prev').disabled = currentSlide === 1;
+      document.getElementById('btn-prev').style.opacity = currentSlide === 1 ? '0.4' : '1';
+
+      updateFooterMeta();
+      if (currentSlide === 6) renderParticipationChart();
+      if (voiceRehearsalOn) speakCurrentSlideNote();
+    }
+
+    function updateFooterMeta() {
+      const meta = SLIDES_META[currentSlide - 1];
+      if (!meta) return;
+      document.getElementById('slide-title-footer').innerText = currentLang === 'ar' ? meta.ar : meta.en;
+      const badge = document.getElementById('slide-target-badge');
+      if (badge) badge.innerText = `0:${String(meta.sec).padStart(2, '0')}`;
+    }
+
+    function nextSlide() { if (currentSlide < totalSlides) showSlide(currentSlide + 1); }
+    function prevSlide() { if (currentSlide > 1) showSlide(currentSlide - 1); }
+
+    // ── 5:00 COUNTDOWN TIMER ─────────────────────────────────────────────────
+    function formatTimer(s) {
+      const m = Math.floor(Math.max(0, s) / 60);
+      const r = Math.max(0, s) % 60;
+      return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+    }
+
+    function toggleTimer() {
+      const icon = document.getElementById('timer-icon');
+      const disp = document.getElementById('pitch-timer-display');
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        icon.className = 'fa-solid fa-play';
+      } else {
+        icon.className = 'fa-solid fa-pause';
+        timerInterval = setInterval(() => {
+          timerSeconds = Math.max(0, timerSeconds - 1);
+          disp.innerText = formatTimer(timerSeconds);
+          if (timerSeconds <= 30) disp.classList.add('text-rose-400');
+          if (timerSeconds === 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            icon.className = 'fa-solid fa-play';
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      timerSeconds = 300;
+      const disp = document.getElementById('pitch-timer-display');
+      disp.innerText = '05:00';
+      disp.classList.remove('text-rose-400');
+      document.getElementById('timer-icon').className = 'fa-solid fa-play';
+    }
+
+    // ── OPTIONAL REHEARSAL VOICE (STRICTLY OFF BY DEFAULT) ───────────────────
+    function toggleRehearsalVoice() {
+      voiceRehearsalOn = !voiceRehearsalOn;
+      const btn = document.getElementById('btn-voice-rehearsal');
+      const icon = document.getElementById('voice-icon');
+      const lbl = document.getElementById('voice-label');
+      if (voiceRehearsalOn) {
+        btn.classList.add('text-emerald-300', 'border-emerald-400/40', 'bg-emerald-500/15');
+        icon.className = 'fa-solid fa-volume-high';
+        lbl.innerText = currentLang === 'ar' ? 'صوت تدريب: مفعل' : 'Practice: On';
+        speakCurrentSlideNote();
+      } else {
+        btn.classList.remove('text-emerald-300', 'border-emerald-400/40', 'bg-emerald-500/15');
+        icon.className = 'fa-solid fa-volume-xmark';
+        lbl.innerText = currentLang === 'ar' ? 'صوت: مغلق' : 'Voice: Off';
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      }
+    }
+
+    function speakCurrentSlideNote() {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const meta = SLIDES_META[currentSlide - 1];
+      const u = new SpeechSynthesisUtterance(currentLang === 'ar' ? meta.noteAr : meta.noteEn);
+      u.lang = currentLang === 'ar' ? 'ar-EG' : 'en-US';
+      u.rate = 1.0;
+      window.speechSynthesis.speak(u);
+    }
+
+    // ── CHART.JS: PARTICIPATION PROGRESSION (SLIDE 6) ────────────────────────
+    function renderParticipationChart() {
+      if (typeof Chart === 'undefined') return;
+      const ctx = document.getElementById('chart-participation');
+      if (!ctx) return;
+      if (participationChart) participationChart.destroy();
+      const labels = currentLang === 'ar'
+        ? ['قبل التجربة', 'الأسبوع الأول', 'الأسبوع الثاني']
+        : ['Baseline', 'Week 1', 'Week 2'];
+      participationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: currentLang === 'ar' ? 'عدد الطلاب المشاركين (من 14)' : 'Active Students (of 14)',
+            data: [5, 9, 13],
+            backgroundColor: ['rgba(244, 63, 94, 0.78)', 'rgba(245, 158, 11, 0.85)', 'rgba(16, 185, 129, 0.92)'],
+            borderRadius: 12,
+            maxBarThickness: 64
+          }]
+        },
+        options: {
+          animation: false,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (c) => `${c.raw} / 14 (${Math.round((c.raw / 14) * 100)}%)`
+              }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true, max: 14, ticks: { stepSize: 2, color: '#CBD5E1', font: { size: 13, weight: '700' } }, grid: { color: 'rgba(255,255,255,0.08)' } },
+            x: { ticks: { color: '#F8FAFC', font: { family: 'Cairo', size: 14, weight: '800' } }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    // ── APPENDIX & 17-QUESTION Q&A ───────────────────────────────────────────
+    function openAppendix(tab = 'a1') {
+      document.getElementById('modal-appendix').classList.remove('hidden');
+      switchAppendixTab(tab);
+    }
+
+    function switchAppendixTab(tab) {
+      ['a1', 'a2', 'a3', 'a4'].forEach(t => {
+        document.getElementById(`appendix-${t}`).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        btn.className = t === tab
+          ? 'app-tab px-4 py-2 rounded-xl text-sm font-bold shrink-0 bg-purple-600 text-white shadow-md'
+          : 'app-tab px-4 py-2 rounded-xl text-sm font-bold shrink-0 bg-white/10 text-slate-300 hover:bg-white/15';
+      });
+      if (tab === 'a4') renderQAList();
+    }
+
+    function setQACat(cat) {
+      qaCategory = cat;
+      document.querySelectorAll('.qa-cat').forEach(b => {
+        const active = b.id === `qa-cat-${cat}`;
+        b.className = active
+          ? 'qa-cat px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-600 text-white'
+          : 'qa-cat px-3 py-1.5 rounded-lg text-xs font-bold bg-white/10 text-slate-300 hover:bg-white/15';
+      });
+      renderQAList();
+    }
+
+    function renderQAList() {
+      const list = document.getElementById('qa-list');
+      if (!list) return;
+      const q = (document.getElementById('qa-search')?.value || '').trim().toLowerCase();
+      const filtered = QA_BANK.filter(item => {
+        if (qaCategory !== 'all' && item.cat !== qaCategory) return false;
+        if (!q) return true;
+        return (item.qAr + item.qEn + item.aAr + item.aEn).toLowerCase().includes(q);
+      });
+      list.innerHTML = filtered.map(item => `
+        <div class="p-4 rounded-2xl bg-white/5 border ${item.cat === 'new' ? 'border-amber-400/40' : 'border-white/10'} space-y-2">
+          <div class="flex items-start justify-between gap-2">
+            <h5 class="font-black text-base sm:text-lg text-white">${currentLang === 'ar' ? item.qAr : item.qEn}</h5>
+            ${item.cat === 'new' ? '<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 shrink-0">HP IDEA Focus</span>' : ''}
+          </div>
+          <p class="text-sm sm:text-base text-slate-200 leading-relaxed">${currentLang === 'ar' ? item.aAr : item.aEn}</p>
+        </div>
+      `).join('') || '<p class="text-center text-slate-400 py-8">لا توجد نتائج مطابقة</p>';
+    }
+
+    // ── JUDGE ISOLATED PARENT-SCREEN SIMULATOR (100% OFFLINE) ────────────────
+    let activeDemoRole = 'parent';
+    function openJudgeDemo() {
+      document.getElementById('modal-judge-demo').classList.remove('hidden');
+      switchDemoView('parent');
+    }
+
+    function switchDemoView(role) {
+      activeDemoRole = role;
+      ['parent', 'public', 'counselor', 'student'].forEach(r => {
+        const btn = document.getElementById(`demo-btn-${r}`);
+        if (!btn) return;
+        btn.className = r === role
+          ? 'demo-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500 text-slate-950 shrink-0'
+          : 'demo-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-white/10 text-slate-200 hover:bg-white/15 shrink-0';
+      });
+      renderDemoView(role);
+    }
+
+    function renderDemoView(role) {
+      const el = document.getElementById('demo-view-body');
+      if (!el) return;
+      const isAr = currentLang === 'ar';
+      if (role === 'parent') {
+        el.innerHTML = `
+          <div class="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-400/35 flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xs text-emerald-300 font-bold">${isAr ? 'ولي أمر الطالب التجريبي' : 'Demo Student Guardian'}</div>
+              <div class="text-xl font-black text-white">${isAr ? 'آدم طارق — فصل C2 (WE السويس)' : 'Adam Tarek — Class C2 (WE Suez)'}</div>
+            </div>
+            <div class="text-center px-4 py-2 rounded-2xl bg-emerald-500 text-slate-950 font-black">
+              <div class="text-2xl font-mono">+18</div>
+              <div class="text-[11px]">${isAr ? 'نقطة إيجابية' : 'Positive Pts'}</div>
+            </div>
+          </div>
+          <div class="space-y-2.5">
+            <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+              <div><strong class="text-emerald-400">${isAr ? '🌟 مشاركة متميزة وحل مسألة Git' : '🌟 Outstanding Git Lab Participation'}</strong><div class="text-xs text-slate-400">${isAr ? 'اليوم • 10:15 ص • م. عبد الله' : 'Today • 10:15 AM • Eng. Abdallah'}</div></div>
+              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 font-mono font-bold">+5</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
+              <div><strong class="text-blue-300">${isAr ? '✅ إتمام اختبار الفهم (3/3 — 100%)' : '✅ Mastery Quiz Complete (3/3 — 100%)'}</strong><div class="text-xs text-slate-400">${isAr ? 'أمس • 11:30 ص' : 'Yesterday • 11:30 AM'}</div></div>
+              <span class="px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 font-mono font-bold">100%</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-400/30">
+              <div class="flex items-center gap-2 text-amber-300 font-bold text-sm"><i class="fa-solid fa-lock"></i> ${isAr ? 'ملاحظة تقويمية خاصة (لا تظهر للطلاب أبداً)' : 'Private Guidance Note (Hidden from Peers)'}</div>
+              <p class="text-sm text-slate-200 mt-1">${isAr ? 'تأخر 5 دقائق عن بداية المعمل — تم التنبيه بلطف في جلسة فردية.' : 'Arrived 5 minutes late to lab — addressed privately with supportive check-in.'}</p>
+            </div>
+          </div>`;
+      } else if (role === 'public') {
+        el.innerHTML = `
+          <div class="p-4 rounded-2xl bg-purple-500/15 border border-purple-400/35">
+            <h4 class="font-black text-lg text-white">${isAr ? '🏆 لوحة الشرف الأسبوعية (إيجابيات وتحسن فقط)' : '🏆 Weekly Honor Roll (Positive & Growth Only)'}</h4>
+            <p class="text-sm text-slate-300 mt-1">${isAr ? 'تحتفي بالمشاركة والتعاون وقفزات التحسن — صفر مخالفات أو ترتيب للأخير.' : 'Celebrates collaboration & growth — zero infractions or bottom rankings.'}</p>
+          </div>
+          <div class="space-y-2.5">
+            <div class="p-3.5 rounded-2xl bg-white/5 flex items-center justify-between"><span class="font-bold text-white">🥇 ${isAr ? 'مريم محمود — نجمة التعاون الصفي' : 'Mariam Mahmoud — Peer Helper Star'}</span><span class="font-mono font-black text-we-goldLight">+24</span></div>
+            <div class="p-3.5 rounded-2xl bg-white/5 flex items-center justify-between"><span class="font-bold text-white">🚀 ${isAr ? 'آدم طارق — أكبر قفزة تحسن هذا الأسبوع' : 'Adam Tarek — Top Weekly Growth'}</span><span class="font-mono font-black text-emerald-400">+18</span></div>
+            <div class="p-3.5 rounded-2xl bg-white/5 flex items-center justify-between"><span class="font-bold text-white">💡 ${isAr ? 'عمر خالد — إتقان اختبار البرمجة 100%' : 'Omar Khaled — 100% Programming Quiz'}</span><span class="font-mono font-black text-purple-300">+16</span></div>
+          </div>`;
+      } else if (role === 'counselor') {
+        el.innerHTML = `
+          <div class="p-4 rounded-2xl bg-amber-500/15 border border-amber-400/35 space-y-2">
+            <div class="flex items-center justify-between">
+              <strong class="text-amber-300">${isAr ? '🧠 فرضية مرصودة للمراجعة البشرية (Human-in-the-Loop)' : '🧠 Pattern Flagged for Human Review'}</strong>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-bold">${isAr ? 'صفر عقوبة آلية' : 'Zero Auto-Penalty'}</span>
+            </div>
+            <p class="text-sm text-slate-200">${isAr ? 'تكرار 3 ملاحظات تأخر صباحي لطالبين في يوم الخميس — هل ترغب بجدولة جلسة دعم فردية ودية؟' : '3 morning-tardiness notes clustered on Thursdays — schedule a supportive check-in?'}</p>
+            <div class="flex gap-2 pt-1">
+              <button onclick="this.innerText = currentLang === 'ar' ? '✅ تم تسجيل قرار الأخصائي' : '✅ Counselor Decision Logged'" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs">${isAr ? 'اعتماد جلسة دعم وقائية' : 'Approve Supportive Check-in'}</button>
+              <button onclick="this.innerText = currentLang === 'ar' ? 'تم الحفظ للمتابعة' : 'Kept for Observation'" class="px-4 py-2 rounded-xl bg-white/10 text-white font-bold text-xs">${isAr ? 'مراقبة بدون تدخل' : 'Observe Only'}</button>
+            </div>
+          </div>`;
+      } else {
+        el.innerHTML = `
+          <div class="p-5 rounded-2xl bg-indigo-500/15 border border-indigo-400/35 text-center space-y-2">
+            <div class="text-4xl">🎯</div>
+            <h4 class="text-xl font-black text-white">${isAr ? 'أهلاً آدم! تقدّمك هذا الأسبوع رائع' : 'Welcome Adam! Great progress this week'}</h4>
+            <p class="text-base text-slate-300">${isAr ? 'حصلت على +18 نقطة إيجابية وأنهيت اختبار Git بنسبة 100% مع شرح مرجعي لكل سؤال.' : 'You earned +18 positive points and scored 100% on the Git mastery quiz.'}</p>
+          </div>`;
+      }
+    }
+
+    // ── OTHER MODALS & KEYBOARD SHORTCUTS ────────────────────────────────────
+    function openVideoBackup() {
+      document.getElementById('modal-video-backup').classList.remove('hidden');
+      const v = document.getElementById('backup-video-el');
+      if (v) v.play().catch(() => {});
+    }
+    function closeVideoBackup() {
+      const v = document.getElementById('backup-video-el');
+      if (v) v.pause();
+      closeModal('modal-video-backup');
+    }
+    function openLightbox(src, caption) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox-caption').innerText = caption || '';
+      document.getElementById('modal-lightbox').classList.remove('hidden');
+    }
+    function openSlideGrid() {
+      const box = document.getElementById('slide-grid-items');
+      box.innerHTML = SLIDES_META.map(s => `
+        <button onclick="showSlide(${s.id}); closeModal('modal-grid');" class="p-3 rounded-2xl text-start border transition ${s.id === currentSlide ? 'bg-purple-600/40 border-we-gold text-white' : 'bg-white/5 border-white/10 text-slate-200 hover:bg-white/10'}">
+          <div class="flex items-center justify-between text-xs font-mono text-we-goldLight mb-1"><span>#${s.id}</span><span>0:${String(s.sec).padStart(2,'0')}</span></div>
+          <div class="font-bold text-sm leading-snug">${currentLang === 'ar' ? s.ar : s.en}</div>
+        </button>
+      `).join('');
+      document.getElementById('modal-grid').classList.remove('hidden');
+    }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+      else document.exitFullscreen?.();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.target && ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      if (e.key === 'ArrowLeft') { currentLang === 'ar' ? nextSlide() : prevSlide(); }
+      else if (e.key === 'ArrowRight') { currentLang === 'ar' ? prevSlide() : nextSlide(); }
+      else if (e.key === ' ') { e.preventDefault(); toggleTimer(); }
+      else if (e.key.toLowerCase() === 'a') { openAppendix('a1'); }
+      else if (e.key.toLowerCase() === 'g') { openSlideGrid(); }
+      else if (e.key.toLowerCase() === 'f') { toggleFullscreen(); }
+      else if (e.key === 'Escape') {
+        ['modal-appendix', 'modal-judge-demo', 'modal-video-backup', 'modal-lightbox', 'modal-grid'].forEach(closeModal);
+        const v = document.getElementById('backup-video-el');
+        if (v) v.pause();
+      }
+    });
+
+    window.addEventListener('beforeprint', () => {
+      renderParticipationChart();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      applyLanguage();
+      showSlide(1);
+      // If judge scanned QR card (?demo=parent), immediately open the safe Parent View!
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('demo') === 'parent') {
+        showSlide(10);
+        openJudgeDemo();
+      }
+    });
+  </script>
+</body>
+</html>

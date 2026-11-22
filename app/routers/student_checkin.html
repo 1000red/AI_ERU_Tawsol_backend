@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>تسجيل الحضور الذكي للطلاب | مدرسة WE للتكنولوجيا التطبيقية بالسويس</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts Cairo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- HTML5 QR Code Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            cairo: ['Cairo', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fbf7fd',
+              100: '#f5eefb',
+              500: '#8e3ab9',
+              600: '#75259e',
+              700: '#5c1780',
+              800: '#431259',
+              900: '#2b0939',
+              950: '#1f0d2b',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      touch-action: manipulation;
+    }
+    .scanner-laser {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #10b981, #a855f7, transparent);
+      box-shadow: 0 0 15px #10b981;
+      animation: scanLaser 2s infinite ease-in-out;
+    }
+    @keyframes scanLaser {
+      0% { top: 5%; opacity: 0.3; }
+      50% { top: 90%; opacity: 1; }
+      100% { top: 5%; opacity: 0.3; }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-full flex flex-col justify-between selection:bg-purple-600 selection:text-white">
+
+  <!-- PLATFORM STOPPED / MAINTENANCE LOCKOUT OVERLAY -->
+  <div id="platform-stopped-overlay" class="fixed inset-0 z-[100] hidden items-center justify-center p-5 bg-slate-950/95 backdrop-blur-md">
+    <div class="max-w-md w-full rounded-3xl bg-slate-900 border border-rose-500/40 p-7 text-center text-white shadow-2xl space-y-4">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-extrabold">
+        <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+        <span>المنصة متوقفة مؤقتاً (503)</span>
+      </div>
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-rose-600 to-purple-700 mx-auto flex items-center justify-center text-2xl shadow-lg shadow-rose-600/30">
+        <i class="fa-solid fa-power-off"></i>
+      </div>
+      <div>
+        <h2 class="text-xl font-black text-white">عذراً، المنصة متوقفة حالياً</h2>
+        <p class="text-xs font-bold text-purple-300 mt-1">مدرسة WE للتكنولوجيا التطبيقية بالسويس</p>
+      </div>
+      <div id="platform-stopped-overlay-msg" class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-line">
+        المنصة متوقفة مؤقتاً من قبل إدارة المدرسة للصيانة والتحديث.
+      </div>
+      <button type="button" onclick="checkPlatformOperationalStatus(true)" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-95 text-white font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2">
+        <i class="fa-solid fa-rotate-right"></i>
+        <span>إعادة الفحص الآن</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Top Ambient Banner -->
+  <div class="w-full bg-gradient-to-r from-brand-950 via-purple-950 to-slate-950 border-b border-purple-900/40 px-4 py-3 shrink-0">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-600/30">
+          <i class="fa-solid fa-qrcode text-base"></i>
+        </div>
+        <div>
+          <h1 class="text-xs sm:text-sm font-black text-white leading-tight">
+            مدرسة WE للتكنولوجيا التطبيقية بالسويس
+          </h1>
+          <p class="text-[10px] text-purple-300 font-semibold">
+            منظومة الحضور والتحقق الذكي (Smart QR Check-In)
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Audio & Language Controls -->
+      <div class="flex items-center gap-1.5 text-xs">
+        <button id="btn-audio-guide" onclick="toggleAudioGuide()" title="تشغيل / إيقاف التوجيه الصوتي" class="w-8 h-8 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-purple-300 flex items-center justify-center transition border border-purple-800/50">
+          <i class="fa-solid fa-volume-high text-xs" id="audio-icon"></i>
+        </button>
+        <button id="btn-lang-toggle" onclick="toggleLanguage()" class="px-2 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-[11px] font-bold text-slate-200 border border-slate-700">
+          EN
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- English Subtitles Floating Bar (Conditional) -->
+  <div id="subtitles-banner" class="hidden w-full bg-purple-900/90 text-purple-100 text-[11px] font-medium text-center py-1.5 px-3 border-b border-purple-700 transition">
+    <span id="subtitles-text">Welcome to WE Applied Technology School Suez - Smart QR Check-In Portal</span>
+  </div>
+
+  <!-- Main Card Container -->
+  <main class="flex-1 max-w-md w-full mx-auto p-4 flex flex-col justify-center">
+
+    <!-- Card -->
+    <div class="bg-slate-800/80 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-purple-900/50 shadow-2xl relative overflow-hidden">
+      
+      <!-- CHECK-IN FORM SECTION -->
+      <div id="checkin-form-view">
+        <div class="text-center mb-5">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>جلسات اليوم مفتوحة للتحضير</span>
+          </span>
+          <h2 class="text-lg sm:text-xl font-extrabold text-white" id="main-heading">
+            تسجيل الحضور الإلكتروني
+          </h2>
+          <p class="text-xs text-slate-400 mt-1" id="main-subheading">
+            امسح رمز الـ QR من شاشة العرض أو أدخل رمز المحاضرة المؤقت
+          </p>
+        </div>
+
+        <!-- CAMERA SCANNER CONTAINER -->
+        <div id="scanner-wrapper" class="hidden mb-4 relative rounded-2xl overflow-hidden border-2 border-emerald-500/80 bg-black aspect-square max-w-[280px] mx-auto shadow-lg shadow-emerald-500/20">
+          <div id="qr-reader" class="w-full h-full"></div>
+          <div class="scanner-laser"></div>
+          <button onclick="stopCameraScanner()" class="absolute bottom-2 left-2 right-2 py-1.5 bg-slate-900/80 backdrop-blur-sm text-rose-400 hover:text-rose-300 text-xs font-bold rounded-xl border border-rose-500/30 transition flex items-center justify-center gap-1.5 z-10">
+            <i class="fa-solid fa-camera-slash"></i>
+            <span>إغلاق الكاميرا</span>
+          </button>
+        </div>
+
+        <!-- SCAN BUTTON TRIGGER -->
+        <div class="mb-4 text-center" id="scan-trigger-box">
+          <button type="button" onclick="startCameraScanner()" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2 group">
+            <i class="fa-solid fa-camera text-base group-hover:scale-110 transition-transform"></i>
+            <span id="lbl-scan-btn">فتح الكاميرا ومسح رمز الـ QR مباشرة</span>
+          </button>
+        </div>
+
+        <!-- DIVIDER -->
+        <div class="relative flex py-2 items-center">
+          <div class="flex-grow border-t border-slate-700"></div>
+          <span class="flex-shrink mx-3 text-slate-500 text-[11px] font-bold" id="lbl-or-token">أو إدخال الرمز يدوياً</span>
+          <div class="flex-grow border-t border-slate-700"></div>
+        </div>
+
+        <!-- FORM -->
+        <form onsubmit="handleStudentCheckIn(event)" class="space-y-3.5 mt-2">
+          <!-- Session Token Input -->
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1" id="lbl-token-input">
+              رمز الجلسة المؤقت (Session Token) *
+            </label>
+            <div class="relative">
+              <input type="text" id="input-token" required placeholder="مثال: X7K9L2 أو امسح الرمز" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white placeholder-slate-500 text-sm font-mono tracking-widest uppercase outline-none focus:ring-2 focus:ring-purple-500 transition">
+              <span id="token-detected-badge" class="hidden absolute left-3 top-2.5 text-xs text-emerald-400 font-bold flex items-center gap-1">
+                <i class="fa-solid fa-check"></i>
+                <span id="lbl-captured">تم الالتقاط</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Student Identifier Input -->
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1" id="lbl-student-id">
+              كود الطالب أو البريد الإلكتروني المعتمد *
+            </label>
+            <input type="text" id="input-student-id" required placeholder="مثال: STU-101 أو student@we.edu.eg أو 2" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white placeholder-slate-500 text-sm outline-none focus:ring-2 focus:ring-purple-500 transition">
+            
+            <!-- Quick preset chips for rapid student check-in testing -->
+            <div class="flex items-center gap-1.5 mt-2 flex-wrap text-[11px]">
+              <span class="text-slate-500" id="lbl-quick-select">اختيار سريع:</span>
+              <button type="button" onclick="setQuickStudent('STU-101', 'أحمد رضا')" class="px-2 py-0.5 rounded-md bg-slate-700/60 hover:bg-slate-700 text-slate-300 transition">أحمد رضا</button>
+              <button type="button" onclick="setQuickStudent('STU-102', 'سارة محمود')" class="px-2 py-0.5 rounded-md bg-slate-700/60 hover:bg-slate-700 text-slate-300 transition">سارة محمود</button>
+              <button type="button" onclick="setQuickStudent('STU-103', 'كريم حسن')" class="px-2 py-0.5 rounded-md bg-slate-700/60 hover:bg-slate-700 text-slate-300 transition">كريم حسن</button>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="btn-submit-checkin" class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 via-brand-600 to-indigo-600 hover:opacity-95 text-white font-extrabold text-sm shadow-lg shadow-purple-600/30 transition flex items-center justify-center gap-2 mt-2">
+            <i class="fa-solid fa-clipboard-check text-base"></i>
+            <span id="lbl-submit-btn">تأكيد ورصد الحضور الآن ✓</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- SUCCESS CONFIRMATION VIEW (Hidden initially) -->
+      <div id="checkin-success-view" class="hidden text-center py-6 space-y-4 animate-fadeIn">
+        <div class="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 flex items-center justify-center text-4xl mx-auto shadow-lg shadow-emerald-500/30 animate-bounce">
+          <i class="fa-solid fa-check"></i>
+        </div>
+
+        <div>
+          <h3 class="text-xl font-black text-white" id="success-title">
+            تم تسجيل حضورك بنجاح! 🎉
+          </h3>
+          <p class="text-xs text-emerald-400 font-bold mt-1" id="success-subtitle">
+            مدرسة WE للتكنولوجيا التطبيقية بالسويس • مادة تخصصية
+          </p>
+        </div>
+
+        <!-- Details Card -->
+        <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-700/80 text-right text-xs space-y-2 max-w-xs mx-auto">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+            <span class="text-slate-400" id="lbl-course-title">المقرر:</span>
+            <span id="res-course-name" class="font-bold text-white">-</span>
+          </div>
+          <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+            <span class="text-slate-400" id="lbl-time-title">وقت الرصد:</span>
+            <span id="res-time" class="font-mono font-bold text-purple-300">-</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-400" id="lbl-status-title">الحالة:</span>
+            <span id="res-status" class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-[11px] border border-emerald-500/40">
+              حاضر (PRESENT)
+            </span>
+          </div>
+        </div>
+
+        <button type="button" onclick="resetCheckInForm()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold transition">
+          <i class="fa-solid fa-rotate-left ml-1"></i>
+          <span id="lbl-checkin-another">تسجيل طالب آخر أو جلسة أخرى</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Security & Anti-Cheat Note -->
+    <p class="text-center text-[11px] text-slate-500 mt-4 leading-relaxed max-w-xs mx-auto" id="lbl-footer-note">
+      <i class="fa-solid fa-shield-halved text-emerald-400 ml-1"></i>
+      الرمز المؤقت محمي ضد التكرار ومربوط بمدة الحصة الفعلية. يتم التحقق وتوثيق الحضور فورياً في سجلات المدرسة.
+    </p>
+
+  </main>
+
+  <!-- Bottom School Footer -->
+  <footer class="w-full text-center py-3 border-t border-slate-800/80 text-[11px] text-slate-500 shrink-0">
+    <span>WE Applied Technology School - Suez • Smart Attendance Gateway</span>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-4 left-4 right-4 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
+
+  <!-- APPLICATION LOGIC -->
+  <script>
+    const API_BASE = window.location.protocol.startsWith('http')
+      ? window.location.origin
+      : 'https://ai-eru-tawsol-backend-weschool.vercel.app';
+
+    let html5QrScanner = null;
+    let currentLang = 'ar';
+    let isAudioActive = true;
+
+    // Translation dictionary
+    const dict = {
+      ar: {
+        heading: "تسجيل الحضور الإلكتروني",
+        subheading: "امسح رمز الـ QR من شاشة العرض أو أدخل رمز المحاضرة المؤقت",
+        scanBtn: "فتح الكاميرا ومسح رمز الـ QR مباشرة",
+        orToken: "أو إدخال الرمز يدوياً",
+        tokenInput: "رمز الجلسة المؤقت (Session Token) *",
+        studentId: "كود الطالب أو البريد الإلكتروني المعتمد *",
+        submitBtn: "تأكيد ورصد الحضور الآن ✓",
+        quickSelect: "اختيار سريع:",
+        captured: "تم الالتقاط",
+        successTitle: "تم تسجيل حضورك بنجاح! 🎉",
+        successSubtitle: "مدرسة WE للتكنولوجيا التطبيقية بالسويس • مادة تخصصية",
+        courseTitle: "المقرر:",
+        timeTitle: "وقت الرصد:",
+        statusTitle: "الحالة:",
+        checkinAnother: "تسجيل طالب آخر أو جلسة أخرى",
+        footerNote: "الرمز المؤقت محمي ضد التكرار ومربوط بمدة الحصة الفعلية. يتم التحقق وتوثيق الحضور فورياً في سجلات المدرسة.",
+        subtitles: "مرحباً بكم في بوابة الحضور الذكي - مدرسة WE للتكنولوجيا التطبيقية بالسويس"
+      },
+      en: {
+        heading: "Smart QR Attendance Check-In",
+        subheading: "Scan the QR code from the projector screen or enter the session token",
+        scanBtn: "Open Camera & Scan QR Code Live",
+        orToken: "Or Enter Session Token Manually",
+        tokenInput: "Temporary Session Token *",
+        studentId: "Student Code or Approved Email *",
+        submitBtn: "Confirm & Record Attendance Now ✓",
+        quickSelect: "Quick Select:",
+        captured: "Captured",
+        successTitle: "Attendance Recorded Successfully! 🎉",
+        successSubtitle: "WE Applied Technology School Suez • Specialized Course",
+        courseTitle: "Course:",
+        timeTitle: "Timestamp:",
+        statusTitle: "Status:",
+        checkinAnother: "Check-in another student or session",
+        footerNote: "The temporary token is single-session protected and verified in real-time on school records.",
+        subtitles: "Welcome to WE Applied Technology School Suez - Smart QR Check-In Portal"
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      checkPlatformOperationalStatus();
+      setInterval(() => checkPlatformOperationalStatus(), 30000);
+
+      // 1. Auto detect token from URL (?token=... or ?t=...)
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenFromUrl = urlParams.get('token') || urlParams.get('t');
+      if (tokenFromUrl) {
+        applyToken(tokenFromUrl);
+      }
+
+      // 2. Auto restore student identifier from localStorage
+      const savedStudent = localStorage.getItem('we_saved_student_id');
+      if (savedStudent) {
+        document.getElementById('input-student-id').value = savedStudent;
+      }
+
+      // Initial voice welcome
+      if (isAudioActive) {
+        speakVoice("مرحباً بك في منظومة تسجيل الحضور الذكي بمدرسة وي للتكنولوجيا التطبيقية بالسويس.");
+      }
+    });
+
+    function applyToken(token) {
+      let clean = token.trim();
+      if (clean.startsWith('eru_attendance:')) {
+        clean = clean.split(':', 2)[1];
+      }
+      const tokenInput = document.getElementById('input-token');
+      if (tokenInput) {
+        tokenInput.value = clean.toUpperCase();
+        document.getElementById('token-detected-badge')?.classList.remove('hidden');
+        showToast('تم التقاط رمز الجلسة بنجاح! 🎯', 'success');
+      }
+    }
+
+    function setQuickStudent(code, name) {
+      document.getElementById('input-student-id').value = code;
+      showToast(`تم اختيار الطالب: ${name} (${code})`, 'info');
+    }
+
+    // ── CAMERA SCANNER VIA HTML5-QRCODE ───────────────────────────────────────
+    function startCameraScanner() {
+      const wrapper = document.getElementById('scanner-wrapper');
+      const triggerBox = document.getElementById('scan-trigger-box');
+      wrapper.classList.remove('hidden');
+      triggerBox.classList.add('hidden');
+
+      html5QrScanner = new Html5Qrcode("qr-reader");
+      const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+
+      html5QrScanner.start(
+        { facingMode: "environment" },
+        config,
+        (decodedText) => {
+          // Success callback
+          stopCameraScanner();
+          applyToken(decodedText);
+          if (isAudioActive) {
+            speakVoice("تم مسح رمز الكيو آر بنجاح.");
+          }
+        },
+        (errorMessage) => {
+          // Ignore frame decode errors
+        }
+      ).catch(err => {
+        console.error("Camera start error:", err);
+        showToast('تعذر تشغيل الكاميرا. يرجى إعطاء الإذن أو إدخال الرمز يدوياً.', 'error');
+        stopCameraScanner();
+      });
+    }
+
+    function stopCameraScanner() {
+      if (html5QrScanner) {
+        html5QrScanner.stop().then(() => {
+          html5QrScanner.clear();
+        }).catch(err => {
+          console.warn("Stop error:", err);
+        });
+      }
+      document.getElementById('scanner-wrapper')?.classList.add('hidden');
+      document.getElementById('scan-trigger-box')?.classList.remove('hidden');
+    }
+
+    // ── SUBMIT CHECK-IN ───────────────────────────────────────────────────────
+    async function handleStudentCheckIn(e) {
+      e.preventDefault();
+      const token = document.getElementById('input-token').value.trim();
+      const studentId = document.getElementById('input-student-id').value.trim();
+
+      if (!token) {
+        showToast('يرجى كتابة أو مسح رمز الجلسة', 'warning');
+        return;
+      }
+      if (!studentId) {
+        showToast('يرجى إدخال كود الطالب أو البريد', 'warning');
+        return;
+      }
+
+      // Save student ID for convenience
+      localStorage.setItem('we_saved_student_id', studentId);
+
+      const btn = document.getElementById('btn-submit-checkin');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>جاري تسجيل الحضور...</span>';
+
+      try {
+        const res = await fetch(`${API_BASE}/attendance/public-check-in`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: token,
+            student_identifier: studentId
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'تعذر تسجيل الحضور. تأكد من صحة الرمز والكود.');
+        }
+
+        displaySuccessView(data);
+
+      } catch (err) {
+        showToast(err.message, 'error');
+        if (isAudioActive) {
+          speakVoice("تعذر تسجيل الحضور. يرجى مراجعة الكود أو وقت الجلسة.");
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-clipboard-check text-base"></i> <span>تأكيد ورصد الحضور الآن ✓</span>';
+      }
+    }
+
+    function displaySuccessView(data) {
+      document.getElementById('checkin-form-view').classList.add('hidden');
+      const successView = document.getElementById('checkin-success-view');
+      successView.classList.remove('hidden');
+
+      document.getElementById('res-course-name').innerText = data.course_name || 'مقرر تخصصي';
+      const scanDate = data.scanned_at ? new Date(data.scanned_at) : new Date();
+      document.getElementById('res-time').innerText = scanDate.toLocaleTimeString('ar-EG', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+      });
+      document.getElementById('res-status').innerText = 'حاضر (PRESENT)';
+
+      // Trigger Confetti Celebration
+      try {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      } catch (e) {}
+
+      // Audio Announcement
+      if (isAudioActive) {
+        speakVoice(`تم تسجيل حضورك بنجاح في مادة ${data.course_name || ''} بمدرسة وي للتكنولوجيا التطبيقية بالسويس.`);
+      }
+    }
+
+    function resetCheckInForm() {
+      document.getElementById('checkin-success-view').classList.add('hidden');
+      document.getElementById('checkin-form-view').classList.remove('hidden');
+      document.getElementById('input-token').value = '';
+      document.getElementById('token-detected-badge')?.classList.add('hidden');
+    }
+
+    // ── AUDIO VOICE-OVER (WEB SPEECH API) ─────────────────────────────────────
+    function toggleAudioGuide() {
+      isAudioActive = !isAudioActive;
+      const icon = document.getElementById('audio-icon');
+      if (isAudioActive) {
+        icon.className = "fa-solid fa-volume-high text-xs";
+        speakVoice("تم تفعيل التعليق الصوتي المساعد.");
+        showToast('تم تفعيل التوجيه الصوتي 🔊', 'info');
+      } else {
+        icon.className = "fa-solid fa-volume-xmark text-xs";
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        showToast('تم كتم الصوت 🔇', 'info');
+      }
+    }
+
+    function speakVoice(text) {
+      if (!isAudioActive || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = (currentLang === 'ar') ? 'ar-SA' : 'en-US';
+      utterance.rate = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // ── LANGUAGE & ENGLISH SUBTITLES TOGGLE ──────────────────────────────────
+    function toggleLanguage() {
+      currentLang = (currentLang === 'ar') ? 'en' : 'ar';
+      document.getElementById('btn-lang-toggle').innerText = (currentLang === 'ar') ? 'EN' : 'عربي';
+      
+      const subBanner = document.getElementById('subtitles-banner');
+      if (currentLang === 'en') {
+        subBanner.classList.remove('hidden');
+        document.documentElement.setAttribute('dir', 'ltr');
+      } else {
+        subBanner.classList.add('hidden');
+        document.documentElement.setAttribute('dir', 'rtl');
+      }
+
+      applyLanguage(currentLang);
+    }
+
+    function applyLanguage(lang) {
+      const texts = dict[lang];
+      document.getElementById('main-heading').innerText = texts.heading;
+      document.getElementById('main-subheading').innerText = texts.subheading;
+      document.getElementById('lbl-scan-btn').innerText = texts.scanBtn;
+      document.getElementById('lbl-or-token').innerText = texts.orToken;
+      document.getElementById('lbl-token-input').innerText = texts.tokenInput;
+      document.getElementById('lbl-student-id').innerText = texts.studentId;
+      document.getElementById('lbl-submit-btn').innerText = texts.submitBtn;
+      document.getElementById('lbl-quick-select').innerText = texts.quickSelect;
+      document.getElementById('lbl-captured').innerText = texts.captured;
+      document.getElementById('success-title').innerText = texts.successTitle;
+      document.getElementById('success-subtitle').innerText = texts.successSubtitle;
+      document.getElementById('lbl-course-title').innerText = texts.courseTitle;
+      document.getElementById('lbl-time-title').innerText = texts.timeTitle;
+      document.getElementById('lbl-status-title').innerText = texts.statusTitle;
+      document.getElementById('lbl-checkin-another').innerText = texts.checkinAnother;
+      document.getElementById('lbl-footer-note').innerText = texts.footerNote;
+      document.getElementById('subtitles-text').innerText = texts.subtitles;
+    }
+
+    function showPlatformStoppedOverlay(message) {
+      try { stopCameraScanner(); } catch (e) {}
+      const overlay = document.getElementById('platform-stopped-overlay');
+      const msgEl = document.getElementById('platform-stopped-overlay-msg');
+      if (!overlay) return;
+      if (msgEl && message) {
+        msgEl.innerText = message;
+      }
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+    }
+
+    // Intercept any 503 platform_stopped API response immediately (zero polling delay)
+    (function installPlatformMaintenanceInterceptor() {
+      if (window.__weMaintenanceFetchInstalled) return;
+      window.__weMaintenanceFetchInstalled = true;
+      const nativeFetch = window.fetch.bind(window);
+      window.fetch = async function(...args) {
+        const res = await nativeFetch(...args);
+        if (res && res.status === 503) {
+          try {
+            const body = await res.clone().json();
+            if (body && (body.maintenance_mode === true || body.error === 'platform_stopped')) {
+              showPlatformStoppedOverlay(body.detail || body.maintenance_message);
+            }
+          } catch (e) {}
+        }
+        return res;
+      };
+    })();
+
+    async function checkPlatformOperationalStatus(manualRetry = false) {
+      try {
+        const res = await fetch(`${API_BASE}/platform/status`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const overlay = document.getElementById('platform-stopped-overlay');
+        if (!overlay) return;
+
+        if (data.is_active === false || data.maintenance_mode === true) {
+          showPlatformStoppedOverlay(data.maintenance_message);
+        } else {
+          const wasHidden = overlay.classList.contains('hidden');
+          overlay.classList.add('hidden');
+          overlay.classList.remove('flex');
+          if (!wasHidden && manualRetry) {
+            window.location.reload();
+          }
+        }
+      } catch (e) {}
+    }
+
+    // ── TOAST NOTIFICATIONS ───────────────────────────────────────────────────
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      const colors = {
+        success: 'bg-emerald-600 text-white border-emerald-500',
+        error: 'bg-rose-600 text-white border-rose-500',
+        warning: 'bg-amber-600 text-white border-amber-500',
+        info: 'bg-purple-700 text-white border-purple-500'
+      };
+      toast.className = `px-4 py-2.5 rounded-2xl text-xs font-bold shadow-xl border pointer-events-auto transition-all transform duration-300 translate-y-0 opacity-100 flex items-center gap-2 ${colors[type] || colors.info}`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+  </script>
+</body>
+</html>

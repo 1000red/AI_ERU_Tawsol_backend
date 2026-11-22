@@ -112,23 +112,22 @@ def setup_db():
 
 # ── Phase 0: Credential Hygiene Tests ──────────────────────────────────────────
 
-def test_phase0_all_website_files_removed():
-    """Verify that all website HTML files and web routers are completely removed from the repository."""
-    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    website_files = [
-        "app/routers/user_management.html",
-        "app/routers/teacher_portal.html",
-        "app/routers/teacher_gateway.html",
-        "app/routers/student_checkin.html",
-        "app/routers/sqbs_pitch.html",
-        "app/routers/user_management_web.py",
-        "app/routers/teacher_portal_web.py",
-        "app/routers/student_checkin_web.py",
-        "app/routers/sqbs_pitch_web.py",
-    ]
-    for wf in website_files:
-        p = os.path.join(repo_root, wf)
-        assert not os.path.exists(p), f"Website file {wf} must be removed from repository"
+def test_phase0_credential_hygiene_in_markup():
+    """Verify that user_management.html contains NO hardcoded admin credentials or default accounts."""
+    html_path = os.path.join(os.path.dirname(__file__), "..", "app", "routers", "user_management.html")
+    assert os.path.isfile(html_path), "user_management.html not found"
+
+    with open(html_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # 1. Reject specific leaked strings
+    assert "admin@weschool-suez.edu.eg" not in content, "Found hardcoded admin email in HTML"
+    assert "Admin@123456" not in content, "Found hardcoded default password in HTML"
+    assert "حساب المسؤول الافتراضي للنظام" not in content, "Found default admin info card in HTML"
+
+    # 2. Check login inputs do not have hardcoded value="..." attributes
+    assert not re.search(r'<input[^>]*id="login-email"[^>]*value=', content), "login-email has hardcoded value"
+    assert not re.search(r'<input[^>]*id="login-password"[^>]*value=', content), "login-password has hardcoded value"
 
 
 def test_phase0_gitignore_protection():

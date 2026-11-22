@@ -257,15 +257,15 @@ def test_user_activity_and_stats_include_attempts_and_ta(analytics_client):
     assert r_stats.json()["doctors_count"] == 2  # DR + TA
 
 
-def test_admin_portal_gateway_and_analytics_endpoint(analytics_client):
-    client, headers, _, _ = analytics_client
+def test_admin_portal_html_has_charts_and_no_stale_model(analytics_client):
+    client, _, _, _ = analytics_client
     r = client.get("/admin")
     assert r.status_code == 200
-    assert r.json()["status"] == "operational"
-
-    # Overview API provides the chart analytics data in pure JSON format
-    r_overview = client.get("/admin/api/overview", headers=headers)
-    assert r_overview.status_code == 200
-    data = r_overview.json()
-    assert "quizzes" in data
-    assert "users" in data
+    html = r.text
+    assert "chart.js" in html.lower()
+    assert "chart-quiz-courses" in html
+    assert "chart-quiz-distribution" in html
+    assert "chart-platform-trend" in html
+    assert "chart-platform-depts" in html
+    assert "courses-analytics-table-body" in html
+    assert "Gemini 1.5 Flash-8B" not in html
