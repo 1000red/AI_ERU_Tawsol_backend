@@ -117,8 +117,12 @@
             </p>
           </div>
 
-          <!-- Sync Button -->
+          <!-- Action Buttons -->
           <div class="flex items-center gap-2 self-start sm:self-center shrink-0">
+            <button onclick="purgeExpiredQuarantine()" id="btn-purge-quarantine" class="px-3.5 py-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 text-xs font-bold transition flex items-center gap-2 shadow-sm" title="تطهير آلي للملفات المعزولة لأكثر من 7 أيام">
+              <i class="fa-solid fa-broom" id="icon-purge-quarantine"></i>
+              <span>تطهير العزل (7 أيام)</span>
+            </button>
             <button onclick="syncStorageQuota()" id="btn-sync-storage" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs font-bold transition flex items-center gap-2 shadow-sm">
               <i class="fa-solid fa-arrows-rotate" id="icon-sync-storage"></i>
               <span>مزامنة مع Vercel Blob</span>
@@ -550,6 +554,38 @@
         await loadStorageCommandCenter();
       } catch (err) {
         showToast('تعذر الاتصال بالسيرفر أثناء المزامنة', 'error');
+      } finally {
+        if (icon) icon.classList.remove('fa-spin');
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function purgeExpiredQuarantine() {
+      const btn = document.getElementById('btn-purge-quarantine');
+      const icon = document.getElementById('icon-purge-quarantine');
+      if (icon) icon.classList.add('fa-spin');
+      if (btn) btn.disabled = true;
+
+      try {
+        let res = await fetch(`${API_BASE}/admin/api/storage/quarantine/purge`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+        });
+        if (!res.ok && res.status === 403) {
+          res = await fetch(`${API_BASE}/admin/api/storage/quarantine/purge`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+        if (res.ok) {
+          const data = await res.json();
+          showToast(`تم فحص العزل: تم تطهير ${data.purged_count} ملفات بنجاح وتحرير ${data.total_freed_formatted}`, 'success');
+        } else {
+          showToast('فشل تنفيذ تطهير سلة العزل', 'error');
+        }
+        await loadStorageCommandCenter();
+      } catch (err) {
+        showToast('تعذر الاتصال بالسيرفر أثناء تطهير العزل', 'error');
       } finally {
         if (icon) icon.classList.remove('fa-spin');
         if (btn) btn.disabled = false;

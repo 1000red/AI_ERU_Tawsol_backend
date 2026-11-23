@@ -94,7 +94,8 @@ STRICT ZERO-HALLUCINATION GROUNDING RULES:
 4. Ignore: Author names, dates, course codes, file names, headers, footers, watermarks, slide numbers.
 5. Distractors: Provide 4 plausible options (A, B, C, D). Distractors must be relevant technical concepts from the same topic, not absurd or obviously false.
 6. Distribution: Distribute correct answers evenly across A, B, C, D.
-7. Format: You MUST call the `save_quiz_questions` tool with all {num_questions} questions.
+7. Mathematical & Scientific Notation: If any question, options, or explanation include math equations, physics formulas, electrical units, or scientific expressions, format them cleanly using standard KaTeX/LaTeX syntax enclosed in $...$ for inline math or $$...$$ for block equations (e.g. $V = I \times R$, $f = \frac{1}{T}$). Keep Arabic and English explanatory words outside the dollar signs.
+8. Format: You MUST call the `save_quiz_questions` tool with all {num_questions} questions.
 
 LECTURE CONTENT:
 {text}
@@ -113,7 +114,8 @@ STRICT ZERO-HALLUCINATION GROUNDING RULES:
 3. Avoid Duplication: Do NOT duplicate or closely rephrase any of the existing quiz questions:
 - {avoid_list}
 4. Options: 4 plausible options (A, B, C, D) with evenly balanced choices.
-5. Format: You MUST call the `save_single_question` tool with question #{question_id}.
+5. Mathematical & Scientific Notation: Use standard KaTeX/LaTeX math syntax in $...$ or $$...$$ for formulas or engineering calculations.
+6. Format: You MUST call the `save_single_question` tool with question #{question_id}.
 
 LECTURE CONTENT:
 {text}

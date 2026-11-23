@@ -1619,6 +1619,8 @@ def get_storage_files_admin(
 
 
 @router.post("/api/storage/upload-token")
+@router.post("/api/storage/presign")
+@router.post("/storage/presign")
 def generate_client_upload_token_admin(
     payload: Dict[str, Any],
     admin_id: int = Depends(require_admin_access),
@@ -1679,6 +1681,26 @@ def restore_storage_file_admin(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/api/storage/quarantine/purge")
+@router.get("/api/cron/quarantine-purge")
+def purge_expired_quarantine_admin(
+    admin_id: Optional[int] = Depends(get_optional_admin_access),
+    db: Session = Depends(get_db),
+):
+    """Automatically purge all quarantined files whose 7-day retention period has expired."""
+    from app.services.storage_service import storage_service
+    admin_name = "مشرف النظام"
+    if admin_id:
+        u = user_svc.get_user_by_id(db, admin_id)
+        if u:
+            admin_name = u.name
+    return storage_service.purge_expired_quarantined_files(
+        db=db,
+        admin_id=admin_id or 1,
+        admin_name=admin_name,
+    )
 
 
 @router.delete("/api/storage/permanent/{file_id}")

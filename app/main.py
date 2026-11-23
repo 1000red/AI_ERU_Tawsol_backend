@@ -183,6 +183,13 @@ def get_public_storage_quota(db: Session = Depends(get_db)):
     summary = storage_service.get_quota_summary(db)
     return {"quota": summary, **summary}
 
+@app.get("/api/cron/quarantine-purge", tags=["Storage Telemetry"])
+@app.post("/api/cron/quarantine-purge", tags=["Storage Telemetry"])
+def public_cron_quarantine_purge(db: Session = Depends(get_db)):
+    """Automated cron endpoint to purge quarantined files older than 7 days."""
+    from app.services.storage_service import storage_service
+    return storage_service.purge_expired_quarantined_files(db=db)
+
 @app.get("/dashboard", response_class=HTMLResponse, tags=["Admin Dashboard"])
 def dashboard_view():
     from app.routers.admin_dashboard import DASHBOARD_HTML

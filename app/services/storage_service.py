@@ -356,6 +356,71 @@ class StorageManagementService:
             "message": "تمت استعادة الملف من العزل بنجاح.",
         }
 
+    def purge_expired_quarantined_files(
+        self,
+        db: Session,
+        admin_id: int = 1,
+        admin_name: str = "نظام الأتمتة التلقائي (Cron)",
+    ) -> Dict[str, Any]:
+        """Automatically purges files in quarantine whose purge_due_at has passed (7+ days)."""
+        now = datetime.datetime.now(datetime.timezone.utc)
+        expired = db.query(StorageQuarantine).filter(
+            StorageQuarantine.purge_due_at <= now
+        ).all()
+
+        purged_count = 0
+        total_freed_bytes = 0
+        purged_files = []
+
+        for q in expired:
+            fid = q.file_id
+            mf = db.query(MaterialFile).filter(MaterialFile.file_id == fid).first()
+            file_bytes = q.original_size or (mf.file_size if mf else 0) or 0
+            file_path = q.original_path or (mf.file_path if mf else "")
+            file_title = mf.title if mf else f"ملف #{fid}"
+
+            # Delete physical blob
+            if file_path:
+                try:
+                    self._delete_physical_blob(file_path)
+                except Exception as ex:
+                    logger.warning(f"Error deleting physical blob {file_path}: {ex}")
+
+            # Remove from DB
+            db.delete(q)
+            if mf:
+                db.delete(mf)
+
+            purged_count += 1
+            total_freed_bytes += file_bytes
+            purged_files.append({"file_id": fid, "title": file_title, "freed_bytes": file_bytes})
+
+            # Audit record
+            audit = StorageAuditLog(
+                admin_id=admin_id,
+                admin_name=admin_name,
+                action="cron_quarantine_purge",
+                file_id=fid,
+                file_title=file_title,
+                file_path=file_path,
+                file_size_bytes=file_bytes,
+                bytes_freed=file_bytes,
+                details=f"تطهير تلقائي لانتهاء فترة العزل (7 أيام). تم استرداد {format_bytes(file_bytes)}.",
+            )
+            db.add(audit)
+
+        db.commit()
+
+        return {
+            "success": True,
+            "status": "success",
+            "purged_count": purged_count,
+            "total_freed_bytes": total_freed_bytes,
+            "total_freed_formatted": format_bytes(total_freed_bytes),
+            "purged_files": purged_files,
+            "purged_at": now.isoformat(),
+        }
+
     def permanent_delete_file(
         self,
         db: Session,
