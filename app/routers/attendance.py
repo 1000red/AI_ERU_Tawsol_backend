@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Response
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -14,8 +14,10 @@ from app.schemas.attendance import (
     AttendanceSheetOut,
     AttendanceMarkRequest,
     AttendanceBatchMarkRequest,
+    LiveRotatingQROut,
 )
 from app.services import attendance_service as att_svc
+from app.services import gradebook_service
 
 router = APIRouter(prefix="/attendance", tags=["Smart Attendance"])
 
@@ -38,6 +40,17 @@ def get_session(
 ):
     """View session status and live attendee list."""
     return att_svc.get_session_details(db, session_id)
+
+
+@router.get("/sessions/{session_id}/live-qr", response_model=LiveRotatingQROut)
+@router.get("/session/{session_id}/live-qr", response_model=LiveRotatingQROut)
+def get_session_live_qr(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """(Teacher) Get dynamic rotating anti-proxy QR code token and TTL (changes every 25 seconds)."""
+    return att_svc.get_live_rotating_qr(db, session_id)
 
 
 @router.get("/sessions/{session_id}/sheet", response_model=AttendanceSheetOut)
@@ -80,6 +93,35 @@ def get_course_sessions(
 ):
     """(Teacher / Admin) List previous attendance sessions for a course."""
     return att_svc.get_course_attendance_sessions(db, material_id)
+
+
+@router.get("/courses/{material_id}/export-gradebook")
+@router.get("/courses/{material_id}/gradebook/export-excel")
+def export_course_gradebook_excel(
+    material_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """(Teacher / Admin) Export official Egyptian Ministry of Education / WE ATS Gradebook (.xlsx)."""
+    excel_bytes, filename = gradebook_service.generate_course_gradebook_excel(db, material_id)
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
+
+
+@router.get("/courses/{material_id}/analytics/weakness-heatmap")
+def get_course_weakness_heatmap(
+    material_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """(Teacher / Admin) Get classroom competency & weakness heatmap for targeted pedagogical remediation."""
+    return gradebook_service.get_classroom_weakness_heatmap(db, material_id)
 
 
 @router.post("/sessions/{session_id}/close", response_model=AttendanceSessionOut)

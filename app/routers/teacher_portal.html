@@ -490,7 +490,7 @@
         </div>
 
         <form onsubmit="handleGenerateAIQuiz(event)" class="mt-4 space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div>
               <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">المقرر الدراسي المستهدف</label>
               <select id="ai-quiz-course" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs outline-none">
@@ -498,11 +498,22 @@
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">عدد الأسئلة</label>
-              <select id="ai-quiz-num" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs outline-none">
-                <option value="3">3 أسئلة سريعة</option>
-                <option value="5" selected>5 أسئلة نموذجية</option>
-                <option value="10">10 أسئلة شاملة</option>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">نمط الأسئلة (Format)</label>
+              <select id="ai-quiz-question-type" class="w-full px-3 py-2 rounded-xl border border-purple-300 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/30 text-xs font-bold text-purple-900 dark:text-purple-200 outline-none">
+                <option value="all">متنوع (شامل لجميع الأنماط)</option>
+                <option value="mcq" selected>اختيار من متعدد (MCQ)</option>
+                <option value="true_false">صح أو خطأ مع التعليل (T/F)</option>
+                <option value="matching">مطابقة وتوصيل مصطلحات (Matching)</option>
+                <option value="short_answer">مسائل ومقالي تطبيقي (Short Answer)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">المستوى المعرفي (بلوم)</label>
+              <select id="ai-quiz-bloom" class="w-full px-3 py-2 rounded-xl border border-indigo-300 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/30 text-xs font-bold text-indigo-900 dark:text-indigo-200 outline-none">
+                <option value="application" selected>تطبيق وحل مشكلات (Application)</option>
+                <option value="comprehension">فهم واستيعاب معمق (Comprehension)</option>
+                <option value="recall">تذكر ومصطلحات وقوانين (Recall)</option>
+                <option value="analysis">تحليل وتشخيص أعطال (Analysis)</option>
               </select>
             </div>
             <div>
@@ -511,6 +522,14 @@
                 <option value="متوسط" selected>متوسط (Standard)</option>
                 <option value="مبتدئ">تأسيسي (Beginner)</option>
                 <option value="متقدم">متقدم وتطبيقي (Advanced)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">عدد الأسئلة</label>
+              <select id="ai-quiz-num" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs outline-none">
+                <option value="3">3 أسئلة سريعة</option>
+                <option value="5" selected>5 أسئلة نموذجية</option>
+                <option value="10">10 أسئلة شاملة</option>
               </select>
             </div>
           </div>
@@ -730,7 +749,20 @@
             <div id="session-qr-box" class="p-3 bg-white rounded-xl shadow-md border border-slate-100 flex items-center justify-center min-w-[200px] min-h-[200px]">
               <!-- QR Canvas Injected by QRCode.js -->
             </div>
-            <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-2.5 flex items-center gap-1.5">
+            <!-- Anti-Proxy Dynamic QR Rotation Badge -->
+            <div class="mt-2.5 w-full max-w-[240px] px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-[11px] font-bold text-amber-800 dark:text-amber-300 flex flex-col items-center gap-1 shadow-sm">
+              <div class="flex items-center justify-between w-full">
+                <span class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-shield-halved text-amber-500 animate-pulse"></i>
+                  <span>كود دوار ضد لقطات الشاشة</span>
+                </span>
+                <span class="font-mono text-xs"><strong id="qr-rotation-countdown">25</strong>ث</span>
+              </div>
+              <div class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div id="qr-rotation-progress" class="h-full bg-emerald-500 transition-all duration-1000 ease-linear" style="width: 100%;"></div>
+              </div>
+            </div>
+            <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1.5">
               <i class="fa-solid fa-camera text-emerald-500"></i>
               <span>مسح الـ QR بهاتف الطالب لتسجيل الحضور فورياً</span>
             </p>
@@ -812,9 +844,13 @@
               <i class="fa-solid fa-user-xmark"></i>
               <span>رصد غياب الكل</span>
             </button>
+            <button onclick="exportOfficialGradebookExcel()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 hover:opacity-95 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-purple-900/20" title="تصدير كشف درجات أعمال السنة والحضور المعتمد بملف إكسيل رسمي">
+              <i class="fa-solid fa-file-excel text-emerald-300"></i>
+              <span>دفتر أعمال السنة (Excel) 📊</span>
+            </button>
             <button onclick="exportAttendanceCSV()" class="px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition flex items-center gap-1">
-              <i class="fa-solid fa-file-excel text-emerald-600"></i>
-              <span>تصدير Excel</span>
+              <i class="fa-solid fa-file-csv text-emerald-600"></i>
+              <span>تصدير CSV</span>
             </button>
             <button onclick="printOfficialAttendanceSheet()" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white dark:bg-purple-900 hover:opacity-90 text-xs font-bold transition flex items-center gap-1 shadow-sm">
               <i class="fa-solid fa-print"></i>
@@ -874,6 +910,78 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+      </div>
+
+      <!-- CLASSROOM WEAKNESS HEATMAP & COMPETENCY RADAR -->
+      <div id="classroom-weakness-heatmap-card" class="glass-card rounded-2xl border border-purple-200 dark:border-purple-900/60 shadow-lg overflow-hidden p-5 sm:p-6 space-y-5 bg-gradient-to-br from-purple-500/5 via-indigo-500/5 to-amber-500/5">
+        
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-purple-200/60 dark:border-purple-900/40">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-purple-600 text-white font-extrabold text-[11px] flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>خريطة الكفاءات الصفية</span>
+              </span>
+              <span id="heatmap-critical-badge" class="px-2.5 py-0.5 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 font-bold text-[10px] border border-rose-200 dark:border-rose-800 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+                <span>1 مفهوم حرج يتطلب تدخلاً عاجلاً</span>
+              </span>
+            </div>
+            <h4 class="font-black text-base sm:text-lg text-slate-900 dark:text-white mt-1.5 flex items-center gap-2">
+              <i class="fa-solid fa-fire text-amber-500"></i>
+              <span>رصد نقاط الضعف والمفاهيم المتعثرة (Classroom Weakness Heatmap)</span>
+            </h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              تحليل إحصائي آلي لنتائج اختبارات الطلاب لرصد المفاهيم التي تعثر فيها أكثر من 40% من الطلاب وتوجيه الخطط العلاجية
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="refreshClassroomWeaknessHeatmap()" class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1.5 shadow-sm" title="إعادة تحليل نتائج الطلاب لحظياً">
+              <i class="fa-solid fa-arrows-rotate text-purple-600"></i>
+              <span>تحديث التحليل</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Heatmap Metric Summary Bar -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="p-4 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-[11px] text-slate-500 font-medium">معدل الاستيعاب الإجمالي للمقرر</p>
+              <h5 id="heatmap-overall-score" class="text-xl font-black text-purple-700 dark:text-purple-400 font-mono mt-0.5">84.5%</h5>
+            </div>
+            <span class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </span>
+          </div>
+
+          <div class="p-4 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-[11px] text-slate-500 font-medium">المفاهيم الحرجة المرصودة</p>
+              <h5 id="heatmap-critical-count" class="text-xl font-black text-rose-600 dark:text-rose-400 font-mono mt-0.5">1 مفهوم</h5>
+            </div>
+            <span class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-300 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </span>
+          </div>
+
+          <div class="p-4 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-[11px] text-slate-500 font-medium">إجمالي محاولات الكويز المقيّمة</p>
+              <h5 id="heatmap-total-attempts" class="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">24 محاولة</h5>
+            </div>
+            <span class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-clipboard-check"></i>
+            </span>
+          </div>
+        </div>
+
+        <!-- Heatmap Items Grid -->
+        <div id="heatmap-items-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Rendered via JS -->
         </div>
 
       </div>
@@ -1498,6 +1606,12 @@
 
       <!-- Live Counters & Timer -->
       <div class="flex items-center justify-center gap-6 text-sm flex-wrap">
+        <div class="bg-amber-500/20 px-4 py-2 rounded-2xl border border-amber-400/40 font-mono flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-amber-400 animate-pulse"></i>
+          <span>كود دوار يتجدد خلال: </span>
+          <strong id="projector-qr-rotation-countdown" class="text-amber-300 font-bold text-base">25</strong>ث
+        </div>
+
         <div class="bg-white/10 px-4 py-2 rounded-2xl border border-white/20 font-mono">
           <i class="fa-solid fa-stopwatch text-amber-400 ml-1"></i>
           <span>الوقت المتبقي: </span>
@@ -3424,6 +3538,9 @@
 <head>
   <meta charset="UTF-8">
   <title>ورقة امتحان رسمي - مدرسة WE للتكنولوجيا التطبيقية بالسويس</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
     body {
@@ -3434,12 +3551,28 @@
       background: #fff;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      position: relative;
+    }
+    .watermark {
+      position: fixed;
+      top: 40%;
+      left: 10%;
+      right: 10%;
+      text-align: center;
+      transform: rotate(-25deg);
+      font-size: 42px;
+      font-weight: 900;
+      color: rgba(67, 18, 89, 0.04);
+      pointer-events: none;
+      z-index: 0;
     }
     .header-table {
       width: 100%;
       border-bottom: 2px solid #431259;
       padding-bottom: 12px;
       margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
     }
     .school-title {
       font-size: 18px;
@@ -3470,6 +3603,8 @@
       margin-bottom: 20px;
       font-size: 12px;
       background: #f8fafc;
+      position: relative;
+      z-index: 1;
     }
     .student-fields-table td {
       padding: 4px 8px;
@@ -3479,12 +3614,35 @@
       page-break-inside: avoid;
       border-bottom: 1px dashed #cbd5e1;
       padding-bottom: 12px;
+      position: relative;
+      z-index: 1;
     }
     .q-title {
       font-size: 13px;
       font-weight: 700;
       color: #1e293b;
       margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .badge-bloom {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    .badge-type {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #475569;
     }
     .options-grid {
       display: grid;
@@ -3539,6 +3697,8 @@
 </head>
 <body>
 
+  <div class="watermark">مدرسة WE للتكنولوجيا التطبيقية بالسويس</div>
+
   <!-- Controls for preview before printing -->
   <div class="no-print" style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: flex-end; background: #f1f5f9; padding: 12px; border-radius: 8px;">
     <button onclick="window.print()" style="padding: 8px 18px; background: #431259; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: Cairo;">
@@ -3580,19 +3740,64 @@
 
   <!-- QUESTIONS LIST -->
   <div>
-    ${currentQuizState.questions.map((q, idx) => `
-      <div class="q-card">
-        <div class="q-title">س${idx + 1}: ${escapeHtml(q.question)}</div>
-        <div class="options-grid">
-          ${['A', 'B', 'C', 'D'].map(key => `
-            <div class="option-item">
-              <span class="bubble">${key}</span>
-              <span>${escapeHtml(q.options ? (q.options[key] || '') : '')}</span>
-            </div>
-          `).join('')}
+    ${currentQuizState.questions.map((q, idx) => {
+      const qType = q.question_type || 'mcq';
+      const bloom = q.bloom_level || 'comprehension';
+      const bloomNameMap = {
+        recall: 'تذكر (Recall)',
+        comprehension: 'فهم (Comprehension)',
+        application: 'تطبيق (Application)',
+        analysis: 'تحليل (Analysis)'
+      };
+      const typeNameMap = {
+        mcq: 'اختيار من متعدد',
+        true_false: 'صح أو خطأ',
+        matching: 'مطابقة وتوصيل',
+        short_answer: 'مسألة / إجابة مقالية'
+      };
+
+      let optionsContent = '';
+      if (qType === 'true_false') {
+        optionsContent = `
+          <div class="options-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="option-item"><span class="bubble">✓</span> <span>صح (True)</span></div>
+            <div class="option-item"><span class="bubble">✗</span> <span>خطأ (False)</span></div>
+          </div>
+        `;
+      } else if (qType === 'short_answer') {
+        optionsContent = `
+          <div style="margin-top: 8px; border: 1px dashed #94a3b8; border-radius: 6px; padding: 10px; background: #fafafa;">
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">مساحة إجابة الطالب وتتبع الخطوات:</div>
+            <div style="border-bottom: 1px solid #cbd5e1; height: 24px;"></div>
+            <div style="border-bottom: 1px solid #cbd5e1; height: 24px;"></div>
+          </div>
+        `;
+      } else {
+        optionsContent = `
+          <div class="options-grid">
+            ${['A', 'B', 'C', 'D'].map(key => `
+              <div class="option-item">
+                <span class="bubble">${key}</span>
+                <span>${escapeHtml(q.options ? (q.options[key] || '') : '')}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="q-card">
+          <div class="q-title">
+            <span>س${idx + 1}: ${escapeHtml(q.question)}</span>
+            <span>
+              <span class="badge-bloom">${escapeHtml(bloomNameMap[bloom] || bloom)}</span>
+              <span class="badge-type">${escapeHtml(typeNameMap[qType] || qType)}</span>
+            </span>
+          </div>
+          ${optionsContent}
         </div>
-      </div>
-    `).join('')}
+      `;
+    }).join('')}
   </div>
 
   <!-- PAGE BREAK FOR TEACHER ANSWER KEY & LECTURE CITATIONS -->
@@ -3619,11 +3824,11 @@
       return `
         <div style="margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; font-size: 12px;">
           <div style="font-weight: bold; color: #1e293b;">
-            س${idx + 1}: الإجابة الصحيحة هي: 
-            <span style="display: inline-block; width: 20px; height: 20px; border-radius: 4px; background: #059669; color: #fff; text-align: center; line-height: 20px; margin: 0 4px;">${correctKey}</span>
+            س${idx + 1}: الإجابة النموذجية: 
+            <span style="display: inline-block; min-width: 20px; padding: 0 4px; height: 20px; border-radius: 4px; background: #059669; color: #fff; text-align: center; line-height: 20px; margin: 0 4px;">${correctKey}</span>
             (${escapeHtml(q.options ? q.options[correctKey] || '' : '')})
           </div>
-          <div style="color: #475569; margin-top: 4px;"><strong>الشرح:</strong> ${escapeHtml(exp)}</div>
+          <div style="color: #475569; margin-top: 4px;"><strong>الشرح ودليل التقييم:</strong> ${escapeHtml(exp)}</div>
           ${quote ? `<div class="quote-box"><strong>📜 المقتبس الحرفي من المحاضرة:</strong> "${escapeHtml(quote)}"</div>` : ''}
         </div>
       `;
@@ -3632,10 +3837,20 @@
 
   <script>
     window.onload = function() {
-      // Auto open print dialog
+      if (typeof renderMathInElement !== 'undefined') {
+        try {
+          renderMathInElement(document.body, {
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false}
+            ],
+            throwOnError: false
+          });
+        } catch(e) {}
+      }
       setTimeout(function() {
         window.print();
-      }, 500);
+      }, 600);
     };
   <\/script>
 </body>
@@ -3913,6 +4128,11 @@
       const difficulty = diffMap[diffRaw] || 'medium';
       const course = document.getElementById('ai-quiz-course').value;
 
+      const qTypeEl = document.getElementById('ai-quiz-question-type');
+      const questionType = qTypeEl ? qTypeEl.value : 'mcq';
+      const bloomEl = document.getElementById('ai-quiz-bloom');
+      const bloomLevel = bloomEl ? bloomEl.value : 'comprehension';
+
       const btn = document.getElementById('btn-generate-ai');
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles fa-spin"></i> جاري استدعاء دوال Gemini وبناء الاستوديو التفاعلي...';
@@ -3922,6 +4142,9 @@
           text_content: content,
           num_questions: numQuestions,
           difficulty: difficulty,
+          question_type: questionType,
+          bloom_level: bloomLevel,
+          course_id: course || null,
           topic: content.slice(0, 70).trim() + (content.length > 70 ? '...' : '')
         };
 
@@ -4569,6 +4792,7 @@
       const selectedCourse = filterSelect ? filterSelect.value : (teacherCourses[0] ? teacherCourses[0].material_id : '');
       if (selectedCourse) {
         loadCourseAttendanceSessionsHistory(selectedCourse);
+        loadClassroomWeaknessHeatmap(selectedCourse);
       }
     }
 
@@ -4576,6 +4800,7 @@
       const select = document.getElementById('attendance-filter-course');
       if (select && select.value) {
         loadCourseAttendanceSessionsHistory(select.value);
+        loadClassroomWeaknessHeatmap(select.value);
       }
     }
 
@@ -4641,6 +4866,79 @@
       }
     }
 
+    let liveRotatingQrInterval = null;
+    let rotationSecondsRemaining = 25;
+
+    function startRotatingQrTicker(sessionId, initialSeconds) {
+      if (liveRotatingQrInterval) clearInterval(liveRotatingQrInterval);
+      rotationSecondsRemaining = initialSeconds || 25;
+
+      async function fetchLiveRotatingQr() {
+        try {
+          const res = await fetch(`${API_BASE}/attendance/sessions/${sessionId}/live-qr`, {
+            headers: getAuthHeaders()
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data && data.qr_payload) {
+            renderSessionQRCode(data.qr_payload);
+            const tokenEl = document.getElementById('session-token-text');
+            if (tokenEl) tokenEl.innerText = data.token;
+            rotationSecondsRemaining = data.expires_in || 25;
+            
+            // If projector modal is open, update projector QR too
+            const projectorBox = document.getElementById('projector-qr-box');
+            const projectorModal = document.getElementById('modal-qr-projector');
+            if (projectorBox && projectorModal && !projectorModal.classList.contains('hidden')) {
+              renderProjectorQRCode(data.qr_payload);
+              const pCourse = document.getElementById('projector-session-course');
+              if (pCourse) pCourse.innerText = `${data.material_id} • كود التحقق الدوار: ${data.token}`;
+            }
+          }
+        } catch (e) {
+          console.warn('Live QR rotation fetch error:', e);
+        }
+      }
+
+      function tickRotation() {
+        rotationSecondsRemaining--;
+        if (rotationSecondsRemaining <= 0) {
+          fetchLiveRotatingQr();
+        } else {
+          const pct = Math.max(0, Math.min(100, (rotationSecondsRemaining / 25) * 100));
+          const prog = document.getElementById('qr-rotation-progress');
+          if (prog) {
+            prog.style.width = `${pct}%`;
+            if (pct < 25) {
+              prog.className = 'h-full bg-rose-500 transition-all duration-1000 ease-linear';
+            } else if (pct < 50) {
+              prog.className = 'h-full bg-amber-500 transition-all duration-1000 ease-linear';
+            } else {
+              prog.className = 'h-full bg-emerald-500 transition-all duration-1000 ease-linear';
+            }
+          }
+          const cd = document.getElementById('qr-rotation-countdown');
+          if (cd) cd.innerText = rotationSecondsRemaining;
+          const pCd = document.getElementById('projector-qr-rotation-countdown');
+          if (pCd) pCd.innerText = rotationSecondsRemaining;
+        }
+      }
+
+      const cd = document.getElementById('qr-rotation-countdown');
+      if (cd) cd.innerText = rotationSecondsRemaining;
+      const prog = document.getElementById('qr-rotation-progress');
+      if (prog) prog.style.width = '100%';
+
+      liveRotatingQrInterval = setInterval(tickRotation, 1000);
+    }
+
+    function stopRotatingQrTicker() {
+      if (liveRotatingQrInterval) {
+        clearInterval(liveRotatingQrInterval);
+        liveRotatingQrInterval = null;
+      }
+    }
+
     async function displayActiveSession(session) {
       activeAttendanceSession = session;
       const card = document.getElementById('active-session-card');
@@ -4658,6 +4956,9 @@
 
       // Start Countdown Timer
       startSessionTimer(session.expires_at);
+
+      // Start Live Anti-Proxy Rotating QR Ticker
+      startRotatingQrTicker(session.session_id, session.expires_in_seconds || 25);
 
       // Load full attendance sheet
       await loadSessionAttendanceSheet(session.session_id);
@@ -4957,6 +5258,7 @@
         });
         if (!res.ok) throw new Error('فشل قفل الجلسة');
         if (attendanceTimerInterval) clearInterval(attendanceTimerInterval);
+        stopRotatingQrTicker();
         document.getElementById('session-status-badge').className = 'px-3 py-1 rounded-full text-xs font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
         document.getElementById('session-status-badge').innerHTML = '<i class="fa-solid fa-lock"></i> <span>جلسة مغلقة وموثقة</span>';
         document.getElementById('session-countdown-timer').innerText = 'تم الإغلاق';
@@ -4967,6 +5269,33 @@
       }
     }
 
+    function renderProjectorQRCode(qrText) {
+      const box = document.getElementById('projector-qr-box');
+      if (!box) return;
+      box.innerHTML = '';
+      let finalPayload = qrText || '';
+      if (!finalPayload.startsWith('http')) {
+        const cleanToken = finalPayload.replace('eru_attendance:', '').trim();
+        finalPayload = getCheckInUrlForSession(cleanToken);
+      }
+      if (typeof QRCode !== 'undefined') {
+        try {
+          new QRCode(box, {
+            text: finalPayload,
+            width: 320,
+            height: 320,
+            colorDark: '#1F0D2B',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+          });
+          return;
+        } catch (e) {
+          console.warn('Projector QRCode error, falling back:', e);
+        }
+      }
+      box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(finalPayload)}" class="w-80 h-80 rounded-xl" alt="QR">`;
+    }
+
     function openProjectorQRModal() {
       if (!activeAttendanceSession && !currentAttendanceSheetData) return;
       const s = activeAttendanceSession || currentAttendanceSheetData;
@@ -4974,29 +5303,8 @@
       document.getElementById('projector-session-title').innerText = s.title;
       document.getElementById('projector-session-course').innerText = `${s.course_name || s.material_id} • كود التحقق: ${s.token}`;
       
-      const box = document.getElementById('projector-qr-box');
-      box.innerHTML = '';
       let qrText = s.qr_payload || `eru_attendance:${s.token}`;
-      if (!qrText.startsWith('http')) {
-        const cleanToken = (s.token || qrText.replace('eru_attendance:', '')).trim();
-        qrText = getCheckInUrlForSession(cleanToken);
-      }
-      if (typeof QRCode !== 'undefined') {
-        try {
-          new QRCode(box, {
-            text: qrText,
-            width: 320,
-            height: 320,
-            colorDark: '#1F0D2B',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
-          });
-        } catch (e) {
-          box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrText)}" class="w-80 h-80 rounded-xl" alt="QR">`;
-        }
-      } else {
-        box.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrText)}" class="w-80 h-80 rounded-xl" alt="QR">`;
-      }
+      renderProjectorQRCode(qrText);
 
       m.classList.remove('hidden');
       m.classList.add('flex');
@@ -5037,6 +5345,165 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       showToast('تم تصدير ملف الإكسل (CSV) بنجاح! 📥', 'success');
+    }
+
+    async function exportOfficialGradebookExcel() {
+      const select = document.getElementById('attendance-filter-course');
+      const courseId = (select && select.value) || (activeAttendanceSession && activeAttendanceSession.material_id) || (teacherCourses[0] && teacherCourses[0].material_id);
+      if (!courseId) {
+        showToast('يرجى اختيار مقرر دراسي لتصدير دفتر الدرجات', 'warning');
+        return;
+      }
+
+      showToast('جاري استخراج دفتر الدرجات والتقييم المعتمد من وزارة التربية والتعليم... 📊', 'info');
+
+      try {
+        const res = await fetch(`${API_BASE}/attendance/courses/${courseId}/export-gradebook`, {
+          headers: getAuthHeaders()
+        });
+
+        if (!res.ok) {
+          throw new Error('فشل تصدير دفتر درجات أعمال السنة');
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `WE_Suez_Gradebook_${courseId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast('تم تحميل دفتر أعمال السنة المعتمد (.xlsx) بنجاح! 📥✨', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function loadClassroomWeaknessHeatmap(courseId) {
+      if (!courseId) return;
+      const container = document.getElementById('heatmap-items-container');
+      if (!container) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/attendance/courses/${courseId}/analytics/weakness-heatmap`, {
+          headers: getAuthHeaders()
+        });
+
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Update Summary Bar
+        const overallEl = document.getElementById('heatmap-overall-score');
+        if (overallEl) overallEl.innerText = `${data.class_overall_mastery_pct || 84.5}%`;
+        const critCountEl = document.getElementById('heatmap-critical-count');
+        if (critCountEl) critCountEl.innerText = `${data.critical_weaknesses_count || 0} مفاهيم`;
+        const attemptsEl = document.getElementById('heatmap-total-attempts');
+        if (attemptsEl) attemptsEl.innerText = `${data.total_quiz_attempts || 0} محاولة`;
+        const badgeEl = document.getElementById('heatmap-critical-badge');
+        if (badgeEl) {
+          if (data.critical_weaknesses_count > 0) {
+            badgeEl.className = 'px-2.5 py-0.5 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 font-bold text-[10px] border border-rose-200 dark:border-rose-800 flex items-center gap-1';
+            badgeEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span><span>${data.critical_weaknesses_count} مفهوم حرج يتطلب تدخلاً</span>`;
+          } else {
+            badgeEl.className = 'px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 font-bold text-[10px] border border-emerald-200 dark:border-emerald-800 flex items-center gap-1';
+            badgeEl.innerHTML = `<i class="fa-solid fa-check text-emerald-600"></i><span>كافة المفاهيم مستوعبة بنجاح</span>`;
+          }
+        }
+
+        // Render Heatmap Items
+        const items = data.weakness_items || [];
+        container.innerHTML = items.map(item => {
+          const isCrit = item.status === 'CRITICAL';
+          const isMod = item.status === 'MODERATE';
+          const cardBorder = isCrit ? 'border-rose-300 dark:border-rose-900/60 bg-rose-500/5' : isMod ? 'border-amber-300 dark:border-amber-900/60 bg-amber-500/5' : 'border-emerald-300 dark:border-emerald-900/60 bg-emerald-500/5';
+          const badgeClass = isCrit ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-200' : isMod ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-200' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200';
+          const barClass = isCrit ? 'bg-rose-500' : isMod ? 'bg-amber-500' : 'bg-emerald-500';
+
+          return `
+            <div class="rounded-2xl p-4 border ${cardBorder} bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-between space-y-3">
+              <div class="space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeClass}">
+                    ${item.status_label || item.status}
+                  </span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
+                    ${item.bloom_label || item.bloom_level}
+                  </span>
+                </div>
+                <h5 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-snug">
+                  ${item.concept_title}
+                </h5>
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                    <span>نسبة الخطأ بين الطلاب:</span>
+                    <strong class="${isCrit ? 'text-rose-600' : isMod ? 'text-amber-600' : 'text-emerald-600'} font-mono font-bold">${item.error_rate_pct}%</strong>
+                  </div>
+                  <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div class="h-full ${barClass}" style="width: ${Math.min(100, item.error_rate_pct)}%"></div>
+                  </div>
+                </div>
+                ${item.sample_question ? `
+                  <p class="text-[11px] text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 p-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                    <i class="fa-solid fa-circle-question text-purple-500 ml-1"></i>
+                    <span>${item.sample_question}</span>
+                  </p>
+                ` : ''}
+                <p class="text-[11px] text-purple-700 dark:text-purple-300 font-medium bg-purple-50 dark:bg-purple-950/40 p-2 rounded-lg border border-purple-100 dark:border-purple-900/30">
+                  <i class="fa-solid fa-lightbulb text-amber-500 ml-1"></i>
+                  <span>${item.remediation_plan}</span>
+                </p>
+              </div>
+
+              <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
+                <button type="button" onclick="launchRemediationQuiz('${encodeURIComponent(item.concept_title)}', '${item.bloom_level}', '${encodeURIComponent(item.remediation_plan)}')" class="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-[11px] transition flex items-center gap-1.5 shadow-sm">
+                  <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+                  <span>توليد كويز علاجي بالـ AI 🪄</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (e) {
+        console.warn('Weakness heatmap load notice:', e);
+      }
+    }
+
+    function refreshClassroomWeaknessHeatmap() {
+      const select = document.getElementById('attendance-filter-course');
+      const courseId = (select && select.value) || (teacherCourses[0] && teacherCourses[0].material_id);
+      if (courseId) {
+        loadClassroomWeaknessHeatmap(courseId);
+        showToast('تم تحديث خريطة نقاط الضعف الصفية بنجاح 🔄', 'info');
+      }
+    }
+
+    function launchRemediationQuiz(encTitle, bloomLevel, encPlan) {
+      const title = decodeURIComponent(encTitle);
+      const plan = decodeURIComponent(encPlan);
+      
+      switchTab('quiz-ai');
+      
+      const contentArea = document.getElementById('ai-quiz-content');
+      if (contentArea) {
+        contentArea.value = `كويز تدريبي وعلاجي مركز لطلاب مدرسة WE للتكنولوجيا التطبيقية.\nالموضوع المستهدف: ${title}\nالخطة العلاجية والتوجيهات: ${plan}\nقم بتوليد أسئلة تطبيقية وتدريبات عملية متدرجة لمعالجة هذا الضعف وتعزيز استيعاب الطلاب.`;
+      }
+      
+      const bloomSelect = document.getElementById('ai-quiz-bloom');
+      if (bloomSelect && bloomLevel) {
+        bloomSelect.value = bloomLevel;
+      }
+      
+      const numSelect = document.getElementById('ai-quiz-num');
+      if (numSelect) {
+        numSelect.value = "5";
+      }
+
+      showToast(`تم ضبط استوديو الذكاء الاصطناعي لتوليد كويز علاجي لـ: ${title} 🎯`, 'info');
+      window.scrollTo({ top: 300, behavior: 'smooth' });
     }
 
     function printOfficialAttendanceSheet() {

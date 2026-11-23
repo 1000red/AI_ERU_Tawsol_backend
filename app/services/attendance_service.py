@@ -1,9 +1,13 @@
 import secrets
+import time
+import hmac
+import hashlib
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from fastapi import HTTPException, status
 
+from app.core.config import settings
 from app.models.attendance import AttendanceSession, AttendanceRecord
 from app.models.material import Material, MaterialStudent, MaterialTeacher
 from app.models.user import User
@@ -17,7 +21,51 @@ from app.schemas.attendance import (
     AttendanceSheetStudent,
     AttendanceSheetSummary,
     AttendanceMarkRequest,
+    LiveRotatingQROut,
 )
+
+ROTATION_SECONDS = 25
+
+
+def _build_rotating_token(base_token: str) -> tuple[str, int]:
+    """Generates a time-bucketed HMAC-SHA256 dynamic rotating token and TTL in seconds."""
+    now_ts = time.time()
+    bucket = int(now_ts // ROTATION_SECONDS)
+    expires_in = int(ROTATION_SECONDS - (now_ts % ROTATION_SECONDS))
+    sig = hmac.new(
+        settings.SECRET_KEY.encode("utf-8"),
+        f"{base_token}:{bucket}".encode("utf-8"),
+        hashlib.sha256
+    ).hexdigest()[:12]
+    return f"{base_token}:{bucket}:{sig}", max(1, expires_in)
+
+
+def get_live_rotating_qr(db: Session, session_id: int) -> LiveRotatingQROut:
+    """Returns real-time rotating anti-proxy QR code token and TTL."""
+    session = db.query(AttendanceSession).filter(AttendanceSession.session_id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="جلسة التحضير غير موجودة.")
+
+    now = datetime.now(timezone.utc)
+    if not session.is_active or session.expires_at < now:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="عفواً، انتهت صلاحية جلسة التحضير هذه."
+        )
+
+    rotating_token, expires_in = _build_rotating_token(session.token)
+    return LiveRotatingQROut(
+        session_id=session.session_id,
+        material_id=session.material_id,
+        title=session.title,
+        base_token=session.token,
+        token=rotating_token,
+        qr_payload=f"eru_attendance:{rotating_token}",
+        rotation_interval_seconds=ROTATION_SECONDS,
+        expires_in=expires_in,
+        session_expires_at=session.expires_at,
+        is_active=session.is_active,
+    )
 
 
 def create_attendance_session(db: Session, doctor_user: User, data: AttendanceSessionCreate) -> AttendanceSessionOut:
@@ -54,7 +102,8 @@ def create_attendance_session(db: Session, doctor_user: User, data: AttendanceSe
     db.refresh(session)
 
     # qr_payload is formatted as JSON or clean URI that mobile_scanner parses
-    qr_payload = f"eru_attendance:{session.token}"
+    rotating_token, expires_in = _build_rotating_token(session.token)
+    qr_payload = f"eru_attendance:{rotating_token}"
 
     return AttendanceSessionOut(
         session_id=session.session_id,
@@ -68,6 +117,9 @@ def create_attendance_session(db: Session, doctor_user: User, data: AttendanceSe
         created_at=session.created_at,
         total_attended=0,
         attendees=[],
+        rotating_token=rotating_token,
+        expires_in_seconds=expires_in,
+        is_rotating=True,
     )
 
 
@@ -109,6 +161,7 @@ def get_session_details(db: Session, session_id: int) -> AttendanceSessionOut:
     # Check if expired automatically
     now = datetime.now(timezone.utc)
     is_active = session.is_active and (session.expires_at > now)
+    rotating_token, expires_in = _build_rotating_token(session.token)
 
     return AttendanceSessionOut(
         session_id=session.session_id,
@@ -116,12 +169,15 @@ def get_session_details(db: Session, session_id: int) -> AttendanceSessionOut:
         course_name=mat.name if mat else session.material_id,
         title=session.title,
         token=session.token,
-        qr_payload=f"eru_attendance:{session.token}",
+        qr_payload=f"eru_attendance:{rotating_token}",
         expires_at=session.expires_at,
         is_active=is_active,
         created_at=session.created_at,
         total_attended=len(attendees),
         attendees=attendees,
+        rotating_token=rotating_token,
+        expires_in_seconds=expires_in,
+        is_rotating=True,
     )
 
 
@@ -131,7 +187,43 @@ def student_check_in(db: Session, student_user: User, raw_token: str) -> Attenda
     if clean_token.startswith("eru_attendance:"):
         clean_token = clean_token.split(":", 1)[1]
 
-    session = db.query(AttendanceSession).filter(AttendanceSession.token == clean_token).first()
+    base_token = clean_token
+
+    # Check for dynamic rotating token format: base_token:bucket:hmac12
+    if clean_token.count(":") >= 2:
+        parts = clean_token.rsplit(":", 2)
+        candidate_base, candidate_bucket, candidate_sig = parts[0], parts[1], parts[2]
+        if candidate_bucket.isdigit() and len(candidate_sig) == 12:
+            bucket = int(candidate_bucket)
+            current_bucket = int(time.time() // ROTATION_SECONDS)
+
+            # Drift validation: allow up to 1 bucket (25s) drift
+            if current_bucket - bucket > 1:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="كود الحضور انتهت صلاحيته (انتهت الـ 25 ثانية)، يرجى مسح الكود المحدث على شاشة المعلم."
+                )
+            elif bucket - current_bucket > 1:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="توقيت كود الحضور غير متطابق مع توقيت الخادم."
+                )
+
+            expected_sig = hmac.new(
+                settings.SECRET_KEY.encode("utf-8"),
+                f"{candidate_base}:{bucket}".encode("utf-8"),
+                hashlib.sha256
+            ).hexdigest()[:12]
+
+            if not hmac.compare_digest(candidate_sig, expected_sig):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="رمز الـ QR غير صالح أو تم التلاعب به."
+                )
+
+            base_token = candidate_base
+
+    session = db.query(AttendanceSession).filter(AttendanceSession.token == base_token).first()
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

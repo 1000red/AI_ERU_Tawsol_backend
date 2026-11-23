@@ -14,6 +14,8 @@ class _StoredQuestion:
     correct: str              # "A" | "B" | "C" | "D"
     explanation: str
     reference_quote: str = "" # Verbatim citation from uploaded lecture material
+    question_type: str = "mcq" # "mcq" | "true_false" | "matching" | "short_answer"
+    bloom_level: str = "comprehension" # "recall" | "comprehension" | "application" | "analysis"
 
 
 @dataclass

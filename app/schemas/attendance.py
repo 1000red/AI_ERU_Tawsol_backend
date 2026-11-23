@@ -32,8 +32,24 @@ class AttendanceSessionOut(BaseModel):
     created_at: datetime
     total_attended: int = 0
     attendees: Optional[list[AttendanceAttendee]] = None
+    rotating_token: Optional[str] = None
+    expires_in_seconds: Optional[int] = 25
+    is_rotating: bool = True
 
     model_config = {"from_attributes": True}
+
+
+class LiveRotatingQROut(BaseModel):
+    session_id: int
+    material_id: str
+    title: str
+    base_token: str
+    token: str
+    qr_payload: str
+    rotation_interval_seconds: int = 25
+    expires_in: int
+    session_expires_at: datetime
+    is_active: bool
 
 
 class AttendanceCheckInRequest(BaseModel):

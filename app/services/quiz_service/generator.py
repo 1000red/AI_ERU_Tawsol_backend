@@ -15,7 +15,7 @@ def _build_quiz_tool():
 
     func = types.FunctionDeclaration(
         name="save_quiz_questions",
-        description="Save multiple-choice questions strictly grounded in the uploaded lecture text with verbatim reference quotes.",
+        description="Save questions strictly grounded in the uploaded lecture text with verbatim reference quotes, Bloom taxonomy classification, and format types.",
         parameters=types.Schema(
             type="OBJECT",
             properties={
@@ -39,6 +39,8 @@ def _build_quiz_tool():
                             "correct": types.Schema(type="STRING", enum=["A", "B", "C", "D"], description="The single correct option letter"),
                             "explanation": types.Schema(type="STRING", description="Concise pedagogical explanation proving the answer"),
                             "reference_quote": types.Schema(type="STRING", description="Verbatim sentence from the lecture text as evidence"),
+                            "question_type": types.Schema(type="STRING", enum=["mcq", "true_false", "matching", "short_answer"], description="Format style of the question"),
+                            "bloom_level": types.Schema(type="STRING", enum=["recall", "comprehension", "application", "analysis"], description="Cognitive taxonomy tier"),
                         },
                         required=["id", "question", "options", "correct", "explanation", "reference_quote"],
                     ),
@@ -56,7 +58,7 @@ def _build_single_question_tool():
 
     func = types.FunctionDeclaration(
         name="save_single_question",
-        description="Save a single newly generated multiple-choice question strictly grounded in lecture text with verbatim quote.",
+        description="Save a single newly generated question strictly grounded in lecture text with verbatim quote.",
         parameters=types.Schema(
             type="OBJECT",
             properties={
@@ -75,6 +77,8 @@ def _build_single_question_tool():
                 "correct": types.Schema(type="STRING", enum=["A", "B", "C", "D"]),
                 "explanation": types.Schema(type="STRING", description="Concise explanation proving the answer"),
                 "reference_quote": types.Schema(type="STRING", description="Verbatim sentence from the lecture text as evidence"),
+                "question_type": types.Schema(type="STRING", enum=["mcq", "true_false", "matching", "short_answer"]),
+                "bloom_level": types.Schema(type="STRING", enum=["recall", "comprehension", "application", "analysis"]),
             },
             required=["id", "question", "options", "correct", "explanation", "reference_quote"],
         ),
@@ -82,20 +86,48 @@ def _build_single_question_tool():
     return types.Tool(function_declarations=[func])
 
 
-def _build_grounded_prompt(text: str, num_questions: int = 10, difficulty: str = "medium") -> str:
-    """Build a prompt enforcing 100% strict grounding on uploaded lecture text only."""
+def _build_grounded_prompt(
+    text: str,
+    num_questions: int = 10,
+    difficulty: str = "medium",
+    question_type: str = "mcq",
+    bloom_level: str = "comprehension",
+) -> str:
+    """Build a prompt enforcing 100% strict grounding, Bloom's Taxonomy, and specified question format."""
+    bloom_instructions = {
+        "recall": "Focus on foundational technical definitions, protocol names, standards, and formula recall (التذكر وحفظ المصطلحات والقوانين).",
+        "comprehension": "Focus on understanding core mechanisms, explaining why specific standards are used, and comparing architectures (الفهم والاستيعاب والتفسير الهندسي).",
+        "application": "Focus on engineering scenarios, practical calculations (e.g. subnetting, bandwidth, resistance/voltage), code tracing, and hands-on execution (التطبيق وحل المشكلات الهندسية).",
+        "analysis": "Focus on technical troubleshooting, fault diagnosis, debugging failure scenarios, and evaluating architectural trade-offs (التحليل وتشخيص الأعطال).",
+    }.get(str(bloom_level).lower(), "Focus on balanced technical comprehension and practical engineering application.")
+
+    format_instructions = {
+        "mcq": "All questions MUST be standard 4-option Multiple Choice (A, B, C, D) with realistic technical distractors.",
+        "true_false": "Format each question as a True/False assessment statement. Set Option A='صح / True' and Option B='خطأ / False', with Option C='-' and Option D='-'. The explanation must explain the technical verdict.",
+        "matching": "Format each question as a Term-Matching challenge where Option A, B, C, D present 4 candidate pairings (e.g. 'A: 1-B, 2-D, 3-A, 4-C') matching technical terms to their exact functions.",
+        "short_answer": "Format each question as a targeted scenario or short technical question. Option A provides the concise model answer, Options B, C, D provide common student misconceptions, and explanation provides the complete grading rubric.",
+        "all": "Provide a balanced variety: ~40% MCQ, ~20% True/False (A=صح, B=خطأ), ~20% Matching, and ~20% Short-Answer problem solving.",
+    }.get(str(question_type).lower(), "Standard high-quality multiple choice questions.")
+
     return f"""You are a master academic assessment architect for WE Applied Technology School in Suez.
-Your mission is to generate exactly {num_questions} high-quality, professional multiple-choice questions (difficulty: {difficulty.upper()}) STRICTLY grounded in the provided lecture content.
+Your mission is to generate exactly {num_questions} high-quality, professional questions (difficulty: {difficulty.upper()}) STRICTLY grounded in the provided lecture content.
+
+TARGET COGNITIVE TIER (Bloom's Taxonomy: {bloom_level.upper()}):
+{bloom_instructions}
+
+TARGET QUESTION FORMAT ({question_type.upper()}):
+{format_instructions}
 
 STRICT ZERO-HALLUCINATION GROUNDING RULES:
 1. Grounding: Every question, correct answer, and explanation must be 100% directly substantiated by the lecture text below. Do NOT use outside knowledge or internet facts not present in this text.
 2. Evidence Citation: For EVERY question, you MUST provide a verbatim quote (`reference_quote`) extracted directly from the lecture text that unequivocally proves the correct answer.
 3. Content Scope: Focus strictly on key technical concepts, core definitions, architectures, protocols, formulas, or operational procedures described in the text.
 4. Ignore: Author names, dates, course codes, file names, headers, footers, watermarks, slide numbers.
-5. Distractors: Provide 4 plausible options (A, B, C, D). Distractors must be relevant technical concepts from the same topic, not absurd or obviously false.
-6. Distribution: Distribute correct answers evenly across A, B, C, D.
-7. Mathematical & Scientific Notation: If any question, options, or explanation include math equations, physics formulas, electrical units, or scientific expressions, format them cleanly using standard KaTeX/LaTeX syntax enclosed in $...$ for inline math or $$...$$ for block equations (e.g. $V = I \times R$, $f = \frac{1}{T}$). Keep Arabic and English explanatory words outside the dollar signs.
-8. Format: You MUST call the `save_quiz_questions` tool with all {num_questions} questions.
+5. Distractors: Provide plausible options. Distractors must be relevant technical concepts from the same topic, not absurd or obviously false.
+6. Distribution: Distribute correct answers evenly across options.
+7. Mathematical & Scientific Notation: If any question, options, or explanation include math equations, physics formulas, electrical units, or scientific expressions, format them cleanly using standard KaTeX/LaTeX syntax enclosed in $...$ for inline math or $$...$$ for block equations (e.g. $V = I \\times R$, $f = \\frac{{1}}{{T}}$, $P = V \\times I$). Keep Arabic and English explanatory words outside the dollar signs.
+8. Classification: For every question, set `question_type` to one of ['mcq', 'true_false', 'matching', 'short_answer'] and `bloom_level` to ['recall', 'comprehension', 'application', 'analysis'].
+9. Format: You MUST call the `save_quiz_questions` tool with all {num_questions} questions.
 
 LECTURE CONTENT:
 {text}
@@ -294,6 +326,14 @@ def _extract_stored_questions_from_call_args(args: dict) -> list[_StoredQuestion
         except (ValueError, TypeError):
             q_id = i
 
+        q_type = str(q.get("question_type", "mcq")).lower().strip()
+        if q_type not in ("mcq", "true_false", "matching", "short_answer"):
+            q_type = "mcq"
+
+        bloom = str(q.get("bloom_level", "comprehension")).lower().strip()
+        if bloom not in ("recall", "comprehension", "application", "analysis"):
+            bloom = "comprehension"
+
         questions.append(
             _StoredQuestion(
                 id=q_id,
@@ -307,6 +347,8 @@ def _extract_stored_questions_from_call_args(args: dict) -> list[_StoredQuestion
                 correct=correct,
                 explanation=str(q.get("explanation", "")).strip(),
                 reference_quote=str(q.get("reference_quote", "")).strip(),
+                question_type=q_type,
+                bloom_level=bloom,
             )
         )
     return questions
@@ -338,6 +380,15 @@ def _parse_questions_json_fallback(raw: str, min_required: int = 5) -> list[_Sto
             correct = str(q["correct"]).upper().strip()
             if correct not in ("A", "B", "C", "D"):
                 correct = "A"
+
+            q_type = str(q.get("question_type", "mcq")).lower().strip()
+            if q_type not in ("mcq", "true_false", "matching", "short_answer"):
+                q_type = "mcq"
+
+            bloom = str(q.get("bloom_level", "comprehension")).lower().strip()
+            if bloom not in ("recall", "comprehension", "application", "analysis"):
+                bloom = "comprehension"
+
             questions.append(
                 _StoredQuestion(
                     id=int(q.get("id", i)),
@@ -351,6 +402,8 @@ def _parse_questions_json_fallback(raw: str, min_required: int = 5) -> list[_Sto
                     correct=correct,
                     explanation=q.get("explanation", ""),
                     reference_quote=q.get("reference_quote", ""),
+                    question_type=q_type,
+                    bloom_level=bloom,
                 )
             )
         except (KeyError, TypeError):
@@ -374,8 +427,10 @@ async def generate_quiz(
     difficulty: str = "medium",
     force_refresh: bool = False,
     file_id: int | None = None,
+    question_type: str = "mcq",
+    bloom_level: str = "comprehension",
 ) -> list[_StoredQuestion]:
-    """Generates MCQs using Gemini Function Calling, strictly grounded in the uploaded material."""
+    """Generates questions using Gemini Function Calling, strictly grounded in the uploaded material."""
     if len(text) < 150:
         raise HTTPException(
             status_code=422,
@@ -395,7 +450,13 @@ async def generate_quiz(
         trimmed = text[:max_chars]
 
     # ── 3. Build token-efficient strict grounding prompt & tool ────────────────
-    prompt = _build_grounded_prompt(trimmed, num_questions=num_questions, difficulty=difficulty)
+    prompt = _build_grounded_prompt(
+        trimmed,
+        num_questions=num_questions,
+        difficulty=difficulty,
+        question_type=question_type,
+        bloom_level=bloom_level,
+    )
 
     from google.genai import types
 

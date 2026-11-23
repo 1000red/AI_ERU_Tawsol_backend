@@ -9,6 +9,8 @@ class QuizGenerateRequest(BaseModel):
     difficulty: Optional[str] = "medium"
     num_questions: Optional[int] = 5
     force_refresh: Optional[bool] = False
+    question_type: Optional[str] = "mcq"  # "mcq" | "true_false" | "matching" | "short_answer" | "all"
+    bloom_level: Optional[str] = "comprehension"  # "recall" | "comprehension" | "application" | "analysis"
 
 
 class QuizOption(BaseModel):
@@ -25,6 +27,8 @@ class QuizQuestion(BaseModel):
     reference_quote: Optional[str] = ""
     explanation: Optional[str] = ""
     correct: Optional[str] = None
+    question_type: Optional[str] = "mcq"
+    bloom_level: Optional[str] = "comprehension"
 
 
 class QuizGenerateResponse(BaseModel):
@@ -70,6 +74,8 @@ class QuizQuestionUpdateItem(BaseModel):
     correct: str  # "A" | "B" | "C" | "D"
     explanation: Optional[str] = ""
     reference_quote: Optional[str] = ""
+    question_type: Optional[str] = "mcq"
+    bloom_level: Optional[str] = "comprehension"
 
 
 class QuizUpdateQuestionsRequest(BaseModel):

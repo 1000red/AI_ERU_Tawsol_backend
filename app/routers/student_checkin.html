@@ -150,6 +150,12 @@
           </p>
         </div>
 
+        <!-- ROTATING TOKEN EXPIRY ALERT -->
+        <div id="rotating-token-alert" class="hidden mb-4 p-3 bg-amber-500/20 border border-amber-500/40 rounded-2xl text-amber-200 text-xs text-center font-bold animate-pulse">
+          <i class="fa-solid fa-arrows-rotate text-amber-400 ml-1.5"></i>
+          <span id="rotating-token-alert-text">كود الحضور انتهت صلاحيته (انتهت الـ 25 ثانية). يرجى مسح الكود المحدث على شاشة المعلم.</span>
+        </div>
+
         <!-- CAMERA SCANNER CONTAINER -->
         <div id="scanner-wrapper" class="hidden mb-4 relative rounded-2xl overflow-hidden border-2 border-emerald-500/80 bg-black aspect-square max-w-[280px] mx-auto shadow-lg shadow-emerald-500/20">
           <div id="qr-reader" class="w-full h-full"></div>
@@ -445,12 +451,20 @@
           throw new Error(data.detail || 'تعذر تسجيل الحضور. تأكد من صحة الرمز والكود.');
         }
 
+        const alertEl = document.getElementById('rotating-token-alert');
+        if (alertEl) alertEl.classList.add('hidden');
+
         displaySuccessView(data);
 
       } catch (err) {
         showToast(err.message, 'error');
+        const alertEl = document.getElementById('rotating-token-alert');
+        if (alertEl && (err.message.includes('25 ثانية') || err.message.includes('صلاحيته'))) {
+          alertEl.classList.remove('hidden');
+          document.getElementById('input-token').value = '';
+        }
         if (isAudioActive) {
-          speakVoice("تعذر تسجيل الحضور. يرجى مراجعة الكود أو وقت الجلسة.");
+          speakVoice(err.message.includes('25 ثانية') ? "انتهت صلاحية الرمز، يرجى مسح الرمز الجديد على شاشة المعلم." : "تعذر تسجيل الحضور. يرجى مراجعة الكود أو وقت الجلسة.");
         }
       } finally {
         btn.disabled = false;

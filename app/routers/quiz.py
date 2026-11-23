@@ -167,6 +167,9 @@ async def generate_quiz_endpoint(
             except Exception:
                 stored_questions = None
 
+    q_type = getattr(body, "question_type", None) or "mcq"
+    bloom = getattr(body, "bloom_level", None) or "comprehension"
+
     if not stored_questions:
         stored_questions = await generate_quiz(
             text=text_to_process,
@@ -174,6 +177,8 @@ async def generate_quiz_endpoint(
             difficulty=body.difficulty or "medium",
             force_refresh=force_refresh,
             file_id=target_file_id if target_file_id > 0 else None,
+            question_type=q_type,
+            bloom_level=bloom,
         )
 
     # ── Create session ────────────────────────────────────────────────────
@@ -189,6 +194,8 @@ async def generate_quiz_endpoint(
                 "correct": q.correct,
                 "explanation": q.explanation,
                 "reference_quote": getattr(q, "reference_quote", ""),
+                "question_type": getattr(q, "question_type", "mcq"),
+                "bloom_level": getattr(q, "bloom_level", "comprehension"),
             }
             for q in stored_questions
         ]
@@ -235,6 +242,8 @@ async def generate_quiz_endpoint(
             reference_quote=getattr(q, "reference_quote", "") or "",
             explanation=q.explanation if is_teacher else "",
             correct=q.correct if is_teacher else None,
+            question_type=getattr(q, "question_type", "mcq"),
+            bloom_level=getattr(q, "bloom_level", "comprehension"),
         )
         for q in stored_questions
     ]
