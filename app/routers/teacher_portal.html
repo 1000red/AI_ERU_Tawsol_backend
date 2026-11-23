@@ -119,13 +119,13 @@
         <!-- Right Controls: Teacher Profile, Dark Mode, Quick Login -->
         <div class="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
           <!-- Teacher Interactive Gateway & Live Arena Link -->
-          <a href="/teacher-gateway" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-700 via-indigo-600 to-teal-600 hover:opacity-95 text-white font-black text-xs shadow-md shadow-purple-500/20 transition flex items-center gap-1.5" title="فتح ساحة التحدي التفاعلية وسجل نقاط الطلاب (Teacher Gateway)">
+          <a href="/gateway" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-700 via-indigo-600 to-teal-600 hover:opacity-95 text-white font-black text-xs shadow-md shadow-purple-500/20 transition flex items-center gap-1.5" title="فتح ساحة التحدي التفاعلية وسجل نقاط الطلاب (Teacher Gateway)">
             <i class="fa-solid fa-gamepad text-amber-300"></i>
             <span class="hidden md:inline">استوديو التحدي 👑</span>
           </a>
 
           <!-- Student QR Check-In Gateway Link -->
-          <a href="Student_CheckIn.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold transition flex items-center gap-1.5" title="بوابة مسح رمز QR حضور الطلاب">
+          <a href="/checkin" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold transition flex items-center gap-1.5" title="بوابة مسح رمز QR حضور الطلاب">
             <i class="fa-solid fa-qrcode text-emerald-600 dark:text-emerald-400"></i>
             <span class="hidden xl:inline">بوابة الحضور</span>
           </a>
@@ -149,7 +149,7 @@
           </button>
 
           <!-- SQBS Competition Pitch Link -->
-          <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:opacity-95 text-white font-black text-xs shadow-md shadow-amber-500/20 transition flex items-center gap-1.5" title="فتح العرض التقديمي التنافسي لمنظومة SQBS">
+          <a href="/pitch" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:opacity-95 text-white font-black text-xs shadow-md shadow-amber-500/20 transition flex items-center gap-1.5" title="فتح العرض التقديمي التنافسي لمنظومة SQBS">
             <i class="fa-solid fa-trophy text-amber-200"></i>
             <span class="hidden md:inline">Pitch</span>
           </a>
@@ -168,6 +168,21 @@
       </div>
     </div>
   </header>
+
+  <!-- LIVE BILINGUAL SUBTITLE & STATUS TICKER BAR -->
+  <div id="live-subtitle-bar" class="w-full bg-slate-900/95 dark:bg-purple-950/90 border-b border-purple-800/50 px-4 py-1.5 text-xs text-purple-200 flex items-center justify-between gap-3 shadow-sm z-20">
+    <div class="flex items-center gap-2 overflow-hidden">
+      <span id="subtitle-pulse-dot" class="w-2 h-2 rounded-full bg-emerald-400 transition-colors"></span>
+      <i id="subtitle-voice-icon" class="fa-solid fa-volume-high text-slate-400 text-xs"></i>
+      <span id="live-subtitle-text" class="truncate font-medium">مرحباً بك في بوابة المعلمين والمهندسين — مدرسة WE للتكنولوجيا التطبيقية بالسويس</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <span id="subtitle-lang-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-800/80 text-white font-mono">AR/EN</span>
+      <span id="backend-status-dot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span id="backend-status-text" class="text-[11px] text-slate-300 font-bold hidden sm:inline">السيرفر: متصل</span>
+    </div>
+  </div>
+
 
   <!-- ========================================================================= -->
   <!-- TEACHER DIRECTORY DRAWER (ROSTER & COURSES)                               -->
@@ -302,7 +317,7 @@
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-purple-900 hover:bg-slate-800 dark:hover:bg-purple-800 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+        <a href="/pitch" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-purple-900 hover:bg-slate-800 dark:hover:bg-purple-800 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
           <i class="fa-solid fa-chart-line text-amber-400"></i>
           <span>عرض تحليل SQBS</span>
         </a>
@@ -771,7 +786,7 @@
                 <i class="fa-solid fa-copy"></i>
                 <span>نسخ الرابط</span>
               </button>
-              <a href="Student_CheckIn.html" target="_blank" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1.5" title="فتح بوابة الطالب في نافذة جديدة">
+              <a href="/checkin" target="_blank" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs transition flex items-center gap-1.5" title="فتح بوابة الطالب في نافذة جديدة">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i>
                 <span>فتح البوابة</span>
               </a>
@@ -1022,7 +1037,7 @@
           </div>
 
           <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0">
-            <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-amber-400/20 transition flex items-center gap-2">
+            <a href="/pitch" target="_blank" class="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-amber-400/20 transition flex items-center gap-2">
               <i class="fa-solid fa-trophy text-slate-900"></i>
               <span>عرض التجربة الميدانية (Pitch)</span>
             </a>
@@ -1689,6 +1704,11 @@
         <div>
           <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">وصف موجز أو أهداف الدرس (اختياري)</label>
           <textarea id="file-modal-desc" rows="2" placeholder="أهم المفاهيم، ملخص الوحدة، أو ملاحظات للطلاب..." class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+        </div>
+
+        <div>
+          <label class="block font-bold mb-1 text-slate-700 dark:text-slate-300">رابط إلكتروني إضافي / مرجع خارجي (اختياري)</label>
+          <input type="url" id="file-modal-link" placeholder="https://... (رابط درس، يوتيوب، أو مرجع خارجي)" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs outline-none focus:ring-2 focus:ring-brand-500 font-mono">
         </div>
 
         <input type="hidden" id="file-modal-type" value="file">
@@ -6086,14 +6106,18 @@
       try {
         const res = await fetch(`${API_BASE}/health`, { cache: 'no-store' });
         const data = await res.json();
+        const dot = document.getElementById('backend-status-dot');
+        const txt = document.getElementById('backend-status-text');
         if (res.ok && data.status === 'ok' && !isPlatformStopped) {
-          document.getElementById('backend-status-dot').className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
-          document.getElementById('backend-status-text').innerText = 'السيرفر السحابي: متصل';
+          if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+          if (txt) txt.innerText = 'السيرفر السحابي: متصل';
         }
       } catch (e) {
         if (!isPlatformStopped) {
-          document.getElementById('backend-status-dot').className = 'w-2 h-2 rounded-full bg-rose-500';
-          document.getElementById('backend-status-text').innerText = 'جاري الاتصال بالسيرفر...';
+          const dot = document.getElementById('backend-status-dot');
+          const txt = document.getElementById('backend-status-text');
+          if (dot) dot.className = 'w-2 h-2 rounded-full bg-rose-500';
+          if (txt) txt.innerText = 'جاري الاتصال بالسيرفر...';
         }
       }
     }

@@ -121,19 +121,19 @@
         <!-- Right Controls: Admin Profile, Dark Mode, Voice-Over & Portals -->
         <div class="flex items-center gap-2 sm:gap-3">
           <!-- Student QR Check-In Gateway Link -->
-          <a href="Student_CheckIn.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold transition flex items-center gap-1.5" title="بوابة مسح رمز QR حضور الطلاب">
+          <a href="/checkin" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 text-xs font-bold transition flex items-center gap-1.5" title="بوابة مسح رمز QR حضور الطلاب">
             <i class="fa-solid fa-qrcode text-emerald-600 dark:text-emerald-400"></i>
             <span class="hidden xl:inline">بوابة حضور الطلاب</span>
           </a>
 
           <!-- Teacher Portal Link -->
-          <a href="Teacher_Portal.html" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 text-xs font-bold transition flex items-center gap-1.5" title="الانتقال إلى بوابة المعلمين والمهندسين">
+          <a href="/teacher" target="_blank" class="px-2.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 text-xs font-bold transition flex items-center gap-1.5" title="الانتقال إلى بوابة المعلمين والمهندسين">
             <i class="fa-solid fa-chalkboard-user text-purple-600 dark:text-purple-400"></i>
             <span class="hidden lg:inline">بوابة المعلمين</span>
           </a>
 
           <!-- Competition Pitch Deck Quick Launch -->
-          <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-black shadow-md shadow-amber-500/25 hover:opacity-95 transition flex items-center gap-1.5" title="فتح العرض التقديمي التنافسي (Pitch Deck)">
+          <a href="/pitch" target="_blank" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-black shadow-md shadow-amber-500/25 hover:opacity-95 transition flex items-center gap-1.5" title="فتح العرض التقديمي التنافسي (Pitch Deck)">
             <i class="fa-solid fa-trophy"></i>
             <span class="hidden sm:inline">العرض التنافسي</span>
           </a>
@@ -304,7 +304,7 @@
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-3 py-2 rounded-xl bg-slate-900 dark:bg-purple-800 text-white text-xs font-bold hover:opacity-90 transition flex items-center gap-1.5" title="عرض الشريحة 10 في العرض التقديمي">
+        <a href="/pitch" target="_blank" class="px-3 py-2 rounded-xl bg-slate-900 dark:bg-purple-800 text-white text-xs font-bold hover:opacity-90 transition flex items-center gap-1.5" title="عرض الشريحة 10 في العرض التقديمي">
           <i class="fa-solid fa-chart-line text-amber-400"></i>
           <span>عرض الشريحة 10</span>
         </a>
@@ -1257,7 +1257,7 @@
           </div>
 
           <div class="flex flex-wrap sm:flex-nowrap items-center gap-3 shrink-0">
-            <a href="SQBS_Competition_Pitch.html" target="_blank" class="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-amber-400/20 transition flex items-center gap-2">
+            <a href="/pitch" target="_blank" class="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-amber-400/20 transition flex items-center gap-2">
               <i class="fa-solid fa-trophy text-slate-900"></i>
               <span>عرض التجربة الميدانية (Pitch)</span>
             </a>
@@ -5977,6 +5977,119 @@ async function inspectQuiz(quizId) {
       }).catch(() => {
         showToast('تعذر نسخ الرابط تلقائياً', 'error');
       });
+    }
+
+    // ── ADMIN HONOR ROLL, VOICEOVER & LANGUAGE ASSISTANT ──────────────────────
+    const C2_HONOR_ROLL_ADMIN = [
+      { rank: 1, id: "C2-STU-01", name: "يوسف أحمد إبراهيم", points: 142, badge: "قائد الابتكار البرمجي", badgeIcon: "fa-code", badgeColor: "amber", attendance: "100%", status: "تحسن استثنائي", note: "ابتكار خوارزمية فرز ذكية ومساعدة 4 زملاء" },
+      { rank: 2, id: "C2-STU-02", name: "عمر خالد عبد العزيز", points: 128, badge: "نجم حل المشكلات", badgeIcon: "fa-puzzle-piece", badgeColor: "indigo", attendance: "96%", status: "تحسن مستمر", note: "حل تحدي الشبكات العملي في زمن قياسي" },
+      { rank: 3, id: "C2-STU-03", name: "مصطفى محمود رضوان", points: 116, badge: "سفير التعاون والأخلاق", badgeIcon: "fa-heart-handshake", badgeColor: "emerald", attendance: "92%", status: "تحسن مستمر", note: "دعم الزملاء في إعداد بيئة التطوير" },
+      { rank: 4, id: "C2-STU-04", name: "عبد الله الشربيني", points: 98, badge: "التميز في شبكات WE", badgeIcon: "fa-network-wired", badgeColor: "purple", attendance: "95%", status: "تحسن مستمر", note: "توصيل وبرمجة راوتر Cisco بنجاح" },
+      { rank: 5, id: "C2-STU-05", name: "محمد طارق علي", points: 92, badge: "المبرمج المبدع", badgeIcon: "fa-laptop-code", badgeColor: "teal", attendance: "90%", status: "تحول نشط", note: "انتقل من الصمت للمشاركة الفعالة 100%" },
+      { rank: 6, id: "C2-STU-06", name: "علي حسن إبراهيم", points: 88, badge: "المثابر الرقمي", badgeIcon: "fa-shield-halved", badgeColor: "blue", attendance: "94%", status: "تحسن مستمر", note: "تطبيق جدران الحماية للشبكة المدرسية" },
+      { rank: 7, id: "C2-STU-07", name: "زياد أيمن فريد", points: 82, badge: "نجم التوثيق البرمجي", badgeIcon: "fa-book-bookmark", badgeColor: "indigo", attendance: "89%", status: "نشاط متميز", note: "توثيق شامل لمشاريع التخرج العملية" },
+      { rank: 8, id: "C2-STU-08", name: "أحمد رضا عثمان", points: 79, badge: "بطل التحول الرقمي", badgeIcon: "fa-bolt", badgeColor: "amber", attendance: "91%", status: "تحسن مستمر", note: "مشاركة ممتازة في مسابقات البرمجة" },
+      { rank: 9, id: "C2-STU-09", name: "كريم ممدوح شحاتة", points: 74, badge: "فارس الدعم التقني", badgeIcon: "fa-headset", badgeColor: "rose", attendance: "88%", status: "إيجابي", note: "المساعدة في صيانة معمل الحواسيب" },
+      { rank: 10, id: "C2-STU-10", name: "حسام الدين هاني", points: 71, badge: "مبتكر قواعد البيانات", badgeIcon: "fa-database", badgeColor: "teal", attendance: "93%", status: "تحسن مستمر", note: "تصميم نموذج ERD متميز لنظام المدرسة" },
+      { rank: 11, id: "C2-STU-11", name: "إبراهيم وليد حمزة", points: 68, badge: "عضو نشط", badgeIcon: "fa-star", badgeColor: "slate", attendance: "86%", status: "مستقر", note: "إتمام جميع التكليفات في الموعد المحدد" },
+      { rank: 12, id: "C2-STU-12", name: "مازن سامي فتحي", points: 64, badge: "عضو نشط", badgeIcon: "fa-star", badgeColor: "slate", attendance: "85%", status: "مستقر", note: "حضور كامل لورش العمل التدريبية" },
+      { rank: 13, id: "C2-STU-13", name: "سيف الدين كمال", points: 58, badge: "عضو صاعد", badgeIcon: "fa-arrow-trend-up", badgeColor: "purple", attendance: "83%", status: "تحسن تدريجي", note: "تطور ملحوظ في اختبارات الشبكات الشهرية" },
+      { rank: 14, id: "C2-STU-14", name: "ياسين تامر صلاح", points: 52, badge: "عضو صاعد", badgeIcon: "fa-seedling", badgeColor: "emerald", attendance: "82%", status: "تحسن تدريجي", note: "استجابة ممتازة لتوجيهات المعلم الداعمة" }
+    ];
+
+    function renderAdminHonorRollTable(list = C2_HONOR_ROLL_ADMIN) {
+      const tbody = document.getElementById('admin-honor-roll-table-body');
+      if (!tbody) return;
+
+      tbody.innerHTML = list.map((s) => {
+        const medal = s.rank === 1 ? '🥇' : s.rank === 2 ? '🥈' : s.rank === 3 ? '🥉' : `#${s.rank}`;
+        const rowBg = s.rank === 1 ? 'bg-amber-50/50 dark:bg-amber-950/20' : s.rank <= 3 ? 'bg-purple-50/30 dark:bg-purple-950/10' : '';
+        return `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/60 transition ${rowBg}">
+            <td class="p-3.5 text-center font-black text-sm text-slate-800 dark:text-slate-100">${medal}</td>
+            <td class="p-3.5">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center">${s.name.charAt(0)}</span>
+                <span class="font-bold text-slate-900 dark:text-white">${s.name}</span>
+              </div>
+            </td>
+            <td class="p-3.5 font-mono text-[11px] text-slate-500 dark:text-slate-400">${s.id}</td>
+            <td class="p-3.5 text-center font-bold font-mono text-emerald-600 dark:text-emerald-400 text-sm">+${s.points}</td>
+            <td class="p-3.5">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-${s.badgeColor}-500/10 text-${s.badgeColor}-700 dark:text-${s.badgeColor}-300 border border-${s.badgeColor}-500/30">
+                <i class="fa-solid ${s.badgeIcon}"></i>
+                <span>${s.badge}</span>
+              </span>
+            </td>
+            <td class="p-3.5 text-center font-mono font-bold text-slate-700 dark:text-slate-300">${s.attendance}</td>
+            <td class="p-3.5 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">${s.status}</span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterAdminHonorRoll(category) {
+      if (category === 'top') {
+        renderAdminHonorRollTable(C2_HONOR_ROLL_ADMIN.slice(0, 3));
+      } else if (category === 'badges') {
+        renderAdminHonorRollTable(C2_HONOR_ROLL_ADMIN.filter(s => s.points >= 75));
+      } else {
+        renderAdminHonorRollTable(C2_HONOR_ROLL_ADMIN);
+      }
+    }
+
+    function printAdminHonorRollCharter() {
+      showToast('جاري تجهيز لوحة الشرف للطباعة الرسمية... 🖨️', 'info');
+      setTimeout(() => window.print(), 300);
+    }
+
+    let isAdminVoiceOverActive = false;
+    function toggleAdminVoiceOverAssistant() {
+      if (!('speechSynthesis' in window)) {
+        showToast('المتصفح لا يدعم توليد الصوت (Web Speech API)', 'warning');
+        return;
+      }
+      isAdminVoiceOverActive = !isAdminVoiceOverActive;
+      const btn = document.getElementById('admin-voiceover-btn');
+      const icon = document.getElementById('admin-voiceover-icon');
+      const lbl = document.getElementById('admin-voiceover-label');
+
+      if (isAdminVoiceOverActive) {
+        if (btn) btn.classList.add('bg-purple-600', 'text-white', 'shadow-md');
+        if (icon) icon.className = 'fa-solid fa-volume-high text-amber-300 animate-pulse';
+        if (lbl) lbl.innerText = 'صوت مفعّل';
+        const utter = new SpeechSynthesisUtterance('مرحباً بك في لوحة تحكم وإدارة مدرسة وي للتكنولوجيا التطبيقية بالسويس.');
+        utter.lang = 'ar-SA';
+        window.speechSynthesis.speak(utter);
+        showToast('تم تفعيل المعلق الصوتي الذكي للإدارة 🔊', 'success');
+      } else {
+        if (btn) btn.classList.remove('bg-purple-600', 'text-white', 'shadow-md');
+        if (icon) icon.className = 'fa-solid fa-volume-high text-purple-600 dark:text-purple-400';
+        if (lbl) lbl.innerText = 'صوت معلق';
+        window.speechSynthesis.cancel();
+        showToast('تم إيقاف المعلق الصوتي 🔇', 'info');
+      }
+    }
+
+    let isAdminEnglish = false;
+    function toggleAdminLanguageOverlay() {
+      isAdminEnglish = !isAdminEnglish;
+      const lbl = document.getElementById('admin-lang-label');
+      if (lbl) lbl.innerText = isAdminEnglish ? 'AR' : 'EN';
+      showToast(
+        isAdminEnglish ? 'Switched Admin UI to English 🌐' : 'تم العودة إلى واجهة اللغة العربية 🇪🇬',
+        'info'
+      );
+    }
+
+    // Auto-render Honor Roll table on DOM ready
+    document.addEventListener('DOMContentLoaded', () => {
+      renderAdminHonorRollTable();
+    });
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(renderAdminHonorRollTable, 50);
     }
 
   </script>

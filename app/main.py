@@ -196,6 +196,16 @@ def dashboard_view():
     return HTMLResponse(content=DASHBOARD_HTML)
 
 
+@app.get("/storage", response_class=HTMLResponse, tags=["Storage Telemetry"])
+@app.get("/storage-center", response_class=HTMLResponse, tags=["Storage Telemetry"])
+def storage_command_center_view():
+    storage_file = os.path.join(os.path.dirname(__file__), "templates", "storage_command_center.html")
+    if os.path.exists(storage_file):
+        with open(storage_file, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<!DOCTYPE html><html><body><h1>Storage Command Center</h1></body></html>")
+
+
 @app.get("/login", include_in_schema=False)
 @app.get("/auth/login", include_in_schema=False)
 def login_get_view():

@@ -534,6 +534,8 @@
                 <span class="text-sm sm:text-base font-bold text-emerald-300 pt-1" data-ar="الأسبوع 2" data-en="Week 2">الأسبوع 2</span>
               </div>
             </div>
+            <!-- Canvas target for Chart.js rendering -->
+            <canvas id="chart-participation" class="hidden"></canvas>
           </div>
 
           <div class="glass rounded-2xl p-4 flex items-center justify-between gap-4 border-s-4 border-we-gold">
@@ -1626,14 +1628,18 @@
       const v = document.getElementById('backup-video-el');
       if (v) v.play().catch(() => {});
     }
-    const openVideoBackup = openPitchVideo;
+    function openVideoBackup() {
+      openPitchVideo();
+    }
 
     function closePitchVideo() {
       const v = document.getElementById('backup-video-el');
       if (v) v.pause();
       closeModal('modal-video-backup');
     }
-    const closeVideoBackup = closePitchVideo;
+    function closeVideoBackup() {
+      closePitchVideo();
+    }
 
     function seekPitchVideo(seconds, btn) {
       const v = document.getElementById('backup-video-el');
