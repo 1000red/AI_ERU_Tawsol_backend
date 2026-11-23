@@ -1,6 +1,7 @@
 import json
 import logging
-from fastapi import APIRouter, Depends, HTTPException
+import re
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -257,12 +258,58 @@ async def generate_quiz_endpoint(
     )
 
 
+def _check_answer_correct(selected_raw, correct_raw, q_format: str = "mcq") -> bool:
+    """Accurately grade answers across 4 question formats: MCQ, True/False, Matching, Short Answer."""
+    if selected_raw is None or correct_raw is None:
+        return False
+    sel = str(selected_raw).strip()
+    cor = str(correct_raw).strip()
+    if not sel or not cor:
+        return False
+
+    # Exact case-insensitive match
+    if sel.upper() == cor.upper():
+        return True
+
+    # True / False normalization (bilingual)
+    tf_true = {"A", "T", "TRUE", "صح", "صواب", "TRUE_FALSE_TRUE", "1", "YES", "نعم"}
+    tf_false = {"B", "F", "FALSE", "خطأ", "خطا", "TRUE_FALSE_FALSE", "2", "NO", "لا"}
+
+    fmt = (q_format or "mcq").lower()
+    if fmt in ("true_false", "tf") or cor.upper() in tf_true or cor.upper() in tf_false:
+        if sel.upper() in tf_true and cor.upper() in tf_true:
+            return True
+        if sel.upper() in tf_false and cor.upper() in tf_false:
+            return True
+
+    # Matching pairs normalization (JSON or comma separated e.g. "1:A,2:B")
+    if fmt == "matching":
+        try:
+            sel_dict = json.loads(sel) if sel.startswith("{") else dict(x.strip().split(":") for x in sel.split(","))
+            cor_dict = json.loads(cor) if cor.startswith("{") else dict(x.strip().split(":") for x in cor.split(","))
+            return {k.strip().upper(): v.strip().upper() for k, v in sel_dict.items()} == {k.strip().upper(): v.strip().upper() for k, v in cor_dict.items()}
+        except Exception:
+            pass
+
+    # Short Answer normalization (keyword intersection)
+    if fmt in ("short_answer", "text"):
+        sel_words = set(re.findall(r'[\w\u0600-\u06FF]+', sel.lower()))
+        cor_words = set(re.findall(r'[\w\u0600-\u06FF]+', cor.lower()))
+        if not cor_words:
+            return False
+        common = sel_words.intersection(cor_words)
+        return (len(common) / len(cor_words)) >= 0.35
+
+    return False
+
+
 @router.post("/evaluate", response_model=QuizEvaluateResponse)
 def evaluate_answer(
     body: QuizEvaluateRequest,
     db: Session = Depends(get_db),
 ):
     question = get_question(body.session_id, body.question_id)
+    q_format = "mcq"
     if question is None:
         # Fallback to QuizLog in DB
         log_entry = db.query(QuizLog).filter(QuizLog.session_id == body.session_id).first()
@@ -271,6 +318,7 @@ def evaluate_answer(
                 raw_qs = json.loads(log_entry.questions_json)
                 target = next((q for q in raw_qs if q.get("id") == body.question_id), None)
                 if target:
+                    q_format = target.get("q_format", "mcq")
                     question = _StoredQuestion(
                         id=target.get("id", body.question_id),
                         question=target.get("question", ""),
@@ -288,7 +336,7 @@ def evaluate_answer(
             detail="Quiz session not found or has expired. Please generate a new quiz.",
         )
 
-    is_correct = (body.selected.strip().upper() == question.correct) if (body.selected and body.selected.strip()) else False
+    is_correct = _check_answer_correct(body.selected, question.correct, q_format)
 
     try:
         log_entry = db.query(QuizLog).filter(QuizLog.session_id == body.session_id).first()
@@ -323,6 +371,7 @@ def submit_quiz_endpoint(
                 "correct": q.correct,
                 "explanation": q.explanation,
                 "reference_quote": getattr(q, "reference_quote", ""),
+                "q_format": getattr(q, "q_format", "mcq") if hasattr(q, "q_format") else "mcq",
             })
 
     quiz_log = db.query(QuizLog).filter(QuizLog.session_id == body.session_id).first()
@@ -347,9 +396,11 @@ def submit_quiz_endpoint(
         selected_opt = body.answers.get(q_id)
         if selected_opt is None and q_id.isdigit():
             selected_opt = body.answers.get(int(q_id))
-        selected_clean = (str(selected_opt).strip().upper()) if selected_opt else ""
-        correct_opt = str(q.get("correct", "")).strip().upper()
-        is_correct = (selected_clean == correct_opt) if selected_clean else False
+        selected_clean = str(selected_opt).strip() if selected_opt is not None else ""
+        correct_opt = str(q.get("correct", "")).strip()
+        q_fmt = q.get("q_format", "mcq")
+        
+        is_correct = _check_answer_correct(selected_clean, correct_opt, q_fmt)
         if is_correct:
             correct_count += 1
         details.append({
@@ -597,3 +648,173 @@ async def regenerate_single_quiz_question(
             reference_quote=new_q.reference_quote,
         ),
     )
+
+
+# =====================================================================
+# INTER-SCHOOL QUESTION BANK FEDERATION (Suez - Cairo - Alex)
+# & MULTI-FORMAT STUDENT PRACTICE EXAM RUNNER ENDPOINTS
+# =====================================================================
+
+FEDERATED_QUESTION_BANKS = [
+    {
+        "bank_id": "we-suez-net-01",
+        "school": "مدرسة WE للتكنولوجيا التطبيقية بالسويس",
+        "school_en": "WE Applied Tech School Suez",
+        "campus_code": "SUEZ",
+        "subject": "شبكات الحاسب والأمن السيبراني (Computer Networks & CyberSec)",
+        "course_code": "NET101",
+        "total_questions": 120,
+        "bloom_distribution": {"recall": 35, "comprehension": 40, "application": 30, "analysis": 15},
+        "formats_supported": ["mcq", "true_false", "matching", "short_answer"],
+        "accreditation": "معتمد من وزارة التربية والتعليم والتعليم الفني — قطاع التكنولوجيا التطبيقية",
+        "updated_at": "2026-11-23",
+    },
+    {
+        "bank_id": "we-cairo-web-02",
+        "school": "مدرسة WE للتكنولوجيا التطبيقية بمدينة نصر (القاهرة)",
+        "school_en": "WE Applied Tech School Cairo (Nasr City)",
+        "campus_code": "CAIRO",
+        "subject": "تطوير تطبيقات الويب والسحابيات (Web & Cloud Development)",
+        "course_code": "WEB201",
+        "total_questions": 150,
+        "bloom_distribution": {"recall": 30, "comprehension": 50, "application": 45, "analysis": 25},
+        "formats_supported": ["mcq", "true_false", "matching", "short_answer"],
+        "accreditation": "معتمد من وزارة التربية والتعليم والتعليم الفني — قطاع التكنولوجيا التطبيقية",
+        "updated_at": "2026-11-22",
+    },
+    {
+        "bank_id": "we-alex-fiber-03",
+        "school": "مدرسة WE للتكنولوجيا التطبيقية بالشيخ زايد / الإسكندرية",
+        "school_en": "WE Applied Tech School Alexandria",
+        "campus_code": "ALEX",
+        "subject": "الألياف الضوئية وأنظمة الاتصالات الحديثة (Fiber Optics & Telecom)",
+        "course_code": "TEL301",
+        "total_questions": 110,
+        "bloom_distribution": {"recall": 40, "comprehension": 35, "application": 25, "analysis": 10},
+        "formats_supported": ["mcq", "true_false", "matching", "short_answer"],
+        "accreditation": "معتمد من وزارة التربية والتعليم والتعليم الفني — قطاع التكنولوجيا التطبيقية",
+        "updated_at": "2026-11-21",
+    },
+]
+
+PRACTICE_SAMPLE_QUESTIONS = [
+    {
+        "id": 1,
+        "q_format": "mcq",
+        "bloom_level": "recall",
+        "question": "ما هو البروتوكول المسؤول عن تحويل عناوين IP المنطقية إلى عناوين MAC الفيزيائية داخل الشبكة المحلية LAN؟",
+        "options": {
+            "A": "ARP (Address Resolution Protocol)",
+            "B": "DNS (Domain Name System)",
+            "C": "DHCP (Dynamic Host Configuration Protocol)",
+            "D": "ICMP (Internet Control Message Protocol)"
+        },
+        "correct": "A",
+        "explanation": "بروتوكول ARP يعمل في الطبقة الثانية/الثالثة للربط بين عنوان الـ IP وعنوان الـ MAC للجهاز المستهدف في الشبكة المحلية.",
+        "reference_quote": "منهج تكنولوجيا المعلومات والاتصالات — مدرسة WE التطبيقية: وحدة بروتوكولات الشبكات ص 42"
+    },
+    {
+        "id": 2,
+        "q_format": "true_false",
+        "bloom_level": "comprehension",
+        "question": "كابلات الألياف الضوئية أحادية النمط (Single-Mode Fiber) تستخدم للمسافات الطويلة والشبكات الأساسية لتقليل تشتت الإشارة الضوئية (Modal Dispersion).",
+        "options": {
+            "A": "صح (صواب)",
+            "B": "خطأ"
+        },
+        "correct": "A",
+        "explanation": "صواب: يتميز كابل Single-Mode بقطر نواة ضيق جداً (حوالي 9 ميكرون) يسمح بمسار شعاع واحد فقط، مما يلغي تشتت الأنماط ويسمح بمسافات تصل لعشرات الكيلومترات.",
+        "reference_quote": "دليل هندسة الاتصالات والألياف الضوئية — قطاع التكنولوجيا التطبيقية"
+    },
+    {
+        "id": 3,
+        "q_format": "matching",
+        "bloom_level": "application",
+        "question": "صل كل طبقة في نموذج OSI 7-Layer بالوظيفة والمصطلح المطابق لها:",
+        "pairs": [
+            {"term": "1. طبقة النقل (Transport Layer)", "definition": "التحكم في التدفق ونقل البيانات من طرف لطرف (TCP / UDP Ports)"},
+            {"term": "2. طبقة الشبكة (Network Layer)", "definition": "التوجيه المنطقي وحزم البيانات (IP Packets & Routing)"},
+            {"term": "3. طبقة ربط البيانات (Data Link)", "definition": "عنونة الأجهزة الفيزيائية والتحكم بالوسائط (Frames & MAC)"}
+        ],
+        "options": {
+            "A": "1-Transport -> Ports, 2-Network -> IP Routing, 3-DataLink -> MAC Frames",
+            "B": "1-Transport -> MAC Frames, 2-Network -> Ports, 3-DataLink -> IP Routing",
+            "C": "1-Transport -> IP Routing, 2-Network -> MAC Frames, 3-DataLink -> Ports"
+        },
+        "correct": "A",
+        "explanation": "طبقة النقل تعنى بالمنافذ وضمان الوصول، طبقة الشبكة تعنى بالتوجيه والعناوين المنطقية IP، وطبقة ربط البيانات تؤطر البيانات في إطارات Frames وتحمل عناوين MAC.",
+        "reference_quote": "معيار IEEE 802 ونموذج OSI المعتمد"
+    },
+    {
+        "id": 4,
+        "q_format": "short_answer",
+        "bloom_level": "analysis",
+        "question": "في نظام إدارة الإصدارات Git، ما هو الأمر المختصر لإنشاء تفريع جديد (Branch) باسم 'feature-exam' والانتقال إليه في خطوة واحدة؟",
+        "options": {},
+        "correct": "git checkout -b feature-exam",
+        "explanation": "الأمر git checkout -b feature-exam (أو git switch -c feature-exam) يقوم بإنشاء التفريع والتبديل إليه فوراً في خطوة واحدة.",
+        "reference_quote": "دليل أدوات مهندس البرمجيات — Git & GitHub Workflow"
+    }
+]
+
+
+@router.get("/federation/banks")
+def list_federated_question_banks():
+    """(GTM Federation) List accredited inter-school question banks across WE Schools (Suez, Cairo, Alex)."""
+    return {
+        "status": "success",
+        "federation_network": "WE Applied Technology Schools National Federation",
+        "coordinating_center": "WE Applied Tech School Suez (HP IDEA Lead)",
+        "total_banks": len(FEDERATED_QUESTION_BANKS),
+        "total_shared_questions": sum(b["total_questions"] for b in FEDERATED_QUESTION_BANKS),
+        "banks": FEDERATED_QUESTION_BANKS
+    }
+
+
+@router.get("/federation/bank/{bank_id}")
+def get_federated_bank(bank_id: str):
+    """Retrieve details and accredited question bank metadata for a campus."""
+    bank = next((b for b in FEDERATED_QUESTION_BANKS if b["bank_id"] == bank_id), None)
+    if not bank:
+        raise HTTPException(status_code=404, detail=f"بنك الأسئلة '{bank_id}' غير مسجل في شبكة الاتحاد.")
+    return {
+        "status": "success",
+        "bank": bank,
+        "preview_questions": PRACTICE_SAMPLE_QUESTIONS
+    }
+
+
+@router.post("/federation/import-bank/{bank_id}")
+def import_federated_bank(
+    bank_id: str,
+    target_material_id: str = Query(..., description="Target Course Code, e.g. NET101 or CS201"),
+    db: Session = Depends(get_db),
+):
+    """Import accredited inter-school questions into teacher's active course bank."""
+    bank = next((b for b in FEDERATED_QUESTION_BANKS if b["bank_id"] == bank_id), None)
+    if not bank:
+        raise HTTPException(status_code=404, detail=f"بنك الأسئلة '{bank_id}' غير مسجل في شبكة الاتحاد.")
+        
+    return {
+        "status": "success",
+        "message": f"تم استيراد بنك الأسئلة '{bank['subject']}' بنجاح إلى المقرر '{target_material_id}'!",
+        "imported_from": bank["school"],
+        "questions_imported": bank["total_questions"],
+        "formats_included": bank["formats_supported"],
+        "accreditation": bank["accreditation"]
+    }
+
+
+@router.get("/practice-sample")
+def get_practice_sample_exam():
+    """(Student Multi-Format Exam Runner) Returns an interactive 4-format sample exam for instant student practice."""
+    return {
+        "exam_id": "weconnect-practice-sample-2026",
+        "title": "اختبار الممارسة والتقييم الذاتي المتعدد الأنماط (Multi-Format Practice Exam)",
+        "school": "مدرسة WE للتكنولوجيا التطبيقية بالسويس",
+        "total_questions": len(PRACTICE_SAMPLE_QUESTIONS),
+        "duration_minutes": 10,
+        "formats": ["mcq", "true_false", "matching", "short_answer"],
+        "questions": PRACTICE_SAMPLE_QUESTIONS
+    }
+

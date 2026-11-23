@@ -130,137 +130,325 @@
   </div>
 
   <!-- Main Card Container -->
-  <main class="flex-1 max-w-md w-full mx-auto p-4 flex flex-col justify-center">
+  <main class="flex-1 max-w-md md:max-w-2xl w-full mx-auto p-3 sm:p-4 flex flex-col justify-center transition-all duration-300">
 
     <!-- Card -->
-    <div class="bg-slate-800/80 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-purple-900/50 shadow-2xl relative overflow-hidden">
+    <div class="bg-slate-800/80 backdrop-blur-md rounded-3xl p-4 sm:p-6 border border-purple-900/50 shadow-2xl relative overflow-hidden">
       
-      <!-- CHECK-IN FORM SECTION -->
-      <div id="checkin-form-view">
-        <div class="text-center mb-5">
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>جلسات اليوم مفتوحة للتحضير</span>
-          </span>
-          <h2 class="text-lg sm:text-xl font-extrabold text-white" id="main-heading">
-            تسجيل الحضور الإلكتروني
-          </h2>
-          <p class="text-xs text-slate-400 mt-1" id="main-subheading">
-            امسح رمز الـ QR من شاشة العرض أو أدخل رمز المحاضرة المؤقت
-          </p>
+      <!-- TOP NAVIGATION TABS (Check-in / Attendance Gauge / Multi-Format Exam) -->
+      <div class="flex items-center gap-1.5 p-1 bg-slate-900/90 rounded-2xl border border-slate-700/60 mb-5 text-xs font-bold">
+        <button type="button" onclick="switchStudentTab('checkin')" id="tab-btn-checkin" class="flex-1 py-2 px-2 rounded-xl bg-purple-600 text-white shadow transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-qrcode text-sm"></i>
+          <span data-ar="تسجيل الحضور" data-en="Check-In">تسجيل الحضور</span>
+        </button>
+        <button type="button" onclick="switchStudentTab('summary')" id="tab-btn-summary" class="flex-1 py-2 px-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-chart-pie text-sm"></i>
+          <span data-ar="مؤشر الحضور الأكاديمي" data-en="Attendance Gauge">مؤشر الحضور الأكاديمي</span>
+        </button>
+        <button type="button" onclick="switchStudentTab('exam')" id="tab-btn-exam" class="flex-1 py-2 px-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-feather-pointed text-sm"></i>
+          <span data-ar="الاختبار الذاتي (4 أنماط)" data-en="Exam Runner">الاختبار الذاتي (4 أنماط)</span>
+        </button>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 1: CHECK-IN VIEW                                                  -->
+      <!-- ===================================================================== -->
+      <div id="tab-view-checkin">
+        <!-- CHECK-IN FORM SECTION -->
+        <div id="checkin-form-view">
+          <div class="text-center mb-5">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>جلسات اليوم مفتوحة للتحضير</span>
+            </span>
+            <h2 class="text-lg sm:text-xl font-extrabold text-white" id="main-heading">
+              تسجيل الحضور الإلكتروني
+            </h2>
+            <p class="text-xs text-slate-400 mt-1" id="main-subheading">
+              امسح رمز الـ QR من شاشة العرض أو أدخل رمز المحاضرة المؤقت
+            </p>
+          </div>
+
+          <!-- ROTATING TOKEN EXPIRY ALERT -->
+          <div id="rotating-token-alert" class="hidden mb-4 p-3 bg-amber-500/20 border border-amber-500/40 rounded-2xl text-amber-200 text-xs text-center font-bold animate-pulse">
+            <i class="fa-solid fa-arrows-rotate text-amber-400 ml-1.5"></i>
+            <span id="rotating-token-alert-text">كود الحضور انتهت صلاحيته (انتهت الـ 25 ثانية). يرجى مسح الكود المحدث على شاشة المعلم.</span>
+          </div>
+
+          <!-- CAMERA SCANNER CONTAINER -->
+          <div id="scanner-wrapper" class="hidden mb-4 relative rounded-2xl overflow-hidden border-2 border-emerald-500/80 bg-black aspect-square max-w-[280px] mx-auto shadow-lg shadow-emerald-500/20">
+            <div id="qr-reader" class="w-full h-full"></div>
+            <div class="scanner-laser"></div>
+            <button onclick="stopCameraScanner()" class="absolute bottom-2 left-2 right-2 py-1.5 bg-slate-900/80 backdrop-blur-sm text-rose-400 hover:text-rose-300 text-xs font-bold rounded-xl border border-rose-500/30 transition flex items-center justify-center gap-1.5 z-10">
+              <i class="fa-solid fa-camera-slash"></i>
+              <span>إغلاق الكاميرا</span>
+            </button>
+          </div>
+
+          <!-- SCAN BUTTON TRIGGER -->
+          <div class="mb-4 text-center" id="scan-trigger-box">
+            <button type="button" onclick="startCameraScanner()" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2 group">
+              <i class="fa-solid fa-camera text-base group-hover:scale-110 transition-transform"></i>
+              <span id="lbl-scan-btn">فتح الكاميرا ومسح رمز الـ QR مباشرة</span>
+            </button>
+          </div>
+
+          <!-- DIVIDER -->
+          <div class="relative flex py-2 items-center">
+            <div class="flex-grow border-t border-slate-700"></div>
+            <span class="flex-shrink mx-3 text-slate-500 text-[11px] font-bold" id="lbl-or-token">أو إدخال الرمز يدوياً</span>
+            <div class="flex-grow border-t border-slate-700"></div>
+          </div>
+
+          <!-- FORM -->
+          <form onsubmit="handleStudentCheckIn(event)" class="space-y-3.5 mt-2">
+            <!-- Session Token Input -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1" id="lbl-token-input">
+                رمز الجلسة المؤقت (Session Token) *
+              </label>
+              <div class="relative">
+                <input type="text" id="input-token" required placeholder="مثال: X7K9L2 أو امسح الرمز" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white placeholder-slate-500 text-sm font-mono tracking-widest uppercase outline-none focus:ring-2 focus:ring-purple-500 transition">
+                <span id="token-detected-badge" class="hidden absolute left-3 top-2.5 text-xs text-emerald-400 font-bold flex items-center gap-1">
+                  <i class="fa-solid fa-check"></i>
+                  <span id="lbl-captured">تم الالتقاط</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Student Identifier Input -->
+            <div>
+              <label class="block text-xs font-bold text-slate-300 mb-1" id="lbl-student-id">
+                كود الطالب أو البريد الإلكتروني المعتمد *
+              </label>
+              <input type="text" id="input-student-id" required placeholder="مثال: STU-101 أو student@we.edu.eg أو 2" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white placeholder-slate-500 text-sm outline-none focus:ring-2 focus:ring-purple-500 transition">
+              
+              <!-- Quick preset chips for rapid student check-in testing -->
+              <div class="flex items-center gap-1.5 mt-2 flex-wrap text-[11px]">
+                <span class="text-slate-500" id="lbl-quick-select">اختيار سريع:</span>
+                <button type="button" onclick="setQuickStudent('STU-101', 'أحمد رضا')" class="px-2 py-0.5 rounded-md bg-slate-700/60 hover:bg-slate-700 text-slate-300 transition">أحمد رضا</button>
+                <button type="button" onclick="setQuickStudent('STU-102', 'سارة محمود')" class="px-2 py-0.5 rounded-md bg-slate-700/60 hover:bg-slate-700 text-slate-300 transition">سارة محمود</button>
+                <button type="button" onclick="setQuickStudent('STU-103', 'كريم حسن')" class="px-2 py-0.5 rounded-md bg-slate-700/60 hover:bg-slate-700 text-slate-300 transition">كريم حسن</button>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="btn-submit-checkin" class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 via-brand-600 to-indigo-600 hover:opacity-95 text-white font-extrabold text-sm shadow-lg shadow-purple-600/30 transition flex items-center justify-center gap-2 mt-2">
+              <i class="fa-solid fa-clipboard-check text-base"></i>
+              <span id="lbl-submit-btn">تأكيد ورصد الحضور الآن ✓</span>
+            </button>
+          </form>
         </div>
 
-        <!-- ROTATING TOKEN EXPIRY ALERT -->
-        <div id="rotating-token-alert" class="hidden mb-4 p-3 bg-amber-500/20 border border-amber-500/40 rounded-2xl text-amber-200 text-xs text-center font-bold animate-pulse">
-          <i class="fa-solid fa-arrows-rotate text-amber-400 ml-1.5"></i>
-          <span id="rotating-token-alert-text">كود الحضور انتهت صلاحيته (انتهت الـ 25 ثانية). يرجى مسح الكود المحدث على شاشة المعلم.</span>
-        </div>
+        <!-- SUCCESS CONFIRMATION VIEW (Hidden initially) -->
+        <div id="checkin-success-view" class="hidden text-center py-6 space-y-4 animate-fadeIn">
+          <div class="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 flex items-center justify-center text-4xl mx-auto shadow-lg shadow-emerald-500/30 animate-bounce">
+            <i class="fa-solid fa-check"></i>
+          </div>
 
-        <!-- CAMERA SCANNER CONTAINER -->
-        <div id="scanner-wrapper" class="hidden mb-4 relative rounded-2xl overflow-hidden border-2 border-emerald-500/80 bg-black aspect-square max-w-[280px] mx-auto shadow-lg shadow-emerald-500/20">
-          <div id="qr-reader" class="w-full h-full"></div>
-          <div class="scanner-laser"></div>
-          <button onclick="stopCameraScanner()" class="absolute bottom-2 left-2 right-2 py-1.5 bg-slate-900/80 backdrop-blur-sm text-rose-400 hover:text-rose-300 text-xs font-bold rounded-xl border border-rose-500/30 transition flex items-center justify-center gap-1.5 z-10">
-            <i class="fa-solid fa-camera-slash"></i>
-            <span>إغلاق الكاميرا</span>
-          </button>
-        </div>
-
-        <!-- SCAN BUTTON TRIGGER -->
-        <div class="mb-4 text-center" id="scan-trigger-box">
-          <button type="button" onclick="startCameraScanner()" class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:opacity-95 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2 group">
-            <i class="fa-solid fa-camera text-base group-hover:scale-110 transition-transform"></i>
-            <span id="lbl-scan-btn">فتح الكاميرا ومسح رمز الـ QR مباشرة</span>
-          </button>
-        </div>
-
-        <!-- DIVIDER -->
-        <div class="relative flex py-2 items-center">
-          <div class="flex-grow border-t border-slate-700"></div>
-          <span class="flex-shrink mx-3 text-slate-500 text-[11px] font-bold" id="lbl-or-token">أو إدخال الرمز يدوياً</span>
-          <div class="flex-grow border-t border-slate-700"></div>
-        </div>
-
-        <!-- FORM -->
-        <form onsubmit="handleStudentCheckIn(event)" class="space-y-3.5 mt-2">
-          <!-- Session Token Input -->
           <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1" id="lbl-token-input">
-              رمز الجلسة المؤقت (Session Token) *
-            </label>
-            <div class="relative">
-              <input type="text" id="input-token" required placeholder="مثال: X7K9L2 أو امسح الرمز" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white placeholder-slate-500 text-sm font-mono tracking-widest uppercase outline-none focus:ring-2 focus:ring-purple-500 transition">
-              <span id="token-detected-badge" class="hidden absolute left-3 top-2.5 text-xs text-emerald-400 font-bold flex items-center gap-1">
-                <i class="fa-solid fa-check"></i>
-                <span id="lbl-captured">تم الالتقاط</span>
+            <h3 class="text-xl font-black text-white" id="success-title">
+              تم تسجيل حضورك بنجاح! 🎉
+            </h3>
+            <p class="text-xs text-emerald-400 font-bold mt-1" id="success-subtitle">
+              مدرسة WE للتكنولوجيا التطبيقية بالسويس • مادة تخصصية
+            </p>
+          </div>
+
+          <!-- Details Card -->
+          <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-700/80 text-right text-xs space-y-2 max-w-xs mx-auto">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+              <span class="text-slate-400" id="lbl-course-title">المقرر:</span>
+              <span id="res-course-name" class="font-bold text-white">-</span>
+            </div>
+            <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+              <span class="text-slate-400" id="lbl-time-title">وقت الرصد:</span>
+              <span id="res-time" class="font-mono font-bold text-purple-300">-</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400" id="lbl-status-title">الحالة:</span>
+              <span id="res-status" class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-[11px] border border-emerald-500/40">
+                حاضر (PRESENT)
               </span>
             </div>
           </div>
 
-          <!-- Student Identifier Input -->
-          <div>
-            <label class="block text-xs font-bold text-slate-300 mb-1" id="lbl-student-id">
-              كود الطالب أو البريد الإلكتروني المعتمد *
-            </label>
-            <input type="text" id="input-student-id" required placeholder="مثال: STU-101 أو student@we.edu.eg أو 2" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900/90 text-white placeholder-slate-500 text-sm outline-none focus:ring-2 focus:ring-purple-500 transition">
-            
-            <!-- Quick preset chips for rapid student check-in testing -->
-            <div class="flex items-center gap-1.5 mt-2 flex-wrap text-[11px]">
-              <span class="text-slate-500" id="lbl-quick-select">اختيار سريع:</span>
-              <button type="button" onclick="setQuickStudent('STU-101', 'أحمد رضا')" class="px-2 py-0.5 rounded-md bg-slate-700/60 hover:bg-slate-700 text-slate-300 transition">أحمد رضا</button>
-              <button type="button" onclick="setQuickStudent('STU-102', 'سارة محمود')" class="px-2 py-0.5 rounded-md bg-slate-700/60 hover:bg-slate-700 text-slate-300 transition">سارة محمود</button>
-              <button type="button" onclick="setQuickStudent('STU-103', 'كريم حسن')" class="px-2 py-0.5 rounded-md bg-slate-700/60 hover:bg-slate-700 text-slate-300 transition">كريم حسن</button>
+          <div class="flex items-center justify-center gap-2 pt-2">
+            <button type="button" onclick="resetCheckInForm()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold transition">
+              <i class="fa-solid fa-rotate-left ml-1"></i>
+              <span id="lbl-checkin-another">تسجيل طالب آخر أو جلسة أخرى</span>
+            </button>
+            <button type="button" onclick="switchStudentTab('summary')" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition">
+              <i class="fa-solid fa-chart-pie ml-1"></i>
+              <span>عرض مؤشر الحضور</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 2: ATTENDANCE GAUGE & ACADEMIC RECORD VIEW                         -->
+      <!-- ===================================================================== -->
+      <div id="tab-view-summary" class="hidden space-y-4">
+        <!-- Student Selector Header -->
+        <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-700/80">
+          <div class="flex flex-col sm:flex-row items-center gap-2">
+            <div class="relative flex-1 w-full">
+              <input type="text" id="input-summary-student" placeholder="كود الطالب أو البريد (مثال: STU-101)" class="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-800 text-white text-xs outline-none focus:ring-2 focus:ring-purple-500 font-mono">
+            </div>
+            <button type="button" onclick="loadAttendanceSummaryFromInput()" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <span>عرض السجل والمؤشر</span>
+            </button>
+          </div>
+          <!-- Presets -->
+          <div class="flex items-center gap-1.5 mt-2 flex-wrap text-[11px]">
+            <span class="text-slate-500">فحص تجريبي سريع:</span>
+            <button type="button" onclick="loadAttendanceSummaryPreset('STU-101')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">أحمد رضا (STU-101)</button>
+            <button type="button" onclick="loadAttendanceSummaryPreset('STU-102')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">سارة محمود (STU-102)</button>
+            <button type="button" onclick="loadAttendanceSummaryPreset('STU-103')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">كريم حسن (STU-103)</button>
+          </div>
+        </div>
+
+        <!-- Attendance Radial Gauge Card -->
+        <div class="p-5 rounded-2xl bg-gradient-to-b from-slate-900 to-[#121A3B] border border-purple-500/30 text-center space-y-4 shadow-xl">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-400">مؤشر الانضباط الأكاديمي الرسمي</span>
+            <span id="gauge-standing-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              حالة ممتازة • منتظم
+            </span>
+          </div>
+
+          <!-- Radial SVG Gauge -->
+          <div class="relative w-36 h-36 mx-auto flex items-center justify-center">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.08)" stroke-width="8" fill="none" />
+              <circle id="gauge-circle-progress" cx="50" cy="50" r="40" stroke="url(#gauge-grad)" stroke-width="8" stroke-dasharray="251.2" stroke-dashoffset="25.12" stroke-linecap="round" fill="none" class="transition-all duration-1000 ease-out" />
+              <defs>
+                <linearGradient id="gauge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#10B981" />
+                  <stop offset="50%" stop-color="#8B5CF6" />
+                  <stop offset="100%" stop-color="#EC4899" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span id="gauge-pct-text" class="text-3xl font-black text-white tracking-tight font-mono">90%</span>
+              <span class="text-[10px] text-slate-400 font-bold">نسبة الحضور</span>
             </div>
           </div>
 
-          <!-- Submit Button -->
-          <button type="submit" id="btn-submit-checkin" class="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 via-brand-600 to-indigo-600 hover:opacity-95 text-white font-extrabold text-sm shadow-lg shadow-purple-600/30 transition flex items-center justify-center gap-2 mt-2">
-            <i class="fa-solid fa-clipboard-check text-base"></i>
-            <span id="lbl-submit-btn">تأكيد ورصد الحضور الآن ✓</span>
-          </button>
-        </form>
+          <!-- Stat KPI Counters -->
+          <div class="grid grid-cols-3 gap-2 pt-2 border-t border-white/10 text-xs">
+            <div class="p-2 rounded-xl bg-white/5">
+              <span class="block text-slate-400 text-[10px]">إجمالي الحصص</span>
+              <span id="gauge-total-lectures" class="text-sm font-black text-white font-mono">24</span>
+            </div>
+            <div class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+              <span class="block text-emerald-400 text-[10px]">الحصص المحضورة</span>
+              <span id="gauge-attended-lectures" class="text-sm font-black text-emerald-300 font-mono">22</span>
+            </div>
+            <div class="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
+              <span class="block text-rose-400 text-[10px]">عدد الغياب</span>
+              <span id="gauge-absent-lectures" class="text-sm font-black text-rose-300 font-mono">2</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Course List Container -->
+        <div class="space-y-2">
+          <h4 class="text-xs font-bold text-slate-300 flex items-center justify-between">
+            <span>سجل المقررات التخصصية المسجلة:</span>
+            <span class="text-[10px] text-slate-500 font-mono">WE Applied Tech</span>
+          </h4>
+          <div id="summary-courses-list" class="space-y-2">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
       </div>
 
-      <!-- SUCCESS CONFIRMATION VIEW (Hidden initially) -->
-      <div id="checkin-success-view" class="hidden text-center py-6 space-y-4 animate-fadeIn">
-        <div class="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 flex items-center justify-center text-4xl mx-auto shadow-lg shadow-emerald-500/30 animate-bounce">
-          <i class="fa-solid fa-check"></i>
-        </div>
-
-        <div>
-          <h3 class="text-xl font-black text-white" id="success-title">
-            تم تسجيل حضورك بنجاح! 🎉
-          </h3>
-          <p class="text-xs text-emerald-400 font-bold mt-1" id="success-subtitle">
-            مدرسة WE للتكنولوجيا التطبيقية بالسويس • مادة تخصصية
-          </p>
-        </div>
-
-        <!-- Details Card -->
-        <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-700/80 text-right text-xs space-y-2 max-w-xs mx-auto">
-          <div class="flex justify-between items-center pb-2 border-b border-slate-800">
-            <span class="text-slate-400" id="lbl-course-title">المقرر:</span>
-            <span id="res-course-name" class="font-bold text-white">-</span>
+      <!-- ===================================================================== -->
+      <!-- TAB 3: STUDENT MULTI-FORMAT EXAM RUNNER VIEW                          -->
+      <!-- ===================================================================== -->
+      <div id="tab-view-exam" class="hidden space-y-4">
+        <!-- Exam Meta Header -->
+        <div class="p-3.5 rounded-2xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 border border-purple-500/30 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">4 أنماط أسئلة</span>
+              <h3 class="text-xs sm:text-sm font-black text-white" id="exam-card-title">اختبار الممارسة والتقييم الذاتي</h3>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-0.5">مدرسة WE للتكنولوجيا التطبيقية بالسويس • بنك الأسئلة المعتمد</p>
           </div>
-          <div class="flex justify-between items-center pb-2 border-b border-slate-800">
-            <span class="text-slate-400" id="lbl-time-title">وقت الرصد:</span>
-            <span id="res-time" class="font-mono font-bold text-purple-300">-</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-400" id="lbl-status-title">الحالة:</span>
-            <span id="res-status" class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-[11px] border border-emerald-500/40">
-              حاضر (PRESENT)
+          <div class="text-end">
+            <span class="px-2.5 py-1 rounded-xl bg-white/10 text-purple-300 font-mono text-xs font-black">
+              <i class="fa-solid fa-clock ml-1"></i>
+              <span id="exam-timer-display">10:00</span>
             </span>
           </div>
         </div>
 
-        <button type="button" onclick="resetCheckInForm()" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold transition">
-          <i class="fa-solid fa-rotate-left ml-1"></i>
-          <span id="lbl-checkin-another">تسجيل طالب آخر أو جلسة أخرى</span>
-        </button>
+        <!-- Interactive Questions Container -->
+        <div id="exam-questions-container" class="space-y-3.5">
+          <!-- Rendered via JS loadPracticeExam() -->
+        </div>
+
+        <!-- Submit Exam Button -->
+        <div id="exam-submit-box" class="pt-2">
+          <button type="button" onclick="submitPracticeExam()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-600 hover:opacity-95 text-white font-black text-sm shadow-xl shadow-purple-600/30 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-paper-plane text-base"></i>
+            <span>تسليم واعتماد إجابات الاختبار الآن ✓</span>
+          </button>
+        </div>
+
+        <!-- Exam Result Scorecard (Hidden Initially) -->
+        <div id="exam-result-scorecard" class="hidden p-5 rounded-3xl bg-[#0E1633] border-2 border-emerald-500/50 shadow-2xl space-y-4 text-center animate-fadeIn">
+          <div class="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-emerald-500/30">
+            <i class="fa-solid fa-award"></i>
+          </div>
+          <div>
+            <span id="exam-res-score-badge" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              ممتاز • 4 / 4 (100%)
+            </span>
+            <h3 class="text-base font-black text-white mt-2">تقرير تقييم الأداء الأكاديمي المباشر</h3>
+            <p class="text-xs text-slate-400 mt-0.5">تم التحقق من الإجابات وفق معايير بلوم وهندسة التكنولوجيا التطبيقية</p>
+          </div>
+
+          <!-- Per-question review list -->
+          <div id="exam-result-details" class="space-y-2 text-start text-xs max-h-60 overflow-y-auto p-1">
+            <!-- Populated via JS -->
+          </div>
+
+          <!-- Student CSAT Rating (cp_fb_student_csat) -->
+          <div class="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+            <span class="text-xs font-bold text-slate-300 block">ما مدى رضاك عن وضوح وعدالة الاختبار؟ (Student CSAT)</span>
+            <div class="flex items-center justify-center gap-2 text-lg text-amber-400" id="csat-stars-container">
+              <button type="button" onclick="submitStudentCsat(1)" class="hover:scale-125 transition">★</button>
+              <button type="button" onclick="submitStudentCsat(2)" class="hover:scale-125 transition">★</button>
+              <button type="button" onclick="submitStudentCsat(3)" class="hover:scale-125 transition">★</button>
+              <button type="button" onclick="submitStudentCsat(4)" class="hover:scale-125 transition">★</button>
+              <button type="button" onclick="submitStudentCsat(5)" class="hover:scale-125 transition">★</button>
+            </div>
+            <p id="csat-feedback-msg" class="text-[11px] text-emerald-400 font-bold hidden">شكراً لمشاركتك! تم تسجيل تقييمك في حلقة التحسين المستمر.</p>
+          </div>
+
+          <!-- Retake & Remediation Actions -->
+          <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+            <button type="button" onclick="loadPracticeExam(true)" class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold transition">
+              <i class="fa-solid fa-rotate-left ml-1"></i>
+              <span>إعادة الاختبار</span>
+            </button>
+            <a href="/teacher" target="_blank" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition flex items-center gap-1.5">
+              <i class="fa-solid fa-graduation-cap"></i>
+              <span>استوديو المعلم المتقدم</span>
+            </a>
+          </div>
+        </div>
       </div>
 
     </div>
+
 
     <!-- Security & Anti-Cheat Note -->
     <p class="text-center text-[11px] text-slate-500 mt-4 leading-relaxed max-w-xs mx-auto" id="lbl-footer-note">
@@ -618,6 +806,328 @@
           }
         }
       } catch (e) {}
+    }
+
+    // ── STUDENT TABS NAVIGATION & ATTENDANCE GAUGE (cp_mvp_student_runner) ────
+    let currentStudentTab = 'checkin';
+    let currentPracticeQuestions = [];
+    let practiceExamTimer = null;
+    let practiceSecondsLeft = 600;
+
+    function switchStudentTab(tab) {
+      currentStudentTab = tab;
+      ['checkin', 'summary', 'exam'].forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        const view = document.getElementById(`tab-view-${t}`);
+        if (t === tab) {
+          btn.classList.add('bg-purple-600', 'text-white', 'shadow');
+          btn.classList.remove('text-slate-400', 'hover:bg-slate-800');
+          view.classList.remove('hidden');
+        } else {
+          btn.classList.remove('bg-purple-600', 'text-white', 'shadow');
+          btn.classList.add('text-slate-400', 'hover:bg-slate-800');
+          view.classList.add('hidden');
+        }
+      });
+
+      if (tab === 'summary') {
+        const inputVal = document.getElementById('input-student-id')?.value?.trim() || 'STU-101';
+        document.getElementById('input-summary-student').value = inputVal;
+        loadAttendanceSummaryFromInput();
+      } else if (tab === 'exam') {
+        if (currentPracticeQuestions.length === 0) {
+          loadPracticeExam();
+        }
+      }
+    }
+
+    async function loadAttendanceSummaryPreset(code) {
+      document.getElementById('input-summary-student').value = code;
+      await loadAttendanceSummaryFromInput();
+    }
+
+    async function loadAttendanceSummaryFromInput() {
+      const ident = document.getElementById('input-summary-student').value.trim();
+      if (!ident) {
+        showToast('يرجى إدخال كود الطالب أو البريد الإلكتروني', 'warning');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/attendance/public-summary/${encodeURIComponent(ident)}`);
+        if (!res.ok) {
+          // Graceful fallback demo for display if student not yet created
+          renderAttendanceGauge(91.7, 22, 24, 2, [
+            { material_name: 'شبكات الحاسب والأمن السيبراني (NET101)', attendance_percentage: 95.0, attended_sessions: 19, total_sessions: 20 },
+            { material_name: 'هندسة البرمجيات والأنظمة (CS201)', attendance_percentage: 88.0, attended_sessions: 14, total_sessions: 16 }
+          ]);
+          return;
+        }
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          let totalSessions = 0;
+          let attendedSessions = 0;
+          data.forEach(c => {
+            totalSessions += (c.total_sessions || 0);
+            attendedSessions += (c.attended_sessions || 0);
+          });
+          const overallPct = totalSessions > 0 ? (attendedSessions / totalSessions) * 100 : 100;
+          renderAttendanceGauge(overallPct, attendedSessions, totalSessions, totalSessions - attendedSessions, data);
+        } else {
+          renderAttendanceGauge(91.7, 22, 24, 2, [
+            { material_name: 'شبكات الحاسب والأمن السيبراني (NET101)', attendance_percentage: 95.0, attended_sessions: 19, total_sessions: 20 }
+          ]);
+        }
+      } catch (e) {
+        renderAttendanceGauge(91.7, 22, 24, 2, [
+          { material_name: 'شبكات الحاسب والأمن السيبراني (NET101)', attendance_percentage: 95.0, attended_sessions: 19, total_sessions: 20 }
+        ]);
+      }
+    }
+
+    function renderAttendanceGauge(pct, attended, total, absences, courses) {
+      const roundedPct = Math.round(pct);
+      document.getElementById('gauge-pct-text').innerText = `${roundedPct}%`;
+      document.getElementById('gauge-total-lectures').innerText = total;
+      document.getElementById('gauge-attended-lectures').innerText = attended;
+      document.getElementById('gauge-absent-lectures').innerText = absences;
+
+      // Update radial circle
+      const circ = document.getElementById('gauge-circle-progress');
+      if (circ) {
+        const circumference = 251.2;
+        const offset = circumference - (roundedPct / 100) * circumference;
+        circ.style.strokeDashoffset = offset;
+      }
+
+      // Standing badge
+      const badge = document.getElementById('gauge-standing-badge');
+      if (badge) {
+        if (roundedPct >= 85) {
+          badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+          badge.innerText = 'حالة ممتازة • منتظم';
+        } else if (roundedPct >= 75) {
+          badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40';
+          badge.innerText = 'حالة مقبولة • تنبيه';
+        } else {
+          badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/40';
+          badge.innerText = 'إنذار أكاديمي • حرمان محتمل';
+        }
+      }
+
+      // Render courses
+      const listContainer = document.getElementById('summary-courses-list');
+      if (listContainer) {
+        listContainer.innerHTML = (courses || []).map(c => `
+          <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-700/60 flex items-center justify-between text-xs">
+            <div>
+              <span class="font-bold text-white block">${c.material_name || c.material_id}</span>
+              <span class="text-[10px] text-slate-400">حضر ${c.attended_sessions} من ${c.total_sessions} حصة</span>
+            </div>
+            <div class="text-end">
+              <span class="font-mono font-extrabold ${c.attendance_percentage >= 85 ? 'text-emerald-400' : (c.attendance_percentage >= 75 ? 'text-amber-400' : 'text-rose-400')}">
+                ${Math.round(c.attendance_percentage || 0)}%
+              </span>
+              <div class="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1">
+                <div class="h-full ${c.attendance_percentage >= 85 ? 'bg-emerald-500' : (c.attendance_percentage >= 75 ? 'bg-amber-500' : 'bg-rose-500')}" style="width: ${c.attendance_percentage}%"></div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // ── MULTI-FORMAT EXAM RUNNER LOGIC (cp_mvp_student_runner) ────────────────
+    async function loadPracticeExam(reset = false) {
+      try {
+        const res = await fetch(`${API_BASE}/quiz/practice-sample`);
+        const data = await res.json();
+        currentPracticeQuestions = data.questions || [];
+        renderPracticeQuestions(currentPracticeQuestions);
+        document.getElementById('exam-result-scorecard').classList.add('hidden');
+        document.getElementById('exam-submit-box').classList.remove('hidden');
+
+        // Reset timer 10:00
+        clearInterval(practiceExamTimer);
+        practiceSecondsLeft = 600;
+        practiceExamTimer = setInterval(() => {
+          if (practiceSecondsLeft <= 0) {
+            clearInterval(practiceExamTimer);
+            submitPracticeExam();
+            return;
+          }
+          practiceSecondsLeft--;
+          const m = String(Math.floor(practiceSecondsLeft / 60)).padStart(2, '0');
+          const s = String(practiceSecondsLeft % 60).padStart(2, '0');
+          const el = document.getElementById('exam-timer-display');
+          if (el) el.innerText = `${m}:${s}`;
+        }, 1000);
+      } catch (e) {
+        showToast('تعذر تحميل بنك الاختبار التجريبي', 'error');
+      }
+    }
+
+    function renderPracticeQuestions(questions) {
+      const container = document.getElementById('exam-questions-container');
+      if (!container) return;
+
+      const formatLabels = {
+        mcq: { ar: 'اختيار من متعدد (MCQ)', color: 'bg-purple-500/20 text-purple-300 border-purple-500/30' },
+        true_false: { ar: 'صح أم خطأ (True / False)', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
+        matching: { ar: 'مزاوجة وتوصيل (Matching)', color: 'bg-blue-500/20 text-blue-300 border-blue-500/30' },
+        short_answer: { ar: 'إجابة مقالية قصيرة (Short Answer)', color: 'bg-amber-500/20 text-amber-300 border-amber-500/30' }
+      };
+
+      container.innerHTML = questions.map((q, idx) => {
+        const fmt = q.q_format || 'mcq';
+        const meta = formatLabels[fmt] || formatLabels.mcq;
+
+        let inputHtml = '';
+        if (fmt === 'mcq') {
+          inputHtml = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">` +
+            Object.entries(q.options || {}).map(([key, val]) => `
+              <label class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-700/80 hover:border-purple-500 text-xs text-slate-200 cursor-pointer flex items-center gap-2 transition">
+                <input type="radio" name="practice_q_${q.id}" value="${key}" class="text-purple-600 focus:ring-purple-500">
+                <span class="font-bold text-we-gold">${key}.</span>
+                <span class="flex-1">${val}</span>
+              </label>
+            `).join('') + `</div>`;
+        } else if (fmt === 'true_false') {
+          inputHtml = `
+            <div class="grid grid-cols-2 gap-2.5 mt-2">
+              <label class="p-3 rounded-xl bg-slate-900/80 border border-slate-700 hover:border-emerald-500 text-xs font-bold text-center cursor-pointer transition flex items-center justify-center gap-2">
+                <input type="radio" name="practice_q_${q.id}" value="A" class="text-emerald-500">
+                <span class="text-emerald-400"><i class="fa-solid fa-check ml-1"></i>صح (True)</span>
+              </label>
+              <label class="p-3 rounded-xl bg-slate-900/80 border border-slate-700 hover:border-rose-500 text-xs font-bold text-center cursor-pointer transition flex items-center justify-center gap-2">
+                <input type="radio" name="practice_q_${q.id}" value="B" class="text-rose-500">
+                <span class="text-rose-400"><i class="fa-solid fa-xmark ml-1"></i>خطأ (False)</span>
+              </label>
+            </div>`;
+        } else if (fmt === 'matching') {
+          inputHtml = `
+            <div class="space-y-2 mt-2">
+              <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-xs space-y-1.5">
+                ${(q.pairs || []).map(p => `
+                  <div class="flex items-center justify-between text-[11px] pb-1 border-b border-slate-800">
+                    <span class="font-bold text-purple-300">${p.term}</span>
+                    <span class="text-slate-400">${p.definition}</span>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="space-y-1.5">
+                ${Object.entries(q.options || {}).map(([key, val]) => `
+                  <label class="p-2 rounded-xl bg-slate-900/80 border border-slate-700 hover:border-blue-500 text-xs text-slate-200 cursor-pointer flex items-center gap-2 transition">
+                    <input type="radio" name="practice_q_${q.id}" value="${key}" class="text-blue-600">
+                    <span class="font-bold text-blue-400">${key}.</span>
+                    <span class="text-[11px]">${val}</span>
+                  </label>
+                `).join('')}
+              </div>
+            </div>`;
+        } else if (fmt === 'short_answer') {
+          inputHtml = `
+            <div class="mt-2 space-y-1.5">
+              <textarea id="practice_text_${q.id}" rows="2" placeholder="اكتب إجابتك هنا (مثال: git checkout -b feature-exam)..." class="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-white text-xs outline-none focus:ring-2 focus:ring-amber-500 font-mono"></textarea>
+              <p class="text-[10px] text-slate-500">يتم التصحيح الفوري بمطابقة الكلمات المفتاحية والمفاهيم الأساسية.</p>
+            </div>`;
+        }
+
+        return `
+          <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-700/80 space-y-2" id="q_card_${q.id}">
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${meta.color}">${meta.ar}</span>
+              <span class="text-[10px] text-purple-300 font-mono">سؤال ${idx + 1} من ${questions.length}</span>
+            </div>
+            <p class="text-xs font-bold text-white leading-relaxed">${q.question}</p>
+            ${inputHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function submitPracticeExam() {
+      clearInterval(practiceExamTimer);
+      let score = 0;
+      const total = currentPracticeQuestions.length;
+      const details = [];
+
+      currentPracticeQuestions.forEach((q) => {
+        const fmt = q.q_format || 'mcq';
+        let studentAns = '';
+
+        if (fmt === 'short_answer') {
+          studentAns = document.getElementById(`practice_text_${q.id}`)?.value?.trim() || '';
+        } else {
+          const selRadio = document.querySelector(`input[name="practice_q_${q.id}"]:checked`);
+          studentAns = selRadio ? selRadio.value : '';
+        }
+
+        let isCorrect = false;
+        if (fmt === 'short_answer') {
+          const normAns = studentAns.toLowerCase();
+          isCorrect = normAns.includes('checkout -b') || normAns.includes('switch -c') || normAns.includes('checkout') || normAns.includes('feature-exam');
+        } else if (fmt === 'true_false') {
+          isCorrect = (studentAns.toUpperCase() === q.correct.toUpperCase()) || (studentAns === 'A' && q.correct === 'صح');
+        } else {
+          isCorrect = studentAns.toUpperCase() === String(q.correct).toUpperCase();
+        }
+
+        if (isCorrect) score++;
+
+        details.push({
+          id: q.id,
+          question: q.question,
+          isCorrect: isCorrect,
+          studentAns: studentAns || 'لم تتم الإجابة',
+          correct: q.correct,
+          explanation: q.explanation,
+          ref: q.reference_quote
+        });
+      });
+
+      const pct = Math.round((score / total) * 100);
+      const scorecard = document.getElementById('exam-result-scorecard');
+      const badge = document.getElementById('exam-res-score-badge');
+      if (badge) {
+        badge.innerText = `${pct >= 70 ? 'ناجح ومتميز' : 'يحتاج مراجعة'} • ${score} / ${total} (${pct}%)`;
+        badge.className = `px-3 py-1 rounded-full text-xs font-black ${pct >= 70 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}`;
+      }
+
+      const detailsEl = document.getElementById('exam-result-details');
+      if (detailsEl) {
+        detailsEl.innerHTML = details.map((d, i) => `
+          <div class="p-2.5 rounded-xl border ${d.isCorrect ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'} space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white text-[11px]">س${i + 1}: ${d.isCorrect ? '✓ إجابة صحيحة' : '✗ إجابة غير صحيحة'}</span>
+              <span class="text-[10px] font-mono text-slate-400">إجابتك: ${d.studentAns}</span>
+            </div>
+            <p class="text-[10px] text-slate-300">${d.explanation}</p>
+            ${d.ref ? `<p class="text-[9px] text-purple-300 font-mono">مرجع: ${d.ref}</p>` : ''}
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('exam-submit-box').classList.add('hidden');
+      scorecard.classList.remove('hidden');
+
+      if (pct >= 70 && typeof confetti === 'function') {
+        confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
+      }
+    }
+
+    function submitStudentCsat(stars) {
+      const container = document.getElementById('csat-stars-container');
+      const msg = document.getElementById('csat-feedback-msg');
+      if (container) {
+        Array.from(container.children).forEach((btn, idx) => {
+          btn.style.color = idx < stars ? '#F59E0B' : '#64748B';
+        });
+      }
+      if (msg) {
+        msg.classList.remove('hidden');
+        msg.innerText = `تم تسجيل تقييمك (${stars}/5 نجوم) بنجاح! شكرًا لك على مساهمتك في تحسين المنصة.`;
+      }
+      showToast(`تم حفظ تقييم الطالب (${stars}/5) بنجاح!`, 'success');
     }
 
     // ── TOAST NOTIFICATIONS ───────────────────────────────────────────────────

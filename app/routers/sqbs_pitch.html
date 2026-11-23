@@ -184,6 +184,12 @@
 
     <!-- Right Controls -->
     <div class="flex items-center gap-2 shrink-0">
+      <!-- 5-Min 1080p Pitch Video Modal Button -->
+      <button onclick="openPitchVideo()" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:opacity-95 text-xs sm:text-sm font-extrabold text-white transition flex items-center gap-1.5 shadow-lg shadow-rose-500/20">
+        <i class="fa-solid fa-circle-play text-we-goldLight"></i>
+        <span data-ar="فيديو المسابقة 5د" data-en="Pitch Video 5m">فيديو المسابقة 5د</span>
+      </button>
+
       <!-- AR / EN Switch -->
       <button onclick="toggleLanguage()" id="btn-lang" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-xs sm:text-sm font-extrabold text-white transition flex items-center gap-1.5">
         <i class="fa-solid fa-globe text-we-goldLight"></i>
@@ -723,14 +729,14 @@
           </p>
 
           <div class="flex flex-wrap items-center gap-3 pt-1">
-            <button onclick="openJudgeDemo()" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-95 text-slate-950 font-black text-lg shadow-xl shadow-emerald-500/25 transition flex items-center gap-2.5">
-              <i class="fa-solid fa-mobile-screen-button"></i>
-              <span data-ar="معاينة شاشة ولي الأمر (تعمل Offline)" data-en="Preview Judge Parent View (Offline)">معاينة شاشة ولي الأمر (تعمل Offline)</span>
+            <button onclick="openPitchVideo()" class="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:opacity-95 text-white font-black text-lg shadow-xl shadow-rose-500/25 transition flex items-center gap-2.5">
+              <i class="fa-solid fa-circle-play text-we-goldLight text-xl"></i>
+              <span data-ar="عرض فيديو المسابقة 5د (1080p)" data-en="Watch 5-Min Pitch Video (1080p)">عرض فيديو المسابقة 5د (1080p)</span>
             </button>
 
-            <button onclick="openVideoBackup()" class="px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-base transition flex items-center gap-2">
-              <i class="fa-solid fa-circle-play text-we-goldLight"></i>
-              <span data-ar="فيديو احتياطي 30ث" data-en="30s Backup Video">فيديو احتياطي 30ث</span>
+            <button onclick="openJudgeDemo()" class="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:opacity-95 text-slate-950 font-black text-base shadow-xl shadow-emerald-500/25 transition flex items-center gap-2">
+              <i class="fa-solid fa-mobile-screen-button"></i>
+              <span data-ar="معاينة شاشة ولي الأمر (تعمل Offline)" data-en="Preview Judge Parent View (Offline)">معاينة شاشة ولي الأمر (تعمل Offline)</span>
             </button>
 
             <button onclick="openAppendix('a4')" class="px-5 py-3.5 rounded-2xl bg-purple-600/80 hover:bg-purple-600 text-white font-bold text-base transition flex items-center gap-2">
@@ -738,6 +744,7 @@
               <span data-ar="بنك أسئلة اللجنة (17)" data-en="Judges Q&A (17)">بنك أسئلة اللجنة (17)</span>
             </button>
           </div>
+
         </div>
 
         <!-- Scannable Inline Offline SVG Judge QR Card -->
@@ -1019,19 +1026,127 @@
   </div>
 
   <!-- ======================================================================= -->
-  <!-- MODAL 3: 30s BACKUP CLASSROOM VIDEO                                     -->
+  <!-- MODAL 3: OFFICIAL 5-MIN HP IDEA PITCH VIDEO & LIVE SHOWCASE (1080p)      -->
   <!-- ======================================================================= -->
-  <div id="modal-video-backup" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-    <div class="bg-[#0F1630] border border-white/15 rounded-3xl w-full max-w-3xl overflow-hidden shadow-2xl">
-      <div class="px-5 py-3 border-b border-white/10 flex items-center justify-between">
-        <h3 class="text-base font-black text-white" data-ar="فيديو احتياطي حي من داخل فصل مدرسة WE السويس" data-en="Backup Live Classroom Demo Video — WE Suez">فيديو احتياطي حي من داخل فصل مدرسة WE السويس</h3>
-        <button onclick="closeVideoBackup()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-rose-500 text-white"><i class="fa-solid fa-xmark"></i></button>
+  <div id="modal-video-backup" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-[#0F1630] border border-white/20 rounded-3xl w-full max-w-5xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]">
+      <!-- Modal Header -->
+      <div class="px-5 py-3.5 border-b border-white/10 bg-[#151D3D] flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-white text-sm shadow-md">
+            <i class="fa-solid fa-play"></i>
+          </span>
+          <div>
+            <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+              <span data-ar="العرض التقديمي الرسمي لمسابقة HP IDEA Egypt" data-en="Official HP IDEA Egypt Pitch Video">العرض التقديمي الرسمي لمسابقة HP IDEA Egypt</span>
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">1080p • 05:00</span>
+            </h3>
+            <p class="text-xs text-slate-400" data-ar="مدرسة WE للتكنولوجيا التطبيقية بالسويس — مسابقة HP IDEA" data-en="WE Applied Technology School Suez — HP IDEA Global Competition">مدرسة WE للتكنولوجيا التطبيقية بالسويس — مسابقة HP IDEA</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="hidden sm:flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1 text-xs">
+            <button onclick="setPitchPlaybackRate(1.0)" class="rate-btn px-2 py-0.5 rounded text-white font-bold bg-white/20" id="rate-1">1x</button>
+            <button onclick="setPitchPlaybackRate(1.25)" class="rate-btn px-2 py-0.5 rounded text-slate-300 font-bold hover:bg-white/10" id="rate-125">1.25x</button>
+            <button onclick="setPitchPlaybackRate(1.5)" class="rate-btn px-2 py-0.5 rounded text-slate-300 font-bold hover:bg-white/10" id="rate-15">1.5x</button>
+          </div>
+          <button onclick="closeVideoBackup()" class="w-8 h-8 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
       </div>
-      <div class="p-4 bg-black">
-        <video id="backup-video-el" src="https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/class_video_2.mp4" controls playsinline class="w-full max-h-[70vh] rounded-2xl"></video>
+
+      <!-- Video Screen -->
+      <div class="p-3 sm:p-4 bg-black flex justify-center items-center">
+        <video id="backup-video-el" controls playsinline preload="metadata" class="w-full max-h-[52vh] rounded-2xl bg-black border border-white/10 shadow-2xl">
+          <source src="/api/media/pitch-video" type="video/mp4">
+          <source src="https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/WeConnect_Pitch_5Min.mp4" type="video/mp4">
+          <source src="https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/class_video_1.mp4" type="video/mp4">
+          <p class="text-white text-center p-4">متصفحك لا يدعم تشغيل الفيديو مباشرة.</p>
+        </video>
+      </div>
+
+      <!-- 10 Interactive Chapter Markers -->
+      <div class="p-3 sm:p-4 bg-[#111834] border-t border-white/10 space-y-2 overflow-y-auto">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-400">
+          <span class="flex items-center gap-1.5 text-we-goldLight">
+            <i class="fa-solid fa-list-ol"></i>
+            <span data-ar="فصول العرض التقديمي (اضغط للقفز للثانية المحددة):" data-en="Presentation Chapters (Click to Jump):">فصول العرض التقديمي (اضغط للقفز للثانية المحددة):</span>
+          </span>
+          <span class="text-slate-400">10 شرائح / 30 ثانية لكل شريحة</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2">
+          <button onclick="seekPitchVideo(0, this)" class="pitch-chap px-2.5 py-1.5 rounded-xl bg-purple-600/30 border border-purple-400/40 text-start text-xs hover:bg-purple-600/50 transition">
+            <span class="font-mono text-we-goldLight font-bold">0:00</span>
+            <span class="block truncate text-slate-200" data-ar="المشكلة والدافع" data-en="Problem Statement">المشكلة والدافع</span>
+          </button>
+          <button onclick="seekPitchVideo(30, this)" class="pitch-chap px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-start text-xs hover:bg-white/10 transition">
+            <span class="font-mono text-we-goldLight font-bold">0:30</span>
+            <span class="block truncate text-slate-200" data-ar="المستخدم والبيئة" data-en="Target Persona">المستخدم والبيئة</span>
+          </button>
+          <button onclick="seekPitchVideo(60, this)" class="pitch-chap px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-start text-xs hover:bg-white/10 transition">
+            <span class="font-mono text-we-goldLight font-bold">1:00</span>
+            <span class="block truncate text-slate-200" data-ar="المعمارية التقنية" data-en="Architecture">المعمارية التقنية</span>
+          </button>
+          <button onclick="seekPitchVideo(90, this)" class="pitch-chap px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-start text-xs hover:bg-white/10 transition">
+            <span class="font-mono text-we-goldLight font-bold">1:30</span>
+            <span class="block truncate text-slate-200" data-ar="التحضير الذكي QR" data-en="Anti-Proxy QR">التحضير الذكي QR</span>
+          </button>
+          <button onclick="seekPitchVideo(120, this)" class="pitch-chap px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-start text-xs hover:bg-white/10 transition">
+            <span class="font-mono text-we-goldLight font-bold">2:00</span>
+            <span class="block truncate text-slate-200" data-ar="استوديو الامتحانات" data-en="AI Exam Studio">استوديو الامتحانات</span>
+          </button>
+          <button onclick="seekPitchVideo(150, this)" class="pitch-chap px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-start text-xs hover:bg-white/10 transition">
+            <span class="font-mono text-we-goldLight font-bold">2:30</span>
+            <span class="block truncate text-slate-200" data-ar="تجربة الطالب" data-en="Student UX">تجربة الطالب</span>
+          </button>
+          <button onclick="seekPitchVideo(180, this)" class="pitch-chap px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-start text-xs hover:bg-white/10 transition">
+            <span class="font-mono text-we-goldLight font-bold">3:00</span>
+            <span class="block truncate text-slate-200" data-ar="سجل الدرجات الرسمي" data-en="Official Gradebook">سجل الدرجات الرسمي</span>
+          </button>
+          <button onclick="seekPitchVideo(210, this)" class="pitch-chap px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-start text-xs hover:bg-white/10 transition">
+            <span class="font-mono text-we-goldLight font-bold">3:30</span>
+            <span class="block truncate text-slate-200" data-ar="الجدوى الاقتصادية" data-en="Unit Economics">الجدوى الاقتصادية</span>
+          </button>
+          <button onclick="seekPitchVideo(240, this)" class="pitch-chap px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-start text-xs hover:bg-white/10 transition">
+            <span class="font-mono text-we-goldLight font-bold">4:00</span>
+            <span class="block truncate text-slate-200" data-ar="اتحاد مدارس WE" data-en="School Federation">اتحاد مدارس WE</span>
+          </button>
+          <button onclick="seekPitchVideo(270, this)" class="pitch-chap px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-start text-xs hover:bg-white/10 transition">
+            <span class="font-mono text-we-goldLight font-bold">4:30</span>
+            <span class="block truncate text-slate-200" data-ar="خارطة التوسع والأثر" data-en="Impact & Call to Action">خارطة التوسع والأثر</span>
+          </button>
+        </div>
+
+        <!-- Live Showcase Quick Launcher Bar -->
+        <div class="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2">
+          <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <i class="fa-solid fa-rocket text-emerald-400"></i>
+            <span data-ar="تشغيل المنصات الحية التجريبية (Live Apps):" data-en="Launch Interactive Live Apps:">تشغيل المنصات الحية التجريبية (Live Apps):</span>
+          </span>
+          <div class="flex flex-wrap items-center gap-2">
+            <a href="/teacher" target="_blank" class="px-3 py-1.5 rounded-xl bg-purple-600/80 hover:bg-purple-600 text-white font-bold text-xs transition flex items-center gap-1.5 shadow">
+              <i class="fa-solid fa-chalkboard-user"></i>
+              <span>Teacher Studio v3</span>
+            </a>
+            <a href="/checkin" target="_blank" class="px-3 py-1.5 rounded-xl bg-emerald-600/80 hover:bg-emerald-600 text-white font-bold text-xs transition flex items-center gap-1.5 shadow">
+              <i class="fa-solid fa-qrcode"></i>
+              <span>Student Check-in</span>
+            </a>
+            <a href="/storage" target="_blank" class="px-3 py-1.5 rounded-xl bg-amber-600/80 hover:bg-amber-600 text-white font-bold text-xs transition flex items-center gap-1.5 shadow">
+              <i class="fa-solid fa-server"></i>
+              <span>Cloud Storage</span>
+            </a>
+            <a href="/gateway" target="_blank" class="px-3 py-1.5 rounded-xl bg-blue-600/80 hover:bg-blue-600 text-white font-bold text-xs transition flex items-center gap-1.5 shadow">
+              <i class="fa-solid fa-door-open"></i>
+              <span>Teacher Gateway</span>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
 
   <!-- ======================================================================= -->
   <!-- MODAL 4: PHOTO LIGHTBOX                                                 -->
@@ -1506,15 +1621,48 @@
     }
 
     // ── OTHER MODALS & KEYBOARD SHORTCUTS ────────────────────────────────────
-    function openVideoBackup() {
+    function openPitchVideo() {
       document.getElementById('modal-video-backup').classList.remove('hidden');
       const v = document.getElementById('backup-video-el');
       if (v) v.play().catch(() => {});
     }
-    function closeVideoBackup() {
+    const openVideoBackup = openPitchVideo;
+
+    function closePitchVideo() {
       const v = document.getElementById('backup-video-el');
       if (v) v.pause();
       closeModal('modal-video-backup');
+    }
+    const closeVideoBackup = closePitchVideo;
+
+    function seekPitchVideo(seconds, btn) {
+      const v = document.getElementById('backup-video-el');
+      if (v) {
+        v.currentTime = seconds;
+        v.play().catch(() => {});
+      }
+      if (btn) {
+        document.querySelectorAll('.pitch-chap').forEach(el => {
+          el.classList.remove('bg-purple-600/50', 'border-purple-400');
+          el.classList.add('bg-white/5', 'border-white/10');
+        });
+        btn.classList.add('bg-purple-600/50', 'border-purple-400');
+        btn.classList.remove('bg-white/5', 'border-white/10');
+      }
+    }
+
+    function setPitchPlaybackRate(rate) {
+      const v = document.getElementById('backup-video-el');
+      if (v) v.playbackRate = rate;
+      document.querySelectorAll('.rate-btn').forEach(b => {
+        b.classList.remove('bg-white/20', 'text-white');
+        b.classList.add('text-slate-300');
+      });
+      const activeBtn = document.getElementById(rate === 1.0 ? 'rate-1' : (rate === 1.25 ? 'rate-125' : 'rate-15'));
+      if (activeBtn) {
+        activeBtn.classList.add('bg-white/20', 'text-white');
+        activeBtn.classList.remove('text-slate-300');
+      }
     }
     function openLightbox(src, caption) {
       document.getElementById('lightbox-img').src = src;

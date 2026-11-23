@@ -160,3 +160,30 @@ def my_attendance_summary(
 ):
     """(Student) View attendance percentage across all enrolled courses."""
     return att_svc.get_student_attendance_summary(db, current_user)
+
+
+@router.get("/public-summary/{student_identifier}", response_model=list[StudentCourseAttendanceSummary])
+def public_student_attendance_summary(
+    student_identifier: str,
+    db: Session = Depends(get_db),
+):
+    """(Student Web Scanner) View attendance percentage across all enrolled courses using student code or email."""
+    ident = student_identifier.strip()
+    user = (
+        db.query(User)
+        .filter(
+            (User.email.ilike(ident))
+            | (User.student_code == ident)
+            | (User.user_id == int(ident) if ident.isdigit() else False)
+            | (User.full_name.ilike(f"%{ident}%"))
+        )
+        .first()
+    )
+    if not user:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=404,
+            detail=f"لم يتم العثور على طالب بالمعرف '{student_identifier}'. يرجى التحقق من كود الطالب أو البريد."
+        )
+    return att_svc.get_student_attendance_summary(db, user)
+
