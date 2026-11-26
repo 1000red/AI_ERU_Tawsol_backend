@@ -70,12 +70,16 @@ async def upload_to_storage(
     user_id: int = Depends(get_current_user_id),
 ):
     """Upload a file to the Neon Object Storage bucket (Authenticated)."""
+    import os
+    import uuid
     if not neon_storage.is_configured:
         raise HTTPException(status_code=503, detail="Neon Object Storage not configured")
 
+    safe_name = os.path.basename(file.filename or "upload.bin").replace("..", "")
+    object_key = f"uploads/{uuid.uuid4().hex}_{safe_name}"
     success, result = neon_storage.upload_file(
         file_obj=file.file,
-        object_key=f"uploads/{file.filename}",
+        object_key=object_key,
         content_type=file.content_type or "application/octet-stream",
     )
     if not success:
@@ -83,7 +87,7 @@ async def upload_to_storage(
 
     return {
         "success": True,
-        "object_key": f"uploads/{file.filename}",
+        "object_key": object_key,
         "url": result,
     }
 

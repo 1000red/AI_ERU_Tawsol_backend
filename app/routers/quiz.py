@@ -42,7 +42,7 @@ logger = logging.getLogger("uvicorn.error")
 _STAFF_TYPES = {"DR", "TA", "ADM"}
 
 
-@router.post("/generate", response_model=QuizGenerateResponse)
+@router.post("/generate", response_model=QuizGenerateResponse, response_model_exclude_none=True)
 async def generate_quiz_endpoint(
     body: QuizGenerateRequest,
     user_id: int = Depends(get_current_user_id),
@@ -64,7 +64,7 @@ async def generate_quiz_endpoint(
     material_file: MaterialFile | None = None
 
     # Support generating directly from text_content
-    if body.text_content and len(body.text_content.strip()) >= 50:
+    if body.text_content and body.text_content.strip():
         text_to_process = body.text_content.strip()
     elif body.file_id:
         material_file = (
@@ -158,6 +158,8 @@ async def generate_quiz_endpoint(
                             correct=q.get("correct", "A"),
                             explanation=q.get("explanation", ""),
                             reference_quote=q.get("reference_quote", ""),
+                            question_type=q.get("question_type") or q.get("q_format", "mcq"),
+                            bloom_level=q.get("bloom_level", "comprehension"),
                         )
                         for idx, q in enumerate(raw_qs)
                     ]
@@ -303,13 +305,20 @@ def _check_answer_correct(selected_raw, correct_raw, q_format: str = "mcq") -> b
     return False
 
 
+def _resolve_question_format(q_obj) -> str:
+    """Resolve question format uniformly from object attributes or JSON dicts."""
+    if isinstance(q_obj, dict):
+        return (q_obj.get("question_type") or q_obj.get("q_format") or "mcq").lower()
+    return (getattr(q_obj, "question_type", None) or getattr(q_obj, "q_format", None) or "mcq").lower()
+
+
 @router.post("/evaluate", response_model=QuizEvaluateResponse)
 def evaluate_answer(
     body: QuizEvaluateRequest,
     db: Session = Depends(get_db),
 ):
     question = get_question(body.session_id, body.question_id)
-    q_format = "mcq"
+    q_format = _resolve_question_format(question) if question is not None else "mcq"
     if question is None:
         # Fallback to QuizLog in DB
         log_entry = db.query(QuizLog).filter(QuizLog.session_id == body.session_id).first()
@@ -318,7 +327,7 @@ def evaluate_answer(
                 raw_qs = json.loads(log_entry.questions_json)
                 target = next((q for q in raw_qs if q.get("id") == body.question_id), None)
                 if target:
-                    q_format = target.get("q_format", "mcq")
+                    q_format = _resolve_question_format(target)
                     question = _StoredQuestion(
                         id=target.get("id", body.question_id),
                         question=target.get("question", ""),
@@ -326,6 +335,8 @@ def evaluate_answer(
                         correct=target.get("correct", "A"),
                         explanation=target.get("explanation", ""),
                         reference_quote=target.get("reference_quote", ""),
+                        question_type=q_format,
+                        bloom_level=target.get("bloom_level", "comprehension"),
                     )
             except Exception:
                 pass
@@ -371,7 +382,7 @@ def submit_quiz_endpoint(
                 "correct": q.correct,
                 "explanation": q.explanation,
                 "reference_quote": getattr(q, "reference_quote", ""),
-                "q_format": getattr(q, "q_format", "mcq") if hasattr(q, "q_format") else "mcq",
+                "question_type": _resolve_question_format(q),
             })
 
     quiz_log = db.query(QuizLog).filter(QuizLog.session_id == body.session_id).first()
@@ -398,7 +409,7 @@ def submit_quiz_endpoint(
             selected_opt = body.answers.get(int(q_id))
         selected_clean = str(selected_opt).strip() if selected_opt is not None else ""
         correct_opt = str(q.get("correct", "")).strip()
-        q_fmt = q.get("q_format", "mcq")
+        q_fmt = _resolve_question_format(q)
         
         is_correct = _check_answer_correct(selected_clean, correct_opt, q_fmt)
         if is_correct:
@@ -509,6 +520,8 @@ def update_quiz_questions(
             correct=item.correct.upper().strip(),
             explanation=item.explanation or "",
             reference_quote=item.reference_quote or "",
+            question_type=item.question_type or "mcq",
+            bloom_level=item.bloom_level or "comprehension",
         )
         for item in body.questions
     ]
@@ -528,6 +541,8 @@ def update_quiz_questions(
                     "correct": q.correct,
                     "explanation": q.explanation,
                     "reference_quote": q.reference_quote,
+                    "question_type": getattr(q, "question_type", "mcq"),
+                    "bloom_level": getattr(q, "bloom_level", "comprehension"),
                 }
                 for q in converted_questions
             ]

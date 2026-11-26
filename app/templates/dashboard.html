@@ -570,6 +570,21 @@
       setTimeout(() => toast.classList.add('hidden'), 4000);
     }
 
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getCookieValue(name) {
+      const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
+      return match ? decodeURIComponent(match[1]) : '';
+    }
+
     // ── AUTH HELPERS ──────────────────────────────────────────────────────────
     function getAdminAuthHeaders(extraHeaders = {}) {
       const headers = { ...extraHeaders };
@@ -579,6 +594,10 @@
         headers['Authorization'] = `Bearer ${token}`;
       } else if (key) {
         headers['X-Admin-Key'] = key;
+      }
+      const csrf = getCookieValue('csrf_token');
+      if (csrf) {
+        headers['X-CSRF-Token'] = csrf;
       }
       return headers;
     }
@@ -707,11 +726,11 @@
         tbody.innerHTML = users.map(u => `
           <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
             <td class="p-3 font-mono font-bold text-xs text-slate-400">${u.user_id}</td>
-            <td class="p-3 font-semibold text-slate-900 dark:text-white">${u.name}</td>
-            <td class="p-3 text-xs font-mono text-slate-500 dark:text-slate-400">${u.email}</td>
-            <td class="p-3 text-xs font-mono font-bold text-blue-600 dark:text-blue-400">${u.uni_code}</td>
+            <td class="p-3 font-semibold text-slate-900 dark:text-white">${escapeHtml(u.name)}</td>
+            <td class="p-3 text-xs font-mono text-slate-500 dark:text-slate-400">${escapeHtml(u.email)}</td>
+            <td class="p-3 text-xs font-mono font-bold text-blue-600 dark:text-blue-400">${escapeHtml(u.uni_code)}</td>
             <td class="p-3">${roleBadge(u.type_code)}</td>
-            <td class="p-3 text-xs">${u.department || '-'}</td>
+            <td class="p-3 text-xs">${escapeHtml(u.department || '-')}</td>
             <td class="p-3 text-xs font-bold">${u.level || 0}</td>
             <td class="p-3 text-center">
               <div class="flex items-center justify-center gap-1.5 flex-wrap">

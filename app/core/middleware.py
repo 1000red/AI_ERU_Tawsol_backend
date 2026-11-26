@@ -60,9 +60,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Route specific rules: (regex, max_requests, window_seconds)
         self.rules = [
             (re.compile(r"^/auth/login"), 10, 60),
+            (re.compile(r"^/login$"), 10, 60),
             (re.compile(r"^/auth/forgot-password"), 5, 60),
             (re.compile(r"^/auth/verify-otp"), 10, 60),
             (re.compile(r"^/auth/reset-password"), 5, 60),
+            (re.compile(r"^/attendance/public-"), 30, 60),
             (re.compile(r"^/contact"), 5, 60),
             (re.compile(r"^/admin/api"), 30, 60),
             (re.compile(r"^/.*"), 180, 60),  # Global fallback: 180 req / min

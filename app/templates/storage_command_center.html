@@ -429,6 +429,21 @@
       return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getCookieValue(name) {
+      const match = document.cookie.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]*)'));
+      return match ? decodeURIComponent(match[1]) : '';
+    }
+
     function getAuthHeaders() {
       const headers = { 'Content-Type': 'application/json' };
       const token = localStorage.getItem('admin_token') || sessionStorage.getItem('admin_token');
@@ -438,6 +453,10 @@
         } else {
           headers['Authorization'] = 'Bearer ' + token;
         }
+      }
+      const csrf = getCookieValue('csrf_token');
+      if (csrf) {
+        headers['X-CSRF-Token'] = csrf;
       }
       return headers;
     }
@@ -451,7 +470,7 @@
         info: 'bg-cyan-600 text-white border-cyan-400',
       };
       t.className = `px-4 py-2.5 rounded-xl text-xs font-bold shadow-2xl border flex items-center gap-2 transition-all duration-300 transform translate-y-2 ${colors[type] || colors.info}`;
-      t.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-info'}"></i><span>${msg}</span>`;
+      t.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-info'}"></i><span>${escapeHtml(msg)}</span>`;
       c.appendChild(t);
       setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 4000);
     }
@@ -539,15 +558,14 @@
       if (btn) btn.disabled = true;
 
       try {
-        let res = await fetch(`${API_BASE}/admin/api/storage/sync`, {
+        const res = await fetch(`${API_BASE}/admin/api/storage/sync`, {
           method: 'POST',
           headers: getAuthHeaders(),
         });
-        if (!res.ok && res.status === 403) {
-          res = await fetch(`${API_BASE}/admin/api/storage/sync`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-        }
         if (res.ok) {
           showToast('تمت مزامنة حالة التخزين مع Vercel Blob وقاعدة البيانات بنجاح!', 'success');
+        } else if (res.status === 401 || res.status === 403) {
+          showToast('صلاحيات المشرف مطلوبة لتنفيذ المزامنة', 'error');
         } else {
           showToast('فشلت المزامنة مع Vercel Blob', 'error');
         }
@@ -567,19 +585,15 @@
       if (btn) btn.disabled = true;
 
       try {
-        let res = await fetch(`${API_BASE}/admin/api/storage/quarantine/purge`, {
+        const res = await fetch(`${API_BASE}/admin/api/storage/quarantine/purge`, {
           method: 'POST',
           headers: getAuthHeaders(),
         });
-        if (!res.ok && res.status === 403) {
-          res = await fetch(`${API_BASE}/admin/api/storage/quarantine/purge`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
         if (res.ok) {
           const data = await res.json();
           showToast(`تم فحص العزل: تم تطهير ${data.purged_count} ملفات بنجاح وتحرير ${data.total_freed_formatted}`, 'success');
+        } else if (res.status === 401 || res.status === 403) {
+          showToast('صلاحيات المشرف مطلوبة لتطهير سلة العزل', 'error');
         } else {
           showToast('فشل تنفيذ تطهير سلة العزل', 'error');
         }
@@ -645,19 +659,19 @@
                   <i class="fa-solid ${f.file_type === 'pdf' ? 'fa-file-pdf' : f.file_type === 'video' ? 'fa-file-video' : 'fa-file'}"></i>
                 </div>
                 <div class="max-w-xs truncate">
-                  <p class="font-bold text-white text-xs truncate" title="${f.title || f.file_path}">${f.title || 'ملف بدون عنوان'}</p>
-                  <p class="text-[10px] text-slate-400 font-mono truncate" title="${f.file_path}">${f.file_path || 'مسار غير محدد'}</p>
+                  <p class="font-bold text-white text-xs truncate" title="${escapeHtml(f.title || f.file_path)}">${escapeHtml(f.title || 'ملف بدون عنوان')}</p>
+                  <p class="text-[10px] text-slate-400 font-mono truncate" title="${escapeHtml(f.file_path)}">${escapeHtml(f.file_path || 'مسار غير محدد')}</p>
                 </div>
               </div>
             </td>
             <td class="py-3 px-4 font-mono">
-              <span class="text-white font-bold">${f.size_formatted}</span>
-              <span class="text-[10px] text-slate-400 block">${f.quota_percentage}% من الحصة</span>
+              <span class="text-white font-bold">${escapeHtml(f.size_formatted)}</span>
+              <span class="text-[10px] text-slate-400 block">${escapeHtml(f.quota_percentage)}% من الحصة</span>
             </td>
-            <td class="py-3 px-4 text-slate-400 uppercase font-mono text-[11px]">${f.file_type || '-'}</td>
+            <td class="py-3 px-4 text-slate-400 uppercase font-mono text-[11px]">${escapeHtml(f.file_type || '-')}</td>
             <td class="py-3 px-4">
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeColor}">
-                ${linked.badge || (f.is_orphan ? 'يتيم • آمن للمسح' : 'مرتبط بمقرر')}
+                ${escapeHtml(linked.badge || (f.is_orphan ? 'يتيم • آمن للمسح' : 'مرتبط بمقرر'))}
               </span>
             </td>
             <td class="py-3 px-4 text-slate-400 text-[11px] font-mono">
@@ -665,7 +679,7 @@
             </td>
             <td class="py-3 px-4 text-center">
               <div class="flex items-center justify-center gap-1.5">
-                ${f.file_path ? `<a href="${f.file_path}" target="_blank" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300" title="معاينة"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
+                ${f.file_path ? `<a href="${escapeHtml(f.file_path)}" target="_blank" rel="noopener noreferrer" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300" title="معاينة"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>` : ''}
                 <button onclick="openReplaceModal(${f.id})" class="p-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-300" title="استبدال ذري"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>
                 ${isQuar ? 
                   `<button onclick="restoreQuarantinedFile(${f.id})" class="p-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300" title="استعادة من العزل"><i class="fa-solid fa-trash-arrow-up"></i></button>` :
@@ -946,11 +960,11 @@
         list.innerHTML = logs.map(l => `
           <div class="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
             <div class="flex items-center justify-between">
-              <span class="font-bold text-cyan-400 uppercase font-mono">${l.action}</span>
+              <span class="font-bold text-cyan-400 uppercase font-mono">${escapeHtml(l.action)}</span>
               <span class="text-[10px] text-slate-500 font-mono">${new Date(l.created_at).toLocaleTimeString('ar-EG')}</span>
             </div>
-            <p class="text-slate-300 text-[11px]">${l.details || l.file_title || '-'}</p>
-            <p class="text-[10px] text-slate-500">بواسطة: ${l.admin_name || 'مسؤول النظام'}</p>
+            <p class="text-slate-300 text-[11px]">${escapeHtml(l.details || l.file_title || '-')}</p>
+            <p class="text-[10px] text-slate-500">بواسطة: ${escapeHtml(l.admin_name || 'مسؤول النظام')}</p>
           </div>
         `).join('');
       } catch (e) {

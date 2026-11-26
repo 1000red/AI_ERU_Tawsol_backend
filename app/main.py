@@ -185,8 +185,17 @@ def get_public_storage_quota(db: Session = Depends(get_db)):
 
 @app.get("/api/cron/quarantine-purge", tags=["Storage Telemetry"])
 @app.post("/api/cron/quarantine-purge", tags=["Storage Telemetry"])
-def public_cron_quarantine_purge(db: Session = Depends(get_db)):
+def public_cron_quarantine_purge(request: Request, db: Session = Depends(get_db)):
     """Automated cron endpoint to purge quarantined files older than 7 days."""
+    import secrets
+    cron_secret = os.getenv("CRON_SECRET", "").strip()
+    if cron_secret:
+        auth_hdr = request.headers.get("authorization", "")
+        token = auth_hdr[7:].strip() if auth_hdr.startswith("Bearer ") else ""
+        if not token or not secrets.compare_digest(token, cron_secret):
+            raise HTTPException(status_code=401, detail="Unauthorized cron invocation")
+    else:
+        admin_dashboard.require_admin_access(request, db)
     from app.services.storage_service import storage_service
     return storage_service.purge_expired_quarantined_files(db=db)
 

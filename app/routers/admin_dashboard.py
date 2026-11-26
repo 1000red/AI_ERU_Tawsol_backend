@@ -39,7 +39,12 @@ def require_admin_access(request: Request, db: Session = Depends(get_db)) -> int
     admin_key = request.headers.get("x-admin-key")
     if admin_key:
         dedicated_key = os.getenv("ADMIN_API_KEY", "")
-        fallback_key = settings.SECRET_KEY if settings.SECRET_KEY and "change-this" not in settings.SECRET_KEY else ""
+        is_prod = bool(os.getenv("VERCEL") or os.getenv("ENVIRONMENT") == "production")
+        fallback_key = (
+            settings.SECRET_KEY
+            if not is_prod and settings.SECRET_KEY and "change-this" not in settings.SECRET_KEY
+            else ""
+        )
         valid_key = dedicated_key or fallback_key
         if valid_key and secrets.compare_digest(admin_key, valid_key):
             return 1
@@ -1684,21 +1689,19 @@ def restore_storage_file_admin(
 
 
 @router.post("/api/storage/quarantine/purge")
-@router.get("/api/cron/quarantine-purge")
 def purge_expired_quarantine_admin(
-    admin_id: Optional[int] = Depends(get_optional_admin_access),
+    admin_id: int = Depends(require_admin_access),
     db: Session = Depends(get_db),
 ):
     """Automatically purge all quarantined files whose 7-day retention period has expired."""
     from app.services.storage_service import storage_service
     admin_name = "مشرف النظام"
-    if admin_id:
-        u = user_svc.get_user_by_id(db, admin_id)
-        if u:
-            admin_name = u.name
+    u = user_svc.get_user_by_id(db, admin_id)
+    if u:
+        admin_name = u.name
     return storage_service.purge_expired_quarantined_files(
         db=db,
-        admin_id=admin_id or 1,
+        admin_id=admin_id,
         admin_name=admin_name,
     )
 
@@ -1811,19 +1814,18 @@ def get_storage_audit_logs_admin(
 
 @router.post("/api/storage/sync")
 def sync_storage_admin(
-    admin_id: Optional[int] = Depends(get_optional_admin_access),
+    admin_id: int = Depends(require_admin_access),
     db: Session = Depends(get_db),
 ):
     """Trigger manual synchronization of storage tallies and Vercel Blob quota."""
     from app.services.storage_service import storage_service
     admin_name = None
-    if admin_id:
-        try:
-            admin_user = user_svc.get_user_by_id(db, admin_id)
-            if admin_user:
-                admin_name = admin_user.name
-        except Exception:
-            pass
+    try:
+        admin_user = user_svc.get_user_by_id(db, admin_id)
+        if admin_user:
+            admin_name = admin_user.name
+    except Exception:
+        pass
     return storage_service.trigger_sync(db, admin_id=admin_id, admin_name=admin_name)
 
 

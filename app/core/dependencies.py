@@ -23,3 +23,16 @@ def require_admin(
     user = svc.get_user_by_id(db, user_id)
     if user.type_code != "ADM":
         raise HTTPException(status_code=403, detail="Admins only")
+    return user
+
+
+def require_staff(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Require Doctor (DR), Teaching Assistant (TA), or Administrator (ADM) privileges."""
+    if current_user.type_code not in ("DR", "TA", "ADM"):
+        raise HTTPException(
+            status_code=403,
+            detail="صلاحيات المعلم أو المشرف مطلوبة لتنفيذ هذا الإجراء.",
+        )
+    return current_user

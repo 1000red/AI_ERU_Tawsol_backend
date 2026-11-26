@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, Response
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, require_staff
 from app.models.user import User
 from app.schemas.attendance import (
     AttendanceSessionCreate,
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/attendance", tags=["Smart Attendance"])
 def create_session(
     data: AttendanceSessionCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_staff),
 ):
     """(Doctor / Teacher / Admin) Create a dynamic QR attendance session for a lecture."""
     return att_svc.create_attendance_session(db, current_user, data)
@@ -36,7 +36,7 @@ def create_session(
 def get_session(
     session_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_staff),
 ):
     """View session status and live attendee list."""
     return att_svc.get_session_details(db, session_id)
@@ -47,7 +47,7 @@ def get_session(
 def get_session_live_qr(
     session_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_staff),
 ):
     """(Teacher) Get dynamic rotating anti-proxy QR code token and TTL (changes every 25 seconds)."""
     return att_svc.get_live_rotating_qr(db, session_id)
@@ -57,7 +57,7 @@ def get_session_live_qr(
 def get_attendance_sheet(
     session_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_staff),
 ):
     """(Teacher / Admin) Get full attendance sheet with all enrolled students and their status."""
     return att_svc.get_session_attendance_sheet(db, session_id)
@@ -68,7 +68,7 @@ def mark_attendance(
     session_id: int,
     data: AttendanceMarkRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_staff),
 ):
     """(Teacher / Admin) Manually mark or change a student's attendance status."""
     return att_svc.mark_student_attendance(db, session_id, data.student_id, data.status)
@@ -79,7 +79,7 @@ def batch_mark_attendance(
     session_id: int,
     data: AttendanceBatchMarkRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_staff),
 ):
     """(Teacher / Admin) Bulk mark or update student attendance statuses."""
     return att_svc.batch_mark_attendance(db, session_id, data.records)
@@ -89,7 +89,7 @@ def batch_mark_attendance(
 def get_course_sessions(
     material_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_staff),
 ):
     """(Teacher / Admin) List previous attendance sessions for a course."""
     return att_svc.get_course_attendance_sessions(db, material_id)
@@ -100,7 +100,7 @@ def get_course_sessions(
 def export_course_gradebook_excel(
     material_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_staff),
 ):
     """(Teacher / Admin) Export official Egyptian Ministry of Education / WE ATS Gradebook (.xlsx)."""
     excel_bytes, filename = gradebook_service.generate_course_gradebook_excel(db, material_id)
@@ -118,7 +118,7 @@ def export_course_gradebook_excel(
 def get_course_weakness_heatmap(
     material_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_staff),
 ):
     """(Teacher / Admin) Get classroom competency & weakness heatmap for targeted pedagogical remediation."""
     return gradebook_service.get_classroom_weakness_heatmap(db, material_id)
@@ -128,7 +128,7 @@ def get_course_weakness_heatmap(
 def close_session(
     session_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_staff),
 ):
     """Manually terminate and lock an attendance session."""
     return att_svc.close_attendance_session(db, session_id, current_user)
@@ -171,9 +171,8 @@ def public_student_attendance_summary(
     from sqlalchemy import func
     ident = student_identifier.strip()
     filters = [
-        User.email.ilike(ident),
+        func.lower(User.email) == ident.lower(),
         func.lower(User.uni_code) == ident.lower(),
-        User.name.ilike(f"%{ident}%"),
     ]
     if ident.isdigit():
         filters.append(User.user_id == int(ident))

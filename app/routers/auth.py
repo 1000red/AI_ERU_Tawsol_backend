@@ -70,9 +70,10 @@ def logout(response: Response, request: Request, db: Session = Depends(get_db)):
     token = auth.split(" ")[1] if auth and auth.startswith("Bearer ") else request.cookies.get("admin_token")
     if token:
         try:
-            from app.core.security import decode_token
+            from app.core.security import decode_token, revoke_token
             from app.services.admin_audit_service import admin_audit_service
             payload = decode_token(token)
+            revoke_token(token, db)
             user_id = int(payload.get("sub", 0))
             if payload.get("type") == "ADM":
                 admin_audit_service.log_action(

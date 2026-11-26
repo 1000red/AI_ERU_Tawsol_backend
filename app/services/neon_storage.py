@@ -39,7 +39,7 @@ class NeonStorageService:
                 aws_access_key_id=self.access_key_id,
                 aws_secret_access_key=self.secret_access_key,
                 region_name=self.region_name,
-                verify=False,
+                verify=os.getenv("NEON_STORAGE_SSL_VERIFY", "true").lower() in ("true", "1"),
                 config=Config(
                     s3={"addressing_style": "path"},
                     signature_version="s3v4",
@@ -84,6 +84,19 @@ class NeonStorageService:
         except ClientError as e:
             logger.error(f"Failed to download object {object_key}: {e}")
             return None
+
+    def get_object(self, object_key: str) -> Tuple[Optional[bytes], str]:
+        """Download an object and its MIME type from the Neon bucket."""
+        if not self.is_configured:
+            return None, "application/octet-stream"
+
+        try:
+            response = self.client.get_object(Bucket=self.bucket_name, Key=object_key)
+            content_type = response.get("ContentType") or "application/octet-stream"
+            return response["Body"].read(), content_type
+        except ClientError as e:
+            logger.error(f"Failed to get object {object_key}: {e}")
+            return None, "application/octet-stream"
 
     def get_presigned_url(self, object_key: str, expires_in: int = 3600) -> Optional[str]:
         """Generate a presigned GET URL for private objects."""

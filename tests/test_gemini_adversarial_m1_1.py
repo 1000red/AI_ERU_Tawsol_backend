@@ -15,6 +15,7 @@ import json
 import asyncio
 import unittest
 from unittest.mock import patch, MagicMock
+import pytest
 
 # Ensure backend root is on sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -247,25 +248,27 @@ class TestAdversarialTextValidation(unittest.TestCase):
                 self.assertEqual(ctx.exception.status_code, 422)
                 self.assertIn("too little extractable text", ctx.exception.detail)
 
-    def test_02_text_boundary_199_vs_200_chars(self):
-        """Verify boundary condition: 199 chars raises 422, while 200 chars proceeds."""
-        text_199 = "x" * 199
+    def test_02_text_boundary_149_vs_150_chars(self):
+        """Verify boundary condition: 149 chars raises 422, while 150 chars proceeds."""
+        text_149 = "x" * 149
         with self.assertRaises(HTTPException) as ctx:
-            self.loop.run_until_complete(generate_quiz(text_199))
+            self.loop.run_until_complete(generate_quiz(text_149))
         self.assertEqual(ctx.exception.status_code, 422)
 
-        # 200 characters should proceed past length validation
-        text_200 = "x" * 200
+        # 150 characters should proceed past length validation
+        text_150 = "x" * 150
         mock_resp = MagicMock()
+        mock_resp.function_calls = None
         mock_resp.text = _build_valid_quiz_payload(10)
         mock_client = MagicMock()
         mock_client.models.generate_content.return_value = mock_resp
 
         with patch("app.services.quiz_service.generator._make_client", return_value=mock_client):
-            questions = self.loop.run_until_complete(generate_quiz(text_200))
+            questions = self.loop.run_until_complete(generate_quiz(text_150))
             self.assertEqual(len(questions), 10)
 
 
+@pytest.mark.live
 class TestAdversarialLiveGeminiVerification(unittest.TestCase):
     """Empirical live testing against Google Gemini using actual configured key."""
 

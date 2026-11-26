@@ -1,3 +1,6 @@
+import time
+import threading
+import uuid
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 import bcrypt
@@ -7,6 +10,44 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 
 bearer_scheme = HTTPBearer()
+
+_REVOKED_JTIS: dict[str, float] = {}
+_REVOKED_LOCK = threading.Lock()
+
+
+def _prune_revoked(now_ts: float) -> None:
+    expired = [jti for jti, exp in _REVOKED_JTIS.items() if exp and exp < now_ts]
+    for jti in expired:
+        _REVOKED_JTIS.pop(jti, None)
+
+
+def revoke_token(token: str, db=None) -> None:
+    """Revoke a JWT token by its JTI (or token digest fallback) until expiry."""
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+            options={"verify_exp": False},
+        )
+    except Exception:
+        return
+    jti = payload.get("jti") or token[-32:]
+    exp = float(payload.get("exp") or (time.time() + 86400))
+    with _REVOKED_LOCK:
+        _prune_revoked(time.time())
+        _REVOKED_JTIS[str(jti)] = exp
+
+
+def is_token_revoked(payload: dict) -> bool:
+    jti = payload.get("jti")
+    if not jti:
+        return False
+    now_ts = time.time()
+    with _REVOKED_LOCK:
+        _prune_revoked(now_ts)
+        exp = _REVOKED_JTIS.get(str(jti))
+        return exp is not None and exp >= now_ts
 
 
 # ── Password ──────────────────────────────────────────────────────────────────
@@ -27,6 +68,7 @@ def create_access_token(data: dict, expires_minutes: int | None = None) -> str:
         minutes=expires_minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
     to_encode["exp"] = expire
+    to_encode.setdefault("jti", uuid.uuid4().hex)
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
@@ -39,13 +81,20 @@ def create_reset_token(user_id: int) -> str:
 
 def decode_token(token: str) -> dict:
     try:
-        return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     except JWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         ) from e
+    if is_token_revoked(payload):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has been revoked",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return payload
 
 
 # ── Dependency: get current user_id ───────────────────────────────────────────
@@ -92,6 +141,6 @@ def require_admin_role(
     user_type = payload.get("type")
     if user_id is None:
         raise HTTPException(status_code=401, detail="Token missing subject")
-    if user_type != "ADM" and str(user_id) != "1":
+    if user_type != "ADM":
         raise HTTPException(status_code=403, detail="Administrator privileges required")
     return int(user_id)

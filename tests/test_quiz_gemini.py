@@ -17,6 +17,7 @@ import ssl
 import asyncio
 import unittest
 from unittest.mock import patch, MagicMock
+import pytest
 
 # Ensure backend root is in sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -322,6 +323,7 @@ class TestGeminiQuizGeneratorMocked(unittest.TestCase):
                 self.assertIn("Failed to initialize Gemini AI client", ctx.exception.detail)
 
 
+@pytest.mark.live
 class TestGeminiLiveInvocation(unittest.TestCase):
     """Test 4: Live model invocation with gemini-2.5-flash using configured key."""
 

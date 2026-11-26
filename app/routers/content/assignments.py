@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime
@@ -76,11 +76,18 @@ def create_assignment(
     db: Session   = Depends(get_db),
 ):
     file_path, _ = save_file(file)
+    try:
+        parsed_deadline = datetime.fromisoformat(deadline)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail="Invalid deadline format. Expected ISO-8601 datetime (e.g. 2026-12-01T23:59:00).",
+        )
     data = AssignmentCreate(
         material_id=material_id,
         title=title,
         description=description,
-        deadline=datetime.fromisoformat(deadline),
+        deadline=parsed_deadline,
         link_url=link_url,
         file_type=file_type,
         text_content=text_content,

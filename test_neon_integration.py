@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.main import app
 from app.core.config import settings
+from app.core.security import create_access_token
 from app.services.neon_storage import neon_storage
 from app.services.neon_ai_gateway import neon_ai
 from app.services.neon_auth import neon_auth
@@ -23,6 +24,8 @@ class TestNeonServicesE2E(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.client = TestClient(app)
+        cls.user_headers = {"Authorization": f"Bearer {create_access_token({'sub': '1', 'type': 'STU'})}"}
+        cls.admin_headers = {"Authorization": f"Bearer {create_access_token({'sub': '1', 'type': 'ADM'})}"}
 
     def test_01_app_health_endpoints(self):
         """Test root and health status endpoints."""
@@ -84,6 +87,7 @@ class TestNeonServicesE2E(unittest.TestCase):
         resp = self.client.post(
             "/api/neon/realtime/seal",
             params={"query": sql_query},
+            headers=self.user_headers,
         )
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
@@ -217,7 +221,11 @@ class TestNeonServicesE2E(unittest.TestCase):
 
     def test_09_storage_presigned_endpoint(self):
         """Test GET /api/neon/storage/presigned-url endpoint."""
-        resp = self.client.get("/api/neon/storage/presigned-url", params={"key": "materials/lecture1.pdf"})
+        resp = self.client.get(
+            "/api/neon/storage/presigned-url",
+            params={"key": "materials/lecture1.pdf"},
+            headers=self.user_headers,
+        )
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
         self.assertEqual(data.get("key"), "materials/lecture1.pdf")
@@ -227,7 +235,11 @@ class TestNeonServicesE2E(unittest.TestCase):
 
     def test_10_neon_functions_invocation_handling(self):
         """Test /api/neon/functions/invoke endpoint and error handling."""
-        resp = self.client.post("/api/neon/functions/invoke", params={"slug": "hello", "path": "/"})
+        resp = self.client.post(
+            "/api/neon/functions/invoke",
+            params={"slug": "hello", "path": "/"},
+            headers=self.admin_headers,
+        )
         # If the function host is offline/unprovisioned, it returns clean 500/503/502 JSON without crashing
         self.assertIn(resp.status_code, [200, 500, 502, 503])
         data = resp.json()

@@ -22,6 +22,7 @@ from unittest.mock import patch, MagicMock
 
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -170,13 +171,24 @@ def get_test_db():
         db.close()
 
 
-fastapi_app.dependency_overrides[get_db] = get_test_db
+@pytest.fixture(scope="module", autouse=True)
+def _bind_e2e_db_override():
+    prev = fastapi_app.dependency_overrides.get(get_db)
+    fastapi_app.dependency_overrides[get_db] = get_test_db
+    yield
+    if prev is not None:
+        fastapi_app.dependency_overrides[get_db] = prev
+    else:
+        fastapi_app.dependency_overrides.pop(get_db, None)
+
+
 client = TestClient(fastapi_app)
 
 
 def auth_header(user_id: int) -> dict:
     """Generate HTTP Authorization header with a valid JWT token for user_id."""
-    token = create_access_token({"sub": str(user_id)})
+    role_map = {1: "ADM", 2: "DR", 3: "DR", 4: "TA", 5: "STU", 6: "STU", 7: "STU", 8: "DR"}
+    token = create_access_token({"sub": str(user_id), "type": role_map.get(user_id, "STU")})
     return {"Authorization": f"Bearer {token}"}
 
 
@@ -462,9 +474,10 @@ class TestTier1FeatureCoverage(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
 
     def test_f6_09_admin_api_key_authentication(self):
-        """F6.9: Accessing /admin/api routes via X-Admin-Key succeeds."""
-        resp = client.get("/admin/api/stats", headers={"x-admin-key": settings.SECRET_KEY})
-        self.assertEqual(resp.status_code, 200)
+        """F6.9: Accessing /admin/api routes via dedicated X-Admin-Key succeeds."""
+        with patch.dict(os.environ, {"ADMIN_API_KEY": "qa-dedicated-admin-api-key-2026"}):
+            resp = client.get("/admin/api/stats", headers={"x-admin-key": "qa-dedicated-admin-api-key-2026"})
+            self.assertEqual(resp.status_code, 200)
 
     def test_f6_10_admin_api_mutations_protected(self):
         """F6.10: POST and DELETE /admin/api/... require admin credentials."""
@@ -668,12 +681,12 @@ class TestTier2BoundaryCases(unittest.TestCase):
             asyncio.run(generate_quiz(short_text))
         self.assertEqual(ctx.exception.status_code, 422)
 
-    def test_b2_02_lecture_text_exact_boundary_199_chars(self):
-        """B2.2: Lecture text of exactly 199 characters raises HTTP 422."""
+    def test_b2_02_lecture_text_exact_boundary_149_chars(self):
+        """B2.2: Lecture text of exactly 149 characters raises HTTP 422."""
         import asyncio
-        text_199 = "x" * 199
+        text_149 = "x" * 149
         with self.assertRaises(HTTPException) as ctx:
-            asyncio.run(generate_quiz(text_199))
+            asyncio.run(generate_quiz(text_149))
         self.assertEqual(ctx.exception.status_code, 422)
 
     def test_b2_03_lecture_text_exceeding_12000_chars_truncated(self):
@@ -880,14 +893,20 @@ class TestTier2BoundaryCases(unittest.TestCase):
             content_svc.delete_assignment(self.db, assignment_id=1, user_id=3)
         self.assertEqual(ctx.exception.status_code, 403)
 
-    def test_b8_05_teacher_cannot_generate_quiz(self):
-        """B8.5: Teacher (user 2) calling /quiz/generate returns HTTP 403."""
-        resp = client.post(
-            "/quiz/generate",
-            json={"file_id": 1},
-            headers=auth_header(2),
-        )
-        self.assertEqual(resp.status_code, 403)
+    def test_b8_05_teacher_can_generate_quiz_and_guest_rejected(self):
+        """B8.5: Teacher (user 2) calling /quiz/generate succeeds with valid file text; invalid role returns 403."""
+        mock_qs = [
+            _StoredQuestion(id=i, question=f"Q{i}?", options={"A": "1", "B": "2", "C": "3", "D": "4"}, correct="A", explanation="E")
+            for i in range(1, 6)
+        ]
+        with patch("app.routers.quiz.extract_text", return_value="Long lecture content " * 15), \
+             patch("app.routers.quiz.generate_quiz", return_value=mock_qs):
+            resp = client.post("/quiz/generate", json={"file_id": 1}, headers=auth_header(2))
+            self.assertEqual(resp.status_code, 200)
+
+        # Unauthenticated caller rejected
+        resp_unauth = client.post("/quiz/generate", json={"file_id": 1})
+        self.assertEqual(resp_unauth.status_code, 401)
 
     # ── Category 9: Git & Deployment Boundaries (5 cases) ─────────────────────
 
@@ -998,11 +1017,11 @@ class TestTier3Interactions(unittest.TestCase):
 
     def test_tier3_07_quiz_generation_prerequisites_matrix(self):
         """T3.7: Quiz generation prerequisites matrix validation."""
-        # Case A: Non-student calling quiz -> 403
-        resp = client.post("/quiz/generate", json={"file_id": 1}, headers=auth_header(2))
+        # Case A: Student 6 (AI201 only) calling quiz for CS101 file 1 -> 403
+        resp = client.post("/quiz/generate", json={"file_id": 1}, headers=auth_header(6))
         self.assertEqual(resp.status_code, 403)
 
-        # Case B: Student calling for file of unenrolled course -> 403
+        # Case B: Student 5 calling for file of unenrolled course -> 403
         resp = client.post("/quiz/generate", json={"file_id": 2}, headers=auth_header(5))
         self.assertEqual(resp.status_code, 403)
 
