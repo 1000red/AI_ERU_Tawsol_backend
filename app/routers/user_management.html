@@ -5924,7 +5924,7 @@ async function inspectQuiz(quizId) {
         });
 
         if (!res.ok) {
-          listEl.innerHTML = renderAnalyticsErrorRow(1, res.status, 'تعذر تحميل سجل تدقيق التخزين', 'loadStorageAuditLogs');
+          listEl.innerHTML = `<table class="w-full"><tbody>${renderAnalyticsErrorRow(1, res.status, 'تعذر تحميل سجل تدقيق التخزين', 'loadStorageAuditLogs')}</tbody></table>`;
           return;
         }
 

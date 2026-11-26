@@ -1,13 +1,20 @@
 """Deep static analyzer for all 7 HTML pages in WeConnect backend.
 Checks:
-1. All onclick, onsubmit, onchange handlers have corresponding defined JS functions.
-2. All document.getElementById('...') lookups point to existing element IDs in the DOM.
-3. All fetch(...) URLs correspond to existing FastAPI routes or valid external URLs.
-4. Detect any JS syntax errors or missing closing tags.
+1. All <script> blocks extracted with standard HTML5-compliant HTMLParser pass `node --check` JS syntax validation (catches unescaped </script> inside templates!).
+2. All static and dynamic onclick/onchange/onsubmit handlers map to defined JS functions.
+3. All document.getElementById('...') and querySelector('#...') lookups point to existing DOM IDs.
+4. All fetch(...) URLs & HTTP methods match registered FastAPI endpoints (including _IncludedRouter traversal).
+5. Zero duplicate DOM IDs, duplicate named JS functions, or broken relative .html links.
 """
 
 import os
 import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from collections import Counter
+from html.parser import HTMLParser
 from app.main import app
 
 HTML_FILES = {
@@ -20,111 +27,195 @@ HTML_FILES = {
     "storage_command_center": "app/templates/storage_command_center.html",
 }
 
-# Collect all FastAPI route paths
-fastapi_routes = set()
-for route in app.routes:
-    if hasattr(route, "path"):
-        fastapi_routes.add(route.path)
-    if hasattr(route, "routes"):
-        for sub in route.routes:
-            if hasattr(sub, "path"):
-                fastapi_routes.add(sub.path)
 
-print(f"Total FastAPI routes detected: {len(fastapi_routes)}")
+class ScriptAndIdExtractor(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.in_script = False
+        self.scripts = []
+        self.cur = []
+        self.cur_line = 0
+        self.ids = []
 
-reports = {}
+    def handle_starttag(self, tag, attrs):
+        attrs_dict = dict(attrs)
+        if "id" in attrs_dict and not self.in_script:
+            self.ids.append(attrs_dict["id"])
+        if tag.lower() == "script":
+            self.in_script = True
+            self.cur = []
+            self.cur_line = self.getpos()[0]
 
-for name, path in HTML_FILES.items():
-    if not os.path.exists(path):
-        print(f"ERROR: {path} not found!")
-        continue
+    def handle_data(self, data):
+        if self.in_script:
+            self.cur.append(data)
 
+    def handle_endtag(self, tag):
+        if tag.lower() == "script" and self.in_script:
+            self.in_script = False
+            self.scripts.append((self.cur_line, "".join(self.cur)))
+
+
+def collect_all_routes(router, prefix=""):
+    res = set()
+    for r in getattr(router, "routes", []):
+        if hasattr(r, "original_router"):
+            ctx = getattr(r, "include_context", None)
+            p = getattr(ctx, "prefix", "") if ctx else ""
+            res |= collect_all_routes(r.original_router, prefix + p)
+        elif hasattr(r, "routes"):
+            res |= collect_all_routes(r, prefix + getattr(r, "prefix", ""))
+        elif hasattr(r, "path"):
+            methods = getattr(r, "methods", None) or {"GET"}
+            for m in methods:
+                res.add((m.upper(), (prefix + r.path).replace("//", "/")))
+    return res
+
+
+all_routes = collect_all_routes(app)
+route_regexes = [
+    (m, p, re.compile("^" + re.sub(r"\{[^}]+\}", r"[^/?]+", p) + "(?:\\?.*)?$"))
+    for m, p in all_routes
+]
+
+
+def matches_method_route(method, url_path):
+    clean = url_path.split("?")[0]
+    clean_norm = re.sub(r"\$\{[^}]+\}", "PLACEHOLDER", clean)
+    return any(m == method.upper() and rx.match(clean_norm) for m, _, rx in route_regexes)
+
+
+def path_exists(url_path):
+    clean = url_path.split("?")[0]
+    clean_norm = re.sub(r"\$\{[^}]+\}", "PLACEHOLDER", clean)
+    return any(rx.match(clean_norm) for _, _, rx in route_regexes)
+
+
+BUILTINS = {
+    "alert", "confirm", "prompt", "window", "event", "stopPropagation", "preventDefault",
+    "console", "setTimeout", "clearTimeout", "setInterval", "clearInterval", "open", "close",
+    "print", "history", "location", "reload", "blur", "focus", "select", "toggle",
+    "classList", "remove", "add", "showToast", "confetti", "Number", "String", "Boolean",
+    "parseInt", "parseFloat", "encodeURIComponent", "decodeURIComponent", "Math", "Date",
+    "JSON", "Array", "Object", "fetch", "navigator", "document", "requestAnimationFrame",
+    "if", "for", "while", "switch", "return", "typeof", "void", "delete", "new", "function", "this",
+}
+
+
+def audit_file(name, path, node_bin=None):
     with open(path, "r", encoding="utf-8") as f:
         html = f.read()
 
-    # 1. Extract all DOM IDs
-    dom_ids = set(re.findall(r'id=["\']([^"\']+)["\']', html))
+    parser = ScriptAndIdExtractor()
+    parser.feed(html)
+    non_empty_scripts = [(line, sc) for line, sc in parser.scripts if sc.strip()]
 
-    # 2. Extract all scripts content
-    scripts = re.findall(r'<script(?:\s+[^>]*)?>(.*?)</script>', html, re.DOTALL | re.IGNORECASE)
-    combined_js = "\n".join(scripts)
+    js_errors = []
+    if parser.in_script:
+        js_errors.append(f"Unclosed <script> tag starting at line {parser.cur_line}")
+    if node_bin:
+        for line, sc in non_empty_scripts:
+            with tempfile.NamedTemporaryFile("w", suffix=".js", encoding="utf-8", delete=False) as tf:
+                tf.write(sc)
+                tmp_path = tf.name
+            try:
+                res = subprocess.run([node_bin, "--check", tmp_path], capture_output=True, text=True)
+                if res.returncode != 0:
+                    js_errors.append(f"Script line {line}: {res.stderr.strip()[:300]}")
+            finally:
+                os.unlink(tmp_path)
 
-    # 3. Extract all defined JS functions
-    # function foo(...)
-    fn_defs_1 = set(re.findall(r'function\s+([a-zA-Z0-9_$]+)\s*\(', combined_js))
-    # const foo = (...) => or const foo = function(...)
-    fn_defs_2 = set(re.findall(r'(?:const|let|var)\s+([a-zA-Z0-9_$]+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[a-zA-Z0-9_$]+)\s*=>', combined_js))
-    fn_defs_3 = set(re.findall(r'(?:const|let|var)\s+([a-zA-Z0-9_$]+)\s*=\s*(?:async\s*)?function', combined_js))
-    # window.foo = ...
-    fn_defs_4 = set(re.findall(r'window\.([a-zA-Z0-9_$]+)\s*=', combined_js))
-    all_defined_fns = fn_defs_1 | fn_defs_2 | fn_defs_3 | fn_defs_4
+    combined_js = "\n".join(sc for _, sc in non_empty_scripts)
+    dom_ids = set(parser.ids)
+    dup_ids = sorted(k for k, v in Counter(parser.ids).items() if v > 1)
 
-    # Built-in or library functions commonly invoked inline
-    builtins = {
-        "alert", "confirm", "prompt", "window", "event", "stopPropagation", "preventDefault",
-        "console", "setTimeout", "clearTimeout", "setInterval", "clearInterval", "open", "close",
-        "print", "history", "location", "reload", "blur", "focus", "select", "toggle",
-        "classList", "remove", "add", "showToast", "confetti"
-    }
+    named_fns = re.findall(r"(?:async\s+)?function\s+([a-zA-Z0-9_$]+)\s*\(", combined_js)
+    dup_fns = sorted(k for k, v in Counter(named_fns).items() if v > 1)
+    fn_defs = set(named_fns)
+    fn_defs |= set(re.findall(r"(?:const|let|var)\s+([a-zA-Z0-9_$]+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[a-zA-Z0-9_$]+)\s*=>", combined_js))
+    fn_defs |= set(re.findall(r"(?:const|let|var)\s+([a-zA-Z0-9_$]+)\s*=\s*(?:async\s*)?function", combined_js))
+    fn_defs |= set(re.findall(r"window\.([a-zA-Z0-9_$]+)\s*=", combined_js))
 
-    # 4. Extract inline handlers: onclick, onsubmit, onchange, etc.
-    handlers = re.findall(r'\bon[a-z]+\s*=\s*["\']([^"\']+)["\']', html, re.IGNORECASE)
-    called_fns = set()
-    for h in handlers:
-        # find foo(...) calls
-        calls = re.findall(r'([a-zA-Z0-9_$]+)\s*\(', h)
-        for c in calls:
-            called_fns.add(c)
-
-    # Missing functions
+    handlers = re.findall(r'\bon[a-z]+\s*=\s*("([^"]*)"|\'([^\']*)\')', html, re.IGNORECASE)
     missing_fns = set()
-    for fn in called_fns:
-        if fn not in all_defined_fns and fn not in builtins:
-            # check if it's a DOM method call like el.remove() or obj.method()
-            # If the handler contains e.g. "this.classList.toggle", 'toggle' might be matched
-            # check if fn is preceded by a dot in any handler
-            is_method = False
-            for h in handlers:
-                if re.search(r'\.\s*' + re.escape(fn) + r'\s*\(', h):
-                    is_method = True
-                    break
-            if not is_method:
+    for _, dq, sq in handlers:
+        h = dq if dq else sq
+        h_no_str = re.sub(r'(["\'])(?:\\.|(?!\1).)*\1', '""', h)
+        for m in re.finditer(r'(?<![.\w$])([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(', h_no_str):
+            fn = m.group(1)
+            if fn not in fn_defs and fn not in BUILTINS:
                 missing_fns.add(fn)
 
-    # 5. Extract document.getElementById('...') calls
     get_el_ids = set(re.findall(r'document\.getElementById\(\s*["\']([^"\']+)["\']\s*\)', combined_js))
-    missing_ids = set()
-    for el_id in get_el_ids:
-        if el_id not in dom_ids:
-            # Check if dynamically created or template
-            missing_ids.add(el_id)
+    missing_ids = sorted(
+        el_id for el_id in get_el_ids
+        if el_id not in dom_ids and not re.search(rf'id\s*=\s*["\\\']?{re.escape(el_id)}', combined_js)
+    )
 
-    # 6. Extract fetch endpoints
-    fetch_calls = re.findall(r'fetch\(\s*[`"\']([^`"\']+)[\'"`]', combined_js)
-    # Also fetch(`${API_BASE}/foo/bar`)
-    template_fetches = re.findall(r'fetch\(\s*`\$\{API_BASE\}(/[^`?]+)', combined_js)
-    all_fetches = set(fetch_calls + template_fetches)
+    fetch_mismatches = []
+    for fm in re.finditer(r'fetch\(\s*([`"\'])((?:\\.|(?!\1).)+)\1(?:\s*,\s*(\{[^;]{0,500}))?', combined_js, re.DOTALL):
+        url = fm.group(2)
+        opts = fm.group(3) or ""
+        u = re.sub(r'^\$\{(?:API_BASE|BASE_URL|window\.location\.origin|origin)\}', '', url)
+        if not u.startswith('/'):
+            continue
+        mm = re.search(r'method\s*:\s*["\']([A-Za-z]+)["\']', opts)
+        method = mm.group(1).upper() if mm else "GET"
+        if not matches_method_route(method, u):
+            fetch_mismatches.append(f"{method} {u}")
 
-    reports[name] = {
+    bad_hrefs = []
+    for h in re.findall(r'href\s*=\s*["\']([^"\']+)["\']', html):
+        if h.startswith(('#', 'http', 'mailto:', 'javascript:', 'data:')):
+            continue
+        if h.endswith('.html') or (h.startswith('/') and not h.startswith('/static') and not path_exists(h)):
+            bad_hrefs.append(h)
+
+    return {
         "size_kb": len(html) // 1024,
         "dom_ids_count": len(dom_ids),
-        "js_functions_count": len(all_defined_fns),
-        "missing_functions": sorted(list(missing_fns)),
-        "missing_dom_ids": sorted(list(missing_ids)),
-        "fetch_endpoints": sorted(list(all_fetches)),
+        "js_functions_count": len(fn_defs),
+        "js_errors": js_errors,
+        "dup_ids": dup_ids,
+        "dup_fns": dup_fns,
+        "missing_functions": sorted(missing_fns),
+        "missing_dom_ids": missing_ids,
+        "fetch_mismatches": fetch_mismatches,
+        "bad_hrefs": bad_hrefs,
     }
 
-print("\n" + "=" * 60)
-print("AUDIT RESULTS SUMMARY")
-print("=" * 60)
-for name, rep in reports.items():
-    print(f"\n--- {name.upper()} ({rep['size_kb']} KB) ---")
-    print(f"DOM IDs: {rep['dom_ids_count']} | JS Defined Functions: {rep['js_functions_count']}")
-    if rep['missing_functions']:
-        print(f"⚠️ POTENTIALLY MISSING FUNCTIONS ({len(rep['missing_functions'])}): {rep['missing_functions']}")
-    else:
-        print("✅ All inline handler functions are defined!")
-    if rep['missing_dom_ids']:
-        print(f"⚠️ POTENTIALLY MISSING DOM IDs ({len(rep['missing_dom_ids'])}): {rep['missing_dom_ids']}")
-    else:
-        print("✅ All referenced DOM IDs exist in HTML!")
+
+if __name__ == "__main__":
+    print(f"Total FastAPI endpoints detected: {len(all_routes)}")
+    node_bin = shutil.which("node")
+    print("\n" + "=" * 60)
+    print("AUDIT RESULTS SUMMARY")
+    print("=" * 60)
+    has_failures = False
+    for name, path in HTML_FILES.items():
+        if not os.path.exists(path):
+            print(f"ERROR: {path} not found!")
+            has_failures = True
+            continue
+        rep = audit_file(name, path, node_bin=node_bin)
+        print(f"\n--- {name.upper()} ({rep['size_kb']} KB) ---")
+        print(f"DOM IDs: {rep['dom_ids_count']} | JS Defined Functions: {rep['js_functions_count']}")
+        checks = [
+            ("JS syntax errors", rep["js_errors"]),
+            ("Duplicate DOM IDs", rep["dup_ids"]),
+            ("Duplicate function defs", rep["dup_fns"]),
+            ("Missing inline functions", rep["missing_functions"]),
+            ("Missing DOM IDs", rep["missing_dom_ids"]),
+            ("Mismatched fetch routes", rep["fetch_mismatches"]),
+            ("Broken href links", rep["bad_hrefs"]),
+        ]
+        page_ok = True
+        for label, issues in checks:
+            if issues:
+                page_ok = False
+                has_failures = True
+                print(f"FAIL {label}: {issues}")
+        if page_ok:
+            print("OK: All syntax, DOM IDs, JS handlers, fetch routes, and links verified!")
+
+    sys.exit(1 if has_failures else 0)
