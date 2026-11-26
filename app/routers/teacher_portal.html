@@ -1981,6 +1981,22 @@
       return fallbackMsg;
     }
 
+    function renderKaTeX(targetEl) {
+      if (window.renderMathInElement && targetEl) {
+        try {
+          renderMathInElement(targetEl, {
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false}
+            ],
+            throwOnError: false
+          });
+        } catch (e) {
+          console.warn('KaTeX rendering notice:', e);
+        }
+      }
+    }
+
     // ── VERIFIED TEACHER DIRECTORY ──────────────────────────────────────────
     const TEACHER_DIRECTORY = [
       {
@@ -2135,7 +2151,6 @@
       // Pre-populate C5 - Programming by default if not authenticated
       if (!currentTeacher) {
         populateCourseDropdowns(DEFAULT_COURSES);
-        loadCourseFiles('C5');
       }
     });
 
@@ -2517,15 +2532,17 @@
       container.innerHTML = `<p class="text-xs text-slate-400 py-4"><i class="fa-solid fa-circle-notch fa-spin"></i> جاري جلب المحاضرات...</p>`;
 
       let files = [];
-      try {
-        const res = await fetch(`${API_BASE}/files/${materialId}`, {
-          headers: getAuthHeaders()
-        });
-        if (res.ok) {
-          files = await res.json();
+      if (getTeacherToken()) {
+        try {
+          const res = await fetch(`${API_BASE}/files/${materialId}`, {
+            headers: getAuthHeaders()
+          });
+          if (res.ok) {
+            files = await res.json();
+          }
+        } catch (e) {
+          console.warn('Backend fetch failed, using fallback:', e);
         }
-      } catch (e) {
-        console.warn('Backend fetch failed, using fallback:', e);
       }
 
       // If backend returned empty or unauthenticated, use verified course files
@@ -2608,19 +2625,7 @@
       }).join('');
 
       // Auto-render KaTeX math and scientific formulas
-      if (window.renderMathInElement && contentArea) {
-        try {
-          renderMathInElement(contentArea, {
-            delimiters: [
-              {left: '$$', right: '$$', display: true},
-              {left: '$', right: '$', display: false}
-            ],
-            throwOnError: false
-          });
-        } catch (e) {
-          console.warn('KaTeX rendering notice:', e);
-        }
-      }
+      renderKaTeX(container);
     }
 
     // ── EASY DRAG & DROP FILE UPLOAD HANDLERS ─────────────────────────────────
@@ -3163,19 +3168,7 @@
       }).join('');
 
       // Auto-render KaTeX math and scientific formulas
-      if (window.renderMathInElement && contentArea) {
-        try {
-          renderMathInElement(contentArea, {
-            delimiters: [
-              {left: '$$', right: '$$', display: true},
-              {left: '$', right: '$', display: false}
-            ],
-            throwOnError: false
-          });
-        } catch (e) {
-          console.warn('KaTeX rendering notice:', e);
-        }
-      }
+      renderKaTeX(contentArea);
     }
 
     // ── INLINE QUESTION EDITING & ACTIONS ─────────────────────────────────────
@@ -3905,6 +3898,15 @@
     async function loadCourseAssignments(materialId) {
       if (!materialId) return;
       const container = document.getElementById('assignments-list-container');
+      if (!getTeacherToken()) {
+        container.innerHTML = `
+          <div class="py-8 text-center bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+            <i class="fa-solid fa-lock text-2xl text-slate-300 dark:text-slate-700 mb-1"></i>
+            <p class="text-xs text-slate-400">يرجى تسجيل دخول المعلم لعرض وإدارة التكليفات لهذا المقرر</p>
+          </div>
+        `;
+        return;
+      }
       container.innerHTML = `<p class="text-xs text-slate-400 py-4"><i class="fa-solid fa-circle-notch fa-spin"></i> جاري جلب التكليفات...</p>`;
 
       try {
@@ -4470,19 +4472,7 @@
       }).join('');
 
       // Auto-render KaTeX math and scientific formulas
-      if (window.renderMathInElement && contentArea) {
-        try {
-          renderMathInElement(contentArea, {
-            delimiters: [
-              {left: '$$', right: '$$', display: true},
-              {left: '$', right: '$', display: false}
-            ],
-            throwOnError: false
-          });
-        } catch (e) {
-          console.warn('KaTeX rendering notice:', e);
-        }
-      }
+      renderKaTeX(list);
     }
 
     // ── TAB 5 INTERACTIVE ACTIONS ─────────────────────────────────────────────
@@ -5170,19 +5160,7 @@
       }).join('');
 
       // Auto-render KaTeX math and scientific formulas
-      if (window.renderMathInElement && contentArea) {
-        try {
-          renderMathInElement(contentArea, {
-            delimiters: [
-              {left: '$$', right: '$$', display: true},
-              {left: '$', right: '$', display: false}
-            ],
-            throwOnError: false
-          });
-        } catch (e) {
-          console.warn('KaTeX rendering notice:', e);
-        }
-      }
+      renderKaTeX(tbody);
     }
 
     async function handleMarkSingleStudent(studentId, newStatus) {
@@ -5838,19 +5816,7 @@
       }).join('');
 
       // Auto-render KaTeX math and scientific formulas
-      if (window.renderMathInElement && contentArea) {
-        try {
-          renderMathInElement(contentArea, {
-            delimiters: [
-              {left: '$$', right: '$$', display: true},
-              {left: '$', right: '$', display: false}
-            ],
-            throwOnError: false
-          });
-        } catch (e) {
-          console.warn('KaTeX rendering notice:', e);
-        }
-      }
+      renderKaTeX(tbody);
     }
 
     function filterHonorRoll(val) {
@@ -5870,12 +5836,14 @@
 
     // ── CHECK-IN URL HELPER FOR MOBILE SCANNER ────────────────────────────────
     function getCheckInUrlForSession(token) {
-      if (!token) return 'Student_CheckIn.html';
+      if (!token) {
+        return window.location.protocol.startsWith('http') ? `${window.location.origin}/checkin` : '/checkin';
+      }
       const cleanToken = token.replace('eru_attendance:', '').trim();
       if (window.location.protocol.startsWith('http')) {
         return `${window.location.origin}/checkin?token=${encodeURIComponent(cleanToken)}`;
       }
-      return `Student_CheckIn.html?token=${encodeURIComponent(cleanToken)}`;
+      return `/checkin?token=${encodeURIComponent(cleanToken)}`;
     }
 
     function copyStudentCheckInUrl() {

@@ -168,17 +168,18 @@ def public_student_attendance_summary(
     db: Session = Depends(get_db),
 ):
     """(Student Web Scanner) View attendance percentage across all enrolled courses using student code or email."""
+    from sqlalchemy import func
     ident = student_identifier.strip()
-    user = (
-        db.query(User)
-        .filter(
-            (User.email.ilike(ident))
-            | (User.student_code == ident)
-            | (User.user_id == int(ident) if ident.isdigit() else False)
-            | (User.full_name.ilike(f"%{ident}%"))
-        )
-        .first()
-    )
+    filters = [
+        User.email.ilike(ident),
+        func.lower(User.uni_code) == ident.lower(),
+        User.name.ilike(f"%{ident}%"),
+    ]
+    if ident.isdigit():
+        filters.append(User.user_id == int(ident))
+
+    from sqlalchemy import or_
+    user = db.query(User).filter(or_(*filters)).first()
     if not user:
         from fastapi import HTTPException
         raise HTTPException(

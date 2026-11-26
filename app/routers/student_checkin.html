@@ -917,22 +917,26 @@
       // Render courses
       const listContainer = document.getElementById('summary-courses-list');
       if (listContainer) {
-        listContainer.innerHTML = (courses || []).map(c => `
+        listContainer.innerHTML = (courses || []).map(c => {
+          const courseLabel = c.course_name || c.material_name || c.material_id;
+          const pctVal = Number(c.attendance_rate ?? c.attendance_percentage ?? 0);
+          return `
           <div class="p-3 rounded-xl bg-slate-900/70 border border-slate-700/60 flex items-center justify-between text-xs">
             <div>
-              <span class="font-bold text-white block">${c.material_name || c.material_id}</span>
+              <span class="font-bold text-white block">${courseLabel}</span>
               <span class="text-[10px] text-slate-400">حضر ${c.attended_sessions} من ${c.total_sessions} حصة</span>
             </div>
             <div class="text-end">
-              <span class="font-mono font-extrabold ${c.attendance_percentage >= 85 ? 'text-emerald-400' : (c.attendance_percentage >= 75 ? 'text-amber-400' : 'text-rose-400')}">
-                ${Math.round(c.attendance_percentage || 0)}%
+              <span class="font-mono font-extrabold ${pctVal >= 85 ? 'text-emerald-400' : (pctVal >= 75 ? 'text-amber-400' : 'text-rose-400')}">
+                ${Math.round(pctVal)}%
               </span>
               <div class="w-16 h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1">
-                <div class="h-full ${c.attendance_percentage >= 85 ? 'bg-emerald-500' : (c.attendance_percentage >= 75 ? 'bg-amber-500' : 'bg-rose-500')}" style="width: ${c.attendance_percentage}%"></div>
+                <div class="h-full ${pctVal >= 85 ? 'bg-emerald-500' : (pctVal >= 75 ? 'bg-amber-500' : 'bg-rose-500')}" style="width: ${pctVal}%"></div>
               </div>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
       }
     }
 

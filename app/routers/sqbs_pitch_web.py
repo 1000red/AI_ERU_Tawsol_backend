@@ -18,7 +18,7 @@ if os.path.exists(_HTML_FILE):
 else:
     SQBS_PITCH_HTML = "<!DOCTYPE html><html><body><h1>WeConnect — HP IDEA Egypt Pitch</h1></body></html>"
 
-NEON_PITCH_VIDEO_URL = "https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/WeConnect_Pitch_5Min.mp4"
+NEON_PITCH_VIDEO_URL = "https://br-still-boat-b5bl10k7.storage.c-7.us-east-2.aws.neon.tech/assets/weconnect_media/class_video_1.mp4"
 LOCAL_VIDEO_PATHS = [
     r"C:\Users\dell\OneDrive\Desktop\WeConnect_Pitch_5Min.mp4",
     os.path.join(os.path.dirname(__file__), "..", "..", "WeConnect_Pitch_5Min.mp4"),

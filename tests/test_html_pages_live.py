@@ -137,3 +137,12 @@ def test_audit_html_pages_zero_issues():
         assert not rep["missing_dom_ids"], f"{name} missing DOM IDs: {rep['missing_dom_ids']}"
         assert not rep["fetch_mismatches"], f"{name} fetch mismatches: {rep['fetch_mismatches']}"
         assert not rep["bad_hrefs"], f"{name} bad hrefs: {rep['bad_hrefs']}"
+
+
+def test_public_attendance_summary_no_500():
+    """Verify /attendance/public-summary/{ident} uses valid User columns (uni_code/name) and never raises 500."""
+    res = client.get("/attendance/public-summary/STU-101")
+    assert res.status_code in (200, 404), f"Expected 200 or 404, got {res.status_code}: {res.text}"
+    if res.status_code == 200:
+        assert isinstance(res.json(), list)
+

@@ -494,7 +494,7 @@ def get_conversations(
             "name": u.name,
             "email": u.email,
             "role": u.type_code,
-            "code": getattr(u, "student_code", None) or getattr(u, "code", None),
+            "code": getattr(u, "uni_code", None) or getattr(u, "student_code", None) or getattr(u, "code", None),
             "department": getattr(u, "department", None),
         }
         for u in db.query(User).filter(User.user_id.in_(all_uids)).all()
