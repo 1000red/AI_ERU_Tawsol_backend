@@ -207,10 +207,6 @@
           <i class="fa-solid fa-crown text-amber-500"></i>
           <span>سجل نقاط وتيجان الطلاب</span>
         </button>
-        <button id="tab-backend" data-tab="backend" type="button" class="tab-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1.5">
-          <i class="fa-solid fa-server text-teal-600"></i>
-          <span>كود الخادم وNeon</span>
-        </button>
       </nav>
 
       <!-- Quick Action Controls -->
@@ -914,64 +910,6 @@
       </div>
     </section>
 
-    <!-- ======================================================================= -->
-    <!-- VIEW 4: BACKEND ARCHITECTURE & NEON INTEGRATION                         -->
-    <!-- ======================================================================= -->
-    <section id="view-backend" class="hidden space-y-6">
-      
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
-          <div class="flex items-center justify-between gap-2">
-            <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-              وسم الدمج في بوابة المعلم الموحدة
-            </h2>
-            <button id="btn-copy-embed" type="button" class="we-gradient-btn px-4 py-1.5 rounded-full text-xs font-bold text-white">
-              📋 نسخ الدمج
-            </button>
-          </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400">
-            يُمرر هوية الطالب وقسم المعلم تلقائياً من جلسة تسجيل الدخول مع توجيه طلبات التوليد لخادم المدرسة.
-          </p>
-          <pre id="embed-code" dir="ltr" class="bg-[#0F172A] text-purple-200 rounded-2xl p-4 text-xs overflow-x-auto leading-relaxed"></pre>
-        </div>
-
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
-          <div class="flex items-center justify-between gap-2">
-            <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-              مخطط جداول النقاط في Neon PostgreSQL 18
-            </h2>
-            <button id="btn-copy-sql" type="button" class="px-4 py-1.5 rounded-full bg-teal-600 hover:bg-teal-700 text-xs font-bold text-white transition">
-              📋 نسخ SQL
-            </button>
-          </div>
-          <p class="text-xs text-slate-500 dark:text-slate-400">
-            جداول <code class="font-mono">student_points_ledger</code> و<code class="font-mono">student_game_attempts</code> جاهزة للتطبيق في Alembic.
-          </p>
-          <pre id="sql-code" dir="ltr" class="bg-[#0F172A] text-teal-200 rounded-2xl p-4 text-xs h-64 overflow-auto leading-relaxed font-mono"></pre>
-        </div>
-
-      </div>
-
-      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-              وحدة FastAPI المدمجة بالخادم (<code class="font-mono text-xs">app/routers/edugame.py</code>)
-            </h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400">
-              تستقبل ملف الدرس أو الموضوع وتتصل بـ Gemini مع ضمان عدم تسريب أوامر الموجه وصحة التغذية الراجعة.
-            </p>
-          </div>
-          <button id="btn-copy-fastapi" type="button" class="px-4 py-1.5 rounded-full bg-[#4A154B] hover:bg-purple-800 text-xs font-bold text-white transition">
-            📋 نسخ كود FastAPI
-          </button>
-        </div>
-        <pre id="fastapi-code" dir="ltr" class="bg-[#0F172A] text-slate-200 rounded-2xl p-4 text-xs max-h-96 overflow-auto leading-relaxed font-mono"></pre>
-      </div>
-
-    </section>
-
   </main>
 
   <!-- ========================================================================= -->
@@ -1290,7 +1228,7 @@
     // Tab Navigation
     function switchTab(tabName) {
       state.activeTab = tabName;
-      ["studio", "play", "points", "backend"].forEach((t) => {
+      ["studio", "play", "points"].forEach((t) => {
         $(`view-${t}`).classList.toggle("hidden", t !== tabName);
         const btn = $(`tab-${t}`);
         if (btn) {
@@ -2297,63 +2235,6 @@
       showToast("تم تصدير كشف درجات الطلاب بصيغة CSV!", "ok");
     }
 
-    // Setup Code Snippets
-    function setupSnippets() {
-      $("embed-code").textContent = `<we-teacher-arena
-  school="WE Applied Technology School Suez"
-  department="IT & Networks"
-  classroom="IT-201"
-  teacher="Eng. Ahmed Radwan"
-  points-sync="/api/v1/games/attempts"
-  roster-source="/api/v1/games/students/{material_id}"
-  database="Neon_PostgreSQL_18">
-</we-teacher-arena>`;
-
-      $("sql-code").textContent = `-- Neon PostgreSQL 18: Student Game Attempts & Leaderboard
-CREATE TABLE IF NOT EXISTS quiz_student_attempts (
-    id SERIAL PRIMARY KEY,
-    session_id VARCHAR(100) NOT NULL,
-    quiz_log_id INTEGER REFERENCES quiz_logs(id) ON DELETE CASCADE,
-    student_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    score DOUBLE PRECISION NOT NULL,
-    total_questions INTEGER NOT NULL DEFAULT 5,
-    correct_count INTEGER NOT NULL DEFAULT 0,
-    answers_json TEXT,
-    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
-);
-
--- Index for real-time leaderboard queries
-CREATE INDEX IF NOT EXISTS idx_student_attempts_student_score 
-ON quiz_student_attempts(student_id, score DESC);`;
-
-      $("fastapi-code").textContent = `"""app/routers/edugame.py — Teacher Gateway Live Backend Router"""
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
-from app.db.database import get_db
-
-router = APIRouter(prefix="/api/v1/games", tags=["Teacher Gateway Interactive Arena"])
-
-class AttemptRecord(BaseModel):
-    student_name: str = Field(..., min_length=2)
-    topic: str
-    points_earned: int = Field(..., ge=0)
-    accuracy: int = Field(..., ge=0, le=100)
-    awarded_crown: bool = False
-    course_id: str = "C5"
-
-@router.post("/attempts")
-def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)):
-    # Persists points & crowns directly into Neon PostgreSQL 18
-    # Automatically updates live student ledger and leaderboard
-    return {
-        "status": "success",
-        "student_name": data.student_name,
-        "points_added": data.points_earned,
-        "crown_awarded": data.awarded_crown
-    }`;
-    }
-
     function init() {
       // Sync logged-in teacher from WE School portal session if present
       try {
@@ -2370,7 +2251,6 @@ def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)
       setupSourceSwitcher();
       loadDynamicCourses();
       loadLedger();
-      setupSnippets();
 
       // Listeners for dynamic department, course & file pickers
       const deptSel = $("sel-department-id");
@@ -2514,17 +2394,6 @@ def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)
         showToast("تمت استعادة سجل الطلاب الافتراضي.", "info");
       });
       $("input-search-ledger").addEventListener("input", renderLedgerUI);
-
-      // Copy Buttons
-      $("btn-copy-embed").addEventListener("click", () => {
-        navigator.clipboard.writeText($("embed-code").textContent).then(() => showToast("تم نسخ وسم الدمج!", "ok"));
-      });
-      $("btn-copy-sql").addEventListener("click", () => {
-        navigator.clipboard.writeText($("sql-code").textContent).then(() => showToast("تم نسخ مخطط SQL!", "ok"));
-      });
-      $("btn-copy-fastapi").addEventListener("click", () => {
-        navigator.clipboard.writeText($("fastapi-code").textContent).then(() => showToast("تم نسخ كود FastAPI!", "ok"));
-      });
 
       // File drag-and-drop & Component Analysis
       const dz = $("dropzone");
