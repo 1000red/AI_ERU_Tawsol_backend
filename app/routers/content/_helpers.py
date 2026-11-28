@@ -4,6 +4,7 @@ from app.services.neon_storage import neon_storage
 
 ALLOWED_CONTENT_EXTENSIONS = {
     ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv",
+    ".md", ".py", ".js", ".ts", ".html", ".css", ".sql", ".json", ".cfg", ".conf",
     ".jpg", ".jpeg", ".png", ".webp", ".gif",
     ".mp3", ".m4a", ".ogg", ".wav",
     ".mp4", ".mov", ".m4v",

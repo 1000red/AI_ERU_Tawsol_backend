@@ -268,6 +268,15 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+          <div class="px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-800 border border-teal-200 dark:border-teal-800 shadow-sm flex items-center gap-2">
+            <span class="text-teal-700 dark:text-teal-300 flex items-center gap-1">
+              <i class="fa-solid fa-building-columns text-purple-600"></i>
+              <span>القسم:</span>
+            </span>
+            <select id="sel-department-id" class="bg-transparent font-bold text-slate-800 dark:text-teal-200 outline-none cursor-pointer">
+              <option value="all">جميع الأقسام (الكل)</option>
+            </select>
+          </div>
           <div class="px-3.5 py-2 rounded-2xl bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 shadow-sm flex items-center gap-2">
             <span class="text-purple-700 dark:text-purple-300 flex items-center gap-1">
               <i class="fa-solid fa-database text-teal-600"></i>
@@ -413,9 +422,15 @@
                 <div id="fa-preview-box" class="hidden p-2.5 rounded-xl bg-slate-900 text-slate-200 text-[11px] font-mono leading-relaxed max-h-36 overflow-y-auto whitespace-pre-wrap select-text"></div>
               </div>
 
-              <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
-                <i class="fa-solid fa-shield-halved text-emerald-600"></i>
-                <span>جاهز الآن: سيتم توليد بنك أسئلة التحدي حصرياً وبدقة من هذا الملف عند الضغط على "بدء جولة التحدي".</span>
+              <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                  <span>جاهز الآن: سيتم توليد بنك أسئلة التحدي حصرياً وبدقة من هذا الملف عند الضغط على "بدء جولة التحدي".</span>
+                </div>
+                <button id="btn-save-course-material" type="button" onclick="saveUploadedFileToCourse()" class="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold shadow-sm transition flex items-center gap-1.5 shrink-0">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                  <span>رفع وحفظ في مكتبة المقرر والقسم</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1288,40 +1303,76 @@
       });
     }
 
-    // Dynamic Course & Roster Loading from Neon PostgreSQL
-    async function loadDynamicCourses() {
+    // Dynamic Course, Department & Roster Loading from Neon PostgreSQL
+    function filterCoursesByDepartment(deptValue) {
       const selCourse = $("sel-course-id");
       if (!selCourse) return;
+      const all = Array.isArray(state.allCourses) ? state.allCourses : [];
+      const deptNorm = (deptValue || "all").trim().toLowerCase();
+      let filtered = all;
+      if (deptNorm && deptNorm !== "all") {
+        const matches = all.filter((c) => String(c.department || "").toLowerCase().includes(deptNorm) || deptNorm.includes(String(c.department || "").toLowerCase()));
+        if (matches.length > 0) filtered = matches;
+      }
+      if (filtered.length > 0) {
+        selCourse.innerHTML = filtered.map((c) => `
+          <option value="${escapeHtml(c.material_id)}">${escapeHtml(c.material_id)} - ${escapeHtml(c.name)} [${escapeHtml(c.department || 'IT')}] (${c.student_count || 0} طالب)</option>
+        `).join("");
+        const initialCourseId = selCourse.value || filtered[0].material_id;
+        loadCourseFiles(initialCourseId);
+        loadCourseStudents(initialCourseId);
+      }
+    }
 
+    async function loadDynamicCourses() {
+      const selCourse = $("sel-course-id");
+      const selDept = $("sel-department-id");
+      if (!selCourse) return;
+
+      let courses = [];
       try {
         const res = await fetch("/api/v1/games/courses");
         if (res.ok) {
-          const courses = await res.json();
-          if (Array.isArray(courses) && courses.length > 0) {
-            selCourse.innerHTML = courses.map((c) => `
-              <option value="${escapeHtml(c.material_id)}">${escapeHtml(c.material_id)} - ${escapeHtml(c.name)} (${c.student_count || 0} طالب)</option>
-            `).join("");
-
-            const initialCourseId = selCourse.value || courses[0].material_id;
-            loadCourseFiles(initialCourseId);
-            loadCourseStudents(initialCourseId);
-            return;
-          }
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) courses = data;
         }
       } catch (err) {
         console.warn("Could not load dynamic courses from backend:", err);
       }
 
-      // Resilient fallback courses
-      selCourse.innerHTML = `
-        <option value="C5" selected>C5 - Programming (48 ساعة)</option>
-        <option value="CS201">CS201 - Software Engineering (45 ساعة)</option>
-        <option value="C1">C1 - Networking (40 ساعة)</option>
-        <option value="C2">C2 - Advanced Networking (42 ساعة)</option>
-        <option value="B3">B3 - AI & Machine Learning (36 ساعة)</option>
-      `;
-      loadCourseFiles("C5");
-      loadCourseStudents("C5");
+      if (!courses.length) {
+        courses = [
+          { material_id: "C5", name: "Programming (C5)", student_count: 0, department: "Programming & Software" },
+          { material_id: "CS201", name: "Software Engineering (CS201)", student_count: 0, department: "Programming & Software" },
+          { material_id: "C1", name: "Networking (C1)", student_count: 0, department: "IT & Networks" },
+          { material_id: "C2", name: "Advanced Networking (C2)", student_count: 0, department: "IT & Networks" },
+          { material_id: "B3", name: "AI & Machine Learning (B3)", student_count: 0, department: "AI & Data Science" }
+        ];
+      }
+
+      state.allCourses = courses;
+
+      if (selDept) {
+        const depts = Array.from(new Set(courses.map((c) => c.department).filter(Boolean)));
+        let engineerDept = "";
+        try {
+          const saved = localStorage.getItem("teacher_user");
+          if (saved) engineerDept = (JSON.parse(saved)?.department || "").trim();
+        } catch (_) {}
+        if (engineerDept && !depts.some((d) => d.toLowerCase() === engineerDept.toLowerCase())) {
+          depts.unshift(engineerDept);
+        }
+        selDept.innerHTML = [
+          `<option value="all">جميع الأقسام (${courses.length} مقرر)</option>`,
+          ...depts.map((d) => `<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`)
+        ].join("");
+        if (engineerDept) {
+          const match = depts.find((d) => d.toLowerCase().includes(engineerDept.toLowerCase()) || engineerDept.toLowerCase().includes(d.toLowerCase()));
+          if (match) selDept.value = match;
+        }
+      }
+
+      filterCoursesByDepartment(selDept ? selDept.value : "all");
     }
 
     async function loadCourseFiles(courseId) {
@@ -1329,6 +1380,7 @@
       const badge = $("course-files-badge");
       if (!selFile) return;
 
+      handleCourseFileSelect("all");
       selFile.innerHTML = `<option value="">جاري فحص ملفات ومحاضرات المقرر...</option>`;
       if (badge) {
         badge.textContent = "جاري الاتصال بـ Neon S3...";
@@ -1527,24 +1579,26 @@
     }
 
     // Source Switcher
-    function setupSourceSwitcher() {
-      $("btn-src-upload").addEventListener("click", () => {
-        state.sourceMode = "upload";
+    function applySourceMode(mode) {
+      state.sourceMode = mode === "upload" ? "upload" : "curriculum";
+      if (state.sourceMode === "upload") {
         $("source-upload-wrap").classList.remove("hidden");
         $("source-curriculum-wrap").classList.add("hidden");
         $("btn-src-upload").className = "py-2 rounded-xl bg-white dark:bg-slate-900 text-[#4A154B] dark:text-purple-300 shadow-sm transition";
         $("btn-src-curriculum").className = "py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
-        updateFilesBadge();
-      });
-
-      $("btn-src-curriculum").addEventListener("click", () => {
-        state.sourceMode = "curriculum";
+      } else {
         $("source-upload-wrap").classList.add("hidden");
         $("source-curriculum-wrap").classList.remove("hidden");
         $("btn-src-curriculum").className = "py-2 rounded-xl bg-white dark:bg-slate-900 text-[#4A154B] dark:text-purple-300 shadow-sm transition";
         $("btn-src-upload").className = "py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition";
-        updateFilesBadge();
-      });
+      }
+      updateFilesBadge();
+    }
+
+    function setupSourceSwitcher() {
+      $("btn-src-upload").addEventListener("click", () => applySourceMode("upload"));
+      $("btn-src-curriculum").addEventListener("click", () => applySourceMode("curriculum"));
+      applySourceMode(state.sourceMode);
     }
 
     function updateFilesBadge() {
@@ -1668,14 +1722,19 @@
 
       } else if (state.sourceMode === "curriculum") {
         const courseFileId = $("sel-course-file")?.value;
-        if (courseFileId && courseFileId !== "all" && courseFileId !== "standard") {
+        const courseId = $("sel-course-id")?.value || "C5";
+        if (courseFileId && courseFileId !== "standard") {
           btn.disabled = true;
           const originalBtnHtml = btn.innerHTML;
           btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>جاري توليد الأسئلة من محاضرة المقرر...</span>`;
 
           try {
             const formData = new FormData();
-            formData.append("file_id", courseFileId);
+            if (courseFileId !== "all") {
+              formData.append("file_id", courseFileId);
+            } else {
+              formData.append("material_id", courseId);
+            }
             formData.append("num_questions", count);
             formData.append("difficulty", difficulty);
             formData.append("mode", mode);
@@ -1689,7 +1748,7 @@
               const data = await res.json();
               if (data.pack && data.pack.questions && data.pack.questions.length > 0) {
                 pack = data.pack;
-                showToast(`✓ تم توليد ${pack.questions.length} أسئلة بنجاح من محاضرة: ${escapeHtml(data.filename)}`, "ok");
+                showToast(`✓ تم توليد ${pack.questions.length} أسئلة بنجاح من: ${escapeHtml(data.filename)}`, "ok");
               }
             }
           } catch (err) {
@@ -2232,7 +2291,16 @@ def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)
       loadLedger();
       setupSnippets();
 
-      // Listeners for dynamic course & file pickers
+      // Listeners for dynamic department, course & file pickers
+      const deptSel = $("sel-department-id");
+      if (deptSel) {
+        deptSel.addEventListener("change", (e) => {
+          const dept = e.target.value;
+          filterCoursesByDepartment(dept);
+          showToast(dept === "all" ? "تم عرض مقررات جميع الأقسام" : `تم تصفية المقررات لقسم «${dept}»`, "info");
+        });
+      }
+
       const courseSel = $("sel-course-id");
       if (courseSel) {
         courseSel.addEventListener("change", (e) => {
@@ -2606,6 +2674,62 @@ def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)
 
       $("cfa-summary").textContent = "تم تجهيز المحاضرة للتوليد التفاعلي المباشر.";
       updateFilesBadge();
+    }
+
+    async function saveUploadedFileToCourse() {
+      if (!state.uploadedFiles || !state.uploadedFiles.length) {
+        showToast("يرجى اختيار ملف أولاً قبل الحفظ في مكتبة المقرر", "err");
+        return;
+      }
+      const courseId = $("sel-course-id")?.value;
+      if (!courseId) {
+        showToast("يرجى اختيار المقرر الدراسي والقسم أولاً", "err");
+        return;
+      }
+      const token =
+        localStorage.getItem("teacher_token") ||
+        sessionStorage.getItem("teacher_token") ||
+        localStorage.getItem("admin_token") ||
+        sessionStorage.getItem("admin_token");
+      if (!token) {
+        showToast("يرجى تسجيل الدخول من بوابة المعلمين (/teacher) لحفظ الملف في قاعدة بيانات القسم", "err");
+        return;
+      }
+
+      const btn = $("btn-save-course-material");
+      const file = state.uploadedFiles[0];
+      const origHtml = btn ? btn.innerHTML : "";
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>جاري الرفع إلى Neon S3...</span>`;
+      }
+
+      try {
+        const fd = new FormData();
+        fd.append("material_id", courseId);
+        fd.append("title", file.name.replace(/\.[^/.]+$/, ""));
+        fd.append("file", file);
+
+        const res = await fetch("/api/v1/games/upload-course-file", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: fd,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `فشل رفع المادة (${res.status})`);
+        }
+        const data = await res.json();
+        showToast(`✓ تم رفع وحفظ «${escapeHtml(data.title)}» داخل مقرر ${escapeHtml(data.material_id)}!`, "ok");
+        await loadCourseFiles(courseId);
+      } catch (err) {
+        showToast(err.message || "تعذر حفظ المادة في المقرر", "err");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+        }
+      }
     }
 
     window.addEventListener("DOMContentLoaded", init);

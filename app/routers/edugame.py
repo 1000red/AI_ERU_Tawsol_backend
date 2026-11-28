@@ -17,10 +17,12 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 
 from app.db.database import get_db
+from app.core.dependencies import require_staff
 from app.models.user import User
-from app.models.material import Material, MaterialStudent
+from app.models.material import Material, MaterialStudent, MaterialTeacher
 from app.models.quiz_log import QuizStudentAttempt
 from app.models.content.material_file import MaterialFile
+from app.routers.content._helpers import save_file
 from app.services.quiz_service.extractor import extract_text
 from app.services.quiz_service.generator import generate_quiz
 
@@ -46,13 +48,29 @@ DEFAULT_ROSTER = [
 ]
 
 DEFAULT_COURSES = [
-    {"material_id": "C5", "name": "Programming (C5)", "description": "هندسة البرمجيات والبرمجة المتقدمة", "duration": 48},
-    {"material_id": "CS201", "name": "Software Engineering (CS201)", "description": "معايير تصميم البرمجيات وهيكلة الأنظمة", "duration": 45},
-    {"material_id": "C1", "name": "Networking (C1)", "description": "أساسيات الشبكات ونموذج الاتصال المفتوح OSI", "duration": 40},
-    {"material_id": "C2", "name": "Advanced Networking (C2)", "description": "بروتوكولات التوجيه المتقدمة وتقسيم الشبكات", "duration": 42},
-    {"material_id": "B3", "name": "Artificial Intelligence (B3)", "description": "نماذج الذكاء الاصطناعي والتعلم الآلي", "duration": 36},
-    {"material_id": "B2", "name": "Python Development (B2)", "description": "أتمتة العمليات والتطوير بلغة بايثون", "duration": 38},
+    {"material_id": "C5", "name": "Programming (C5)", "description": "هندسة البرمجيات والبرمجة المتقدمة", "duration": 48, "department": "Programming & Software"},
+    {"material_id": "CS201", "name": "Software Engineering (CS201)", "description": "معايير تصميم البرمجيات وهيكلة الأنظمة", "duration": 45, "department": "Programming & Software"},
+    {"material_id": "C1", "name": "Networking (C1)", "description": "أساسيات الشبكات ونموذج الاتصال المفتوح OSI", "duration": 40, "department": "IT & Networks"},
+    {"material_id": "C2", "name": "Advanced Networking (C2)", "description": "بروتوكولات التوجيه المتقدمة وتقسيم الشبكات", "duration": 42, "department": "IT & Networks"},
+    {"material_id": "B3", "name": "Artificial Intelligence (B3)", "description": "نماذج الذكاء الاصطناعي والتعلم الآلي", "duration": 36, "department": "AI & Data Science"},
+    {"material_id": "B2", "name": "Python Development (B2)", "description": "أتمتة العمليات والتطوير بلغة بايثون", "duration": 38, "department": "Programming & Software"},
 ]
+
+
+def _infer_course_department(material_id: str, name: str, description: str = "", teacher_dept: Optional[str] = None) -> str:
+    """Resolve department for a course from its assigned teacher or curriculum metadata."""
+    if teacher_dept and str(teacher_dept).strip():
+        return str(teacher_dept).strip()
+    blob = f"{material_id} {name} {description}".lower()
+    if any(k in blob for k in ("ai", "machine learning", "data", "ذكاء", "بيانات", "b3", "ds")):
+        return "AI & Data Science"
+    if any(k in blob for k in ("program", "software", "python", "web", "code", "برمج", "c5", "b2", "cs", "web201")):
+        return "Programming & Software"
+    if any(k in blob for k in ("fiber", "telecom", "signal", "اتصالات", "ألياف", "tel")):
+        return "Telecom & Fiber"
+    if any(k in blob for k in ("cyber", "security", "أمن")):
+        return "Cybersecurity"
+    return "IT & Networks"
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
@@ -74,6 +92,7 @@ class GameCourseOut(BaseModel):
     description: Optional[str] = None
     duration: int = 0
     student_count: int = 0
+    department: str = "IT & Networks"
 
 
 class GameStudentOut(BaseModel):
@@ -102,26 +121,54 @@ class AttemptResultOut(BaseModel):
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("/courses", response_model=List[GameCourseOut])
-def get_game_courses(db: Session = Depends(get_db)):
-    """Return all available courses from database for Arena selection."""
+def get_game_courses(department: Optional[str] = None, db: Session = Depends(get_db)):
+    """Return all available courses from database for Arena selection (optionally filtered by department)."""
     try:
         mats = db.query(Material).order_by(Material.material_id).all()
         if mats:
-            return [
+            teacher_depts = {}
+            try:
+                rows = (
+                    db.query(MaterialTeacher.material_id, User.department)
+                    .join(User, MaterialTeacher.user_id == User.user_id)
+                    .all()
+                )
+                for mid, dept in rows:
+                    if mid not in teacher_depts and dept:
+                        teacher_depts[mid] = dept
+            except Exception:
+                pass
+
+            out = [
                 GameCourseOut(
                     material_id=m.material_id,
                     name=m.name,
                     description=m.description or "",
                     duration=m.duration or 0,
                     student_count=getattr(m, "student_count", 0) or 0,
+                    department=_infer_course_department(
+                        m.material_id, m.name, m.description or "", teacher_depts.get(m.material_id)
+                    ),
                 )
                 for m in mats
             ]
+            if department and department.strip().lower() not in ("all", "الكل", ""):
+                dept_norm = department.strip().lower()
+                filtered = [c for c in out if dept_norm in c.department.lower()]
+                if filtered:
+                    return filtered
+            return out
     except Exception as e:
         logger.warning(f"Error fetching game courses from DB: {e}")
 
     # Fallback to default curriculum courses
-    return [GameCourseOut(**c) for c in DEFAULT_COURSES]
+    out = [GameCourseOut(**c) for c in DEFAULT_COURSES]
+    if department and department.strip().lower() not in ("all", "الكل", ""):
+        dept_norm = department.strip().lower()
+        filtered = [c for c in out if dept_norm in c.department.lower()]
+        if filtered:
+            return filtered
+    return out
 
 
 @router.get("/files/{material_id}")
@@ -690,6 +737,7 @@ async def _resolve_text_and_filename(
     file_id: Optional[int] = None,
     text_content: Optional[str] = None,
     db: Optional[Session] = None,
+    material_id: Optional[str] = None,
 ) -> tuple[str, str, int]:
     text = ""
     filename = "محتوى الدرس"
@@ -736,6 +784,25 @@ async def _resolve_text_and_filename(
         filename = "نص الدرس التفاعلي"
         file_size = len(text.encode("utf-8"))
 
+    elif material_id and db:
+        m_files = db.query(MaterialFile).filter(MaterialFile.material_id == material_id.strip()).order_by(MaterialFile.file_id).limit(5).all()
+        chunks = []
+        for mf in m_files:
+            part = ""
+            if mf.file_path:
+                try:
+                    part = extract_text(mf.file_path)
+                except Exception:
+                    part = ""
+            if not part and mf.description:
+                part = f"{mf.title or ''}\n{mf.description}"
+            if part:
+                chunks.append(part[:3000])
+        if chunks:
+            text = "\n\n".join(chunks)
+            filename = f"مكتبة المقرر ({material_id.strip()})"
+            file_size = len(text.encode("utf-8"))
+
     return text, filename, file_size
 
 
@@ -766,14 +833,15 @@ async def analyze_file_endpoint(
 async def generate_from_file_endpoint(
     file: Optional[UploadFile] = File(None),
     file_id: Optional[int] = Form(None),
+    material_id: Optional[str] = Form(None),
     text_content: Optional[str] = Form(None),
     num_questions: int = Form(5),
     difficulty: str = Form("applied"),
     mode: str = Form("speed_challenge"),
     db: Session = Depends(get_db),
 ):
-    """Generate interactive challenge arena questions strictly grounded in the file."""
-    text, filename, file_size = await _resolve_text_and_filename(file, file_id, text_content, db)
+    """Generate interactive challenge arena questions strictly grounded in the file or course library."""
+    text, filename, file_size = await _resolve_text_and_filename(file, file_id, text_content, db, material_id=material_id)
     if not text or len(text.strip()) < 10:
         raise HTTPException(
             status_code=400,
@@ -797,5 +865,63 @@ async def generate_from_file_endpoint(
             "title": f"تحدي: {filename}",
             "questions": questions,
         },
+    }
+
+
+@router.post("/upload-course-file", status_code=201)
+async def upload_course_file_from_arena(
+    material_id: str = Form(...),
+    title: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    file: UploadFile = File(...),
+    current_user: User = Depends(require_staff),
+    db: Session = Depends(get_db),
+):
+    """(Staff/Engineer) Upload and persist a material file directly to the selected course & department library."""
+    clean_mat_id = (material_id or "").strip()
+    if not clean_mat_id:
+        raise HTTPException(status_code=422, detail="يرجى تحديد المقرر الدراسي المطلوب رفع المادة إليه.")
+
+    mat = db.query(Material).filter(Material.material_id == clean_mat_id).first()
+    if not mat:
+        raise HTTPException(status_code=404, detail=f"المقرر الدراسي '{clean_mat_id}' غير موجود في قاعدة البيانات.")
+
+    file_path, file_size = save_file(file)
+    if not file_path:
+        raise HTTPException(status_code=400, detail="تعذر حفظ الملف المرفوع.")
+
+    ext = os.path.splitext(file.filename or "")[1].lower().lstrip(".")
+    ext_map = {
+        "pdf": "pdf", "doc": "word", "docx": "word", "ppt": "ppt", "pptx": "ppt",
+        "xls": "file", "xlsx": "file", "txt": "text", "csv": "file",
+        "png": "image", "jpg": "image", "jpeg": "image", "webp": "image",
+        "mp4": "video", "mov": "video", "zip": "zip", "rar": "rar", "7z": "7z",
+        "py": "python", "js": "javascript", "ts": "typescript", "html": "html",
+        "css": "css", "sql": "sql", "json": "text", "md": "text",
+    }
+    clean_type = ext_map.get(ext, "file")
+    final_title = (title or "").strip() or os.path.splitext(file.filename or "ملف_المادة")[0]
+
+    mf = MaterialFile(
+        material_id=clean_mat_id,
+        author_id=current_user.user_id,
+        title=final_title,
+        description=(description or "").strip() or None,
+        file_type=clean_type,
+        file_path=file_path,
+        file_size=file_size,
+    )
+    db.add(mf)
+    db.commit()
+    db.refresh(mf)
+
+    return {
+        "status": "success",
+        "file_id": mf.file_id,
+        "material_id": mf.material_id,
+        "title": mf.title,
+        "file_type": mf.file_type,
+        "file_path": mf.file_path,
+        "file_size": mf.file_size,
     }
 
