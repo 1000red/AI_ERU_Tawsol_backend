@@ -1375,6 +1375,80 @@
       filterCoursesByDepartment(selDept ? selDept.value : "all");
     }
 
+    const DEFAULT_WE_TOPICS = [
+      { value: "c5_programming", label: "مقرر C5: هندسة البرمجيات وبناء التطبيقات النظيفة (Clean Architecture)" },
+      { value: "osi_layers", label: "الوحدة 1: نموذج الاتصال المعياري OSI 7-Layers والبروتوكولات (TCP/UDP/IP)" },
+      { value: "ip_subnetting", label: "الوحدة 2: عنونة الشبكات وتقسيم الشبكات الفرعية IPv4 Subnetting & CIDR" },
+      { value: "vlan_switching", label: "الوحدة 3: إعداد المحولات والشبكات الافتراضية VLANs & 802.1Q Trunking" },
+      { value: "python_automation", label: "الوحدة 4: أتمتة الشبكات باستخدام Python وNetmiko وRESTCONF" },
+      { value: "cyber_firewall", label: "الوحدة 5: أمن الشبكات، الجدران النارية، وقوائم التحكم بالوصول ACLs" }
+    ];
+
+    async function loadPresetTopicsFromDB(courseId, currentCourseFiles = []) {
+      const selTopic = $("sel-preset-topic");
+      if (!selTopic) return;
+
+      const prevValue = selTopic.value;
+      let allDbFiles = [];
+      try {
+        const resAll = await fetch("/api/v1/games/files/all");
+        if (resAll.ok) {
+          const dataAll = await resAll.json();
+          if (Array.isArray(dataAll)) allDbFiles = dataAll;
+        }
+      } catch (err) {
+        console.warn("Could not load all DB materials for preset topic:", err);
+      }
+
+      const currentIds = new Set((currentCourseFiles || []).map((f) => String(f.file_id)));
+      const otherDbFiles = allDbFiles.filter(
+        (f) => String(f.material_id) !== String(courseId) && !currentIds.has(String(f.file_id))
+      );
+
+      const groups = [];
+      if (currentCourseFiles && currentCourseFiles.length > 0) {
+        groups.push(
+          `<optgroup label="📁 المواد المرفوعة للمقرر (${escapeHtml(courseId)})">` +
+            currentCourseFiles
+              .map(
+                (f) =>
+                  `<option value="db_file:${f.file_id}" data-file-id="${f.file_id}" data-material-id="${escapeHtml(f.material_id)}">📄 ${escapeHtml(f.title || f.file_name || "محاضرة")} (${(f.file_type || "FILE").toUpperCase()})</option>`
+              )
+              .join("") +
+            `</optgroup>`
+        );
+      }
+
+      if (otherDbFiles.length > 0) {
+        groups.push(
+          `<optgroup label="🌐 مواد أخرى مرفوعة في قاعدة البيانات (${otherDbFiles.length})">` +
+            otherDbFiles
+              .map((f) => {
+                const courseLabel = f.material_name || f.material_id || "مقرر";
+                return `<option value="db_file:${f.file_id}" data-file-id="${f.file_id}" data-material-id="${escapeHtml(f.material_id)}">📚 [${escapeHtml(courseLabel)}] ${escapeHtml(f.title || f.file_name || "مادة")} (${(f.file_type || "FILE").toUpperCase()})</option>`;
+              })
+              .join("") +
+            `</optgroup>`
+        );
+      }
+
+      groups.push(
+        `<optgroup label="🎓 وحدات مدرسة WE المعتمدة">` +
+          DEFAULT_WE_TOPICS.map((t) => `<option value="${t.value}">${escapeHtml(t.label)}</option>`).join("") +
+          `</optgroup>`
+      );
+
+      selTopic.innerHTML = groups.join("");
+
+      if (prevValue && Array.from(selTopic.options).some((o) => o.value === prevValue)) {
+        selTopic.value = prevValue;
+      } else if (currentCourseFiles && currentCourseFiles.length > 0) {
+        selTopic.value = `db_file:${currentCourseFiles[0].file_id}`;
+      } else if (otherDbFiles.length > 0) {
+        selTopic.value = `db_file:${otherDbFiles[0].file_id}`;
+      }
+    }
+
     async function loadCourseFiles(courseId) {
       const selFile = $("sel-course-file");
       const badge = $("course-files-badge");
@@ -1387,11 +1461,13 @@
         badge.className = "px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 text-[10px] font-bold border border-purple-200 dark:border-purple-800";
       }
 
+      let courseFiles = [];
       try {
         const res = await fetch(`/api/v1/games/files/${encodeURIComponent(courseId)}`);
         if (res.ok) {
           const files = await res.json();
           if (Array.isArray(files) && files.length > 0) {
+            courseFiles = files;
             selFile.innerHTML = [
               `<option value="all">🌟 توليد التحدي من جميع ملفات المقرر (${files.length} ملفات)</option>`,
               ...files.map((f) => `<option value="${f.file_id}">📄 ${escapeHtml(f.title || f.file_name || 'محاضرة')} (${(f.file_type || 'PDF').toUpperCase()})</option>`)
@@ -1400,6 +1476,7 @@
               badge.textContent = `✓ ${files.length} ملفات سحابية في Neon`;
               badge.className = "px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold border border-emerald-200 dark:border-emerald-800";
             }
+            await loadPresetTopicsFromDB(courseId, courseFiles);
             return;
           }
         }
@@ -1412,6 +1489,7 @@
         badge.textContent = "جاهز (منهج WE المعتمد)";
         badge.className = "px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 text-[10px] font-bold border border-purple-200 dark:border-purple-800";
       }
+      await loadPresetTopicsFromDB(courseId, []);
     }
 
     async function loadCourseStudents(courseId) {
@@ -1722,16 +1800,19 @@
 
       } else if (state.sourceMode === "curriculum") {
         const courseFileId = $("sel-course-file")?.value;
+        const presetVal = $("sel-preset-topic")?.value || "";
+        const presetFileId = presetVal.startsWith("db_file:") ? presetVal.slice(8) : "";
         const courseId = $("sel-course-id")?.value || "C5";
-        if (courseFileId && courseFileId !== "standard") {
+        const effectiveFileId = presetFileId || (courseFileId && courseFileId !== "standard" ? courseFileId : "");
+        if (effectiveFileId) {
           btn.disabled = true;
           const originalBtnHtml = btn.innerHTML;
           btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>جاري توليد الأسئلة من محاضرة المقرر...</span>`;
 
           try {
             const formData = new FormData();
-            if (courseFileId !== "all") {
-              formData.append("file_id", courseFileId);
+            if (effectiveFileId !== "all") {
+              formData.append("file_id", effectiveFileId);
             } else {
               formData.append("material_id", courseId);
             }
@@ -2318,8 +2399,30 @@ def save_student_game_attempt(data: AttemptRecord, db: Session = Depends(get_db)
           if (opt && opt.value !== "standard" && opt.value !== "all") {
             showToast(`تم تحديد المحاضرة: ${opt.text}`, "ok");
             handleCourseFileSelect(opt.value);
+            const topicSel = $("sel-preset-topic");
+            if (topicSel && Array.from(topicSel.options).some((o) => o.value === `db_file:${opt.value}`)) {
+              topicSel.value = `db_file:${opt.value}`;
+            }
           } else {
             handleCourseFileSelect(opt ? opt.value : "all");
+          }
+        });
+      }
+
+      const presetTopicSel = $("sel-preset-topic");
+      if (presetTopicSel) {
+        presetTopicSel.addEventListener("change", (e) => {
+          const val = e.target.value || "";
+          const opt = e.target.selectedOptions?.[0];
+          if (val.startsWith("db_file:")) {
+            const fid = val.slice(8);
+            if (fileSel && Array.from(fileSel.options).some((o) => o.value === fid)) {
+              fileSel.value = fid;
+            }
+            handleCourseFileSelect(fid);
+            showToast(`تم اختيار المادة من قاعدة البيانات: ${opt ? opt.text : fid}`, "ok");
+          } else {
+            handleCourseFileSelect("standard");
           }
         });
       }

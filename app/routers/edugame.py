@@ -182,10 +182,15 @@ def get_game_course_files(material_id: str, db: Session = Depends(get_db)):
             query = query.filter(MaterialFile.material_id == clean_id)
         files = query.order_by(MaterialFile.file_id).all()
         if files:
+            mat_names = {
+                m.material_id: (m.name or m.material_id)
+                for m in db.query(Material).all()
+            }
             return [
                 {
                     "file_id": f.file_id,
                     "material_id": f.material_id,
+                    "material_name": mat_names.get(f.material_id, f.material_id),
                     "title": f.title,
                     "description": f.description or "",
                     "file_type": f.file_type or "pdf",

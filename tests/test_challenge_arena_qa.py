@@ -172,3 +172,44 @@ def test_04_arena_students_attempts_and_ledger_flow(arena_db):
     assert led_res.status_code == 200
     assert led_res.json()["status"] == "success"
     assert any(row["name"] == "Nour Student" and row["totalPoints"] >= 1250 for row in led_res.json()["ledger"])
+
+
+def test_05_arena_all_files_and_preset_topics_db_loading(arena_db):
+    client = TestClient(app)
+    db = arena_db()
+    db.add_all([
+        MaterialFile(
+            material_id="C1",
+            author_id=2,
+            title="OSI Reference Lecture",
+            description="7 layers of OSI",
+            file_type="pdf",
+            file_path="",
+            file_size=100,
+        ),
+        MaterialFile(
+            material_id="C5",
+            author_id=2,
+            title="Clean Architecture Guide",
+            description="SOLID principles",
+            file_type="py",
+            file_path="",
+            file_size=150,
+        ),
+    ])
+    db.commit()
+    db.close()
+
+    all_files_res = client.get("/api/v1/games/files/all")
+    assert all_files_res.status_code == 200
+    items = all_files_res.json()
+    assert len(items) == 2
+    by_mat = {item["material_id"]: item for item in items}
+    assert by_mat["C1"]["material_name"] == "Networking Fundamentals"
+    assert by_mat["C5"]["material_name"] == "Programming C5"
+
+    # Gateway HTML must dynamically load DB materials into #sel-preset-topic
+    gw_res = client.get("/gateway")
+    assert gw_res.status_code == 200
+    assert "loadPresetTopicsFromDB" in gw_res.text
+    assert "/api/v1/games/files/all" in gw_res.text
